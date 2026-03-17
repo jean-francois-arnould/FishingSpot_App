@@ -13,66 +13,157 @@
 
     <Grid RowDefinitions="*,Auto">
         <ScrollView Grid.Row="0">
-            <VerticalStackLayout Padding="20" Spacing="15">
+            <VerticalStackLayout Padding="20" Spacing="20">
 
-                <Label Text="Informations du Setup"
-                       FontSize="18"
-                       FontAttributes="Bold"/>
+                <!-- Section : Informations générales -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2C2C2E}"
+                       BorderColor="Transparent"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="📋 Informations générales"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1976D2, Dark=#64B5F6}"/>
 
-                <Entry x:Name="NameEntry"
-                       Placeholder="Nom du setup (ex: Setup Carnassiers)"
-                       PlaceholderColor="Gray"/>
+                        <BoxView HeightRequest="1" 
+                                 Color="{AppThemeBinding Light=#E0E0E0, Dark=#424242}"
+                                 Margin="0,0,0,8"/>
 
-                <Editor x:Name="DescriptionEditor"
-                        Placeholder="Description (optionnel)"
-                        HeightRequest="80"
-                        AutoSize="TextChanges"/>
+                        <Label Text="Nom du setup *"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#424242, Dark=#E0E0E0}"/>
+                        <Entry x:Name="NameEntry"
+                               Placeholder="ex: Setup Carnassiers"
+                               PlaceholderColor="Gray"
+                               BackgroundColor="{AppThemeBinding Light=White, Dark=#3C3C3E}"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}"/>
 
-                <Label Text="Composition du Setup"
-                       FontSize="18"
-                       FontAttributes="Bold"
-                       Margin="0,20,0,0"/>
+                        <Label Text="Description"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#424242, Dark=#E0E0E0}"
+                               Margin="0,8,0,0"/>
+                        <Editor x:Name="DescriptionEditor"
+                                Placeholder="Décrivez votre setup (optionnel)"
+                                HeightRequest="80"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#3C3C3E}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                AutoSize="TextChanges"/>
+                    </VerticalStackLayout>
+                </Frame>
 
-                <Label Text="Canne"
-                       FontSize="14"/>
-                <Picker x:Name="CannePicker"
-                        Title="Choisir une canne"/>
+                <!-- Section : Composition du Setup -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2C2C2E}"
+                       BorderColor="Transparent"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="🎣 Composition du setup"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1976D2, Dark=#64B5F6}"/>
 
-                <Label Text="Fil"
-                       FontSize="14"/>
-                <Picker x:Name="FilPicker"
-                        Title="Choisir un fil"/>
+                        <BoxView HeightRequest="1" 
+                                 Color="{AppThemeBinding Light=#E0E0E0, Dark=#424242}"
+                                 Margin="0,0,0,8"/>
 
-                <Label Text="Bas de ligne"
-                       FontSize="14"/>
-                <Picker x:Name="BasDeLignePicker"
-                        Title="Choisir un bas de ligne"/>
+                        <Label Text="Canne à pêche"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#424242, Dark=#E0E0E0}"/>
+                        <Picker x:Name="CannePicker"
+                                Title="Sélectionnez une canne"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#3C3C3E}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"/>
 
-                <Label Text="Appât ou Leurre"
-                       FontSize="14"/>
-                <Picker x:Name="AppAtPicker"
-                        Title="Choisir un appât/leurre"/>
+                        <Label Text="Fil de pêche"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#424242, Dark=#E0E0E0}"
+                               Margin="0,8,0,0"/>
+                        <Picker x:Name="FilPicker"
+                                Title="Sélectionnez un fil"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#3C3C3E}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"/>
 
-                <Label Text="Notes (optionnel)"
-                       FontSize="16"
-                       FontAttributes="Bold"
-                       Margin="0,20,0,0"/>
+                        <Label Text="Bas de ligne"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#424242, Dark=#E0E0E0}"
+                               Margin="0,8,0,0"/>
+                        <Picker x:Name="BasDeLignePicker"
+                                Title="Sélectionnez un bas de ligne"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#3C3C3E}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"/>
 
-                <Editor x:Name="NotesEditor"
-                        Placeholder="Notes sur ce setup..."
-                        HeightRequest="100"
-                        AutoSize="TextChanges"/>
+                        <Label Text="Appât ou Leurre"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#424242, Dark=#E0E0E0}"
+                               Margin="0,8,0,0"/>
+                        <Picker x:Name="AppAtPicker"
+                                Title="Sélectionnez un appât/leurre"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#3C3C3E}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"/>
+                    </VerticalStackLayout>
+                </Frame>
 
-                <CheckBox x:Name="IsActiveCheckBox"
-                          IsChecked="False"/>
-                <Label Text="Définir comme setup actif"
-                       VerticalOptions="Center"
-                       Margin="-10,0,0,0"/>
+                <!-- Section : Notes et Options -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2C2C2E}"
+                       BorderColor="Transparent"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="📝 Notes et options"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1976D2, Dark=#64B5F6}"/>
+
+                        <BoxView HeightRequest="1" 
+                                 Color="{AppThemeBinding Light=#E0E0E0, Dark=#424242}"
+                                 Margin="0,0,0,8"/>
+
+                        <Label Text="Notes personnelles"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#424242, Dark=#E0E0E0}"/>
+                        <Editor x:Name="NotesEditor"
+                                Placeholder="Ajoutez vos observations, conditions d'utilisation, résultats..."
+                                HeightRequest="100"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#3C3C3E}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                AutoSize="TextChanges"/>
+
+                        <!-- Setup actif -->
+                        <Frame BackgroundColor="{AppThemeBinding Light=#E3F2FD, Dark=#1565C0}"
+                               BorderColor="{AppThemeBinding Light=#2196F3, Dark=#64B5F6}"
+                               Padding="12"
+                               CornerRadius="8"
+                               Margin="0,8,0,0">
+                            <HorizontalStackLayout Spacing="12">
+                                <CheckBox x:Name="IsActiveCheckBox"
+                                          IsChecked="False"
+                                          Color="{AppThemeBinding Light=#1976D2, Dark=#64B5F6}"/>
+                                <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                    <Label Text="✅ Définir comme setup actif"
+                                           FontSize="15"
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light=#1565C0, Dark=White}"/>
+                                    <Label Text="Ce setup sera utilisé par défaut lors de vos sorties"
+                                           FontSize="12"
+                                           TextColor="{AppThemeBinding Light=#1976D2, Dark=#B3E5FC}"/>
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
+                        </Frame>
+                    </VerticalStackLayout>
+                </Frame>
 
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Boutons en bas -->
+        <!-- Boutons d'action en bas -->
         <Grid Grid.Row="1"
               ColumnDefinitions="*,*"
               ColumnSpacing="10"
@@ -80,20 +171,24 @@
               BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}">
 
             <Button Grid.Column="0"
-                    Text="Cancel"
+                    Text="❌ Annuler"
                     Clicked="OnCancelClicked"
-                    BackgroundColor="#E0E0E0"
-                    TextColor="Black"
-                    CornerRadius="8"
-                    HeightRequest="50"/>
+                    BackgroundColor="{AppThemeBinding Light=#E0E0E0, Dark=#424242}"
+                    TextColor="{AppThemeBinding Light=#424242, Dark=White}"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    FontSize="16"
+                    FontAttributes="Bold"/>
 
             <Button Grid.Column="1"
-                    Text="Save"
+                    Text="💾 Enregistrer"
                     Clicked="OnSaveClicked"
                     BackgroundColor="#4CAF50"
                     TextColor="White"
-                    CornerRadius="8"
-                    HeightRequest="50"/>
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    FontSize="16"
+                    FontAttributes="Bold"/>
         </Grid>
     </Grid>
 
