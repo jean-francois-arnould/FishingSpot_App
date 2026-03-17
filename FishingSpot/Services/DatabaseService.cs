@@ -242,9 +242,10 @@ namespace FishingSpot.Services
         }
 
         // Méthodes synchrones pour compatibilité (déprécié - utiliser les versions async)
-        public void AddCatch(FishCatch fishCatch)
+        public int AddCatch(FishCatch fishCatch)
         {
-            _ = Task.Run(async () => await AddCatchAsync(fishCatch));
+            Task.Run(async () => await AddCatchAsync(fishCatch)).Wait();
+            return fishCatch.Id;
         }
 
         public void DeleteCatch(FishCatch fishCatch)

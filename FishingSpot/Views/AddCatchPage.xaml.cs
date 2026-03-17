@@ -8,11 +8,13 @@ namespace FishingSpot.Views
     {
         private readonly DatabaseService _databaseService;
         private readonly SetupService _setupService;
+        private readonly WeatherService _weatherService;
         private string _photoPath = string.Empty;
         private double _latitude;
         private double _longitude;
         private int _fishCatchId = 0;
         private FishCatch? _existingFishCatch;
+        private WeatherData? _currentWeather;
 
         public int FishCatchId
         {
@@ -27,11 +29,12 @@ namespace FishingSpot.Views
             }
         }
 
-        public AddCatchPage(DatabaseService databaseService, SetupService setupService)
+        public AddCatchPage(DatabaseService databaseService, SetupService setupService, WeatherService weatherService)
         {
             InitializeComponent();
             _databaseService = databaseService;
             _setupService = setupService;
+            _weatherService = weatherService;
 
             // Initialiser les dates
             CatchDatePicker.Date = DateTime.Now;
@@ -218,6 +221,18 @@ namespace FishingSpot.Views
                     {
                         LocationEntry.Text = $"Position GPS ({_latitude:F4}, {_longitude:F4})";
                     }
+
+                    // Récupérer la météo actuelle
+                    _currentWeather = await _weatherService.GetCurrentWeatherAsync(_latitude, _longitude);
+                    if (_currentWeather != null)
+                    {
+                        await DisplayAlertAsync("Météo", 
+                            $"Température: {_currentWeather.Temperature:F1}°C\n" +
+                            $"Conditions: {_currentWeather.Description}\n" +
+                            $"Vent: {_currentWeather.WindSpeed} m/s\n" +
+                            $"Humidité: {_currentWeather.Humidity}%", 
+                            "OK");
+                    }
                 }
                 else
                 {
@@ -324,7 +339,15 @@ namespace FishingSpot.Views
                     SetupId = setupId
                 };
 
-                _databaseService.AddCatch(fishCatch);
+                var catchId = _databaseService.AddCatch(fishCatch);
+
+                // Associer la météo à la capture
+                if (_currentWeather != null)
+                {
+                    _currentWeather.CatchId = catchId;
+                    await _weatherService.UpdateWeatherForCatchAsync(_currentWeather);
+                }
+
                 await DisplayAlertAsync("Succès", "Votre capture a été enregistrée !", "OK");
             }
 

@@ -24,6 +24,7 @@ namespace FishingSpot.Services
             await _database.CreateTableAsync<FishCatch>();
             await _database.CreateTableAsync<FishingMaterial>();
             await _database.CreateTableAsync<FishingSetup>();
+            await _database.CreateTableAsync<WeatherData>();
 
             _isInitialized = true;
         }
@@ -178,6 +179,30 @@ namespace FishingSpot.Services
                 selectedSetup.IsActive = true;
                 await _database.UpdateAsync(selectedSetup);
             }
+        }
+
+        #endregion
+
+        #region WeatherData Operations
+
+        public async Task<int> AddWeatherDataAsync(WeatherData weatherData)
+        {
+            await InitializeAsync();
+            return await _database.InsertAsync(weatherData);
+        }
+
+        public async Task<WeatherData?> GetWeatherDataByCatchIdAsync(int catchId)
+        {
+            await InitializeAsync();
+            return await _database.Table<WeatherData>()
+                .Where(w => w.CatchId == catchId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<int> UpdateWeatherDataAsync(WeatherData weatherData)
+        {
+            await InitializeAsync();
+            return await _database.UpdateAsync(weatherData);
         }
 
         #endregion

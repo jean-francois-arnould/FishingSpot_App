@@ -19,6 +19,18 @@
             Icon="fish.png"
             ContentTemplate="{DataTemplate views:MyCatchesPage}"
             Route="MyCatchesPage" />
+
+        <ShellContent
+            Title="Calendrier"
+            Icon="calendar.png"
+            ContentTemplate="{DataTemplate views:CalendarPage}"
+            Route="CalendarPage" />
+
+        <ShellContent
+            Title="Statistiques"
+            Icon="chart.png"
+            ContentTemplate="{DataTemplate views:StatisticsPage}"
+            Route="StatisticsPage" />
     </TabBar>
 
 </Shell>

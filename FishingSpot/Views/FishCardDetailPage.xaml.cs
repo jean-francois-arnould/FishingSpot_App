@@ -8,6 +8,8 @@ namespace FishingSpot.Views
     {
         private readonly DatabaseService _databaseService;
         private readonly MaterialService _materialService;
+        private readonly SocialShareService _socialShareService;
+        private readonly WeatherService _weatherService;
         private int _fishCatchId;
         private FishCatch? _currentFishCatch;
 
@@ -21,11 +23,14 @@ namespace FishingSpot.Views
             }
         }
 
-        public FishCardDetailPage(DatabaseService databaseService, MaterialService materialService)
+        public FishCardDetailPage(DatabaseService databaseService, MaterialService materialService, 
+            SocialShareService socialShareService, WeatherService weatherService)
         {
             InitializeComponent();
             _databaseService = databaseService;
             _materialService = materialService;
+            _socialShareService = socialShareService;
+            _weatherService = weatherService;
         }
 
         private void LoadFishDetails()
@@ -66,8 +71,23 @@ namespace FishingSpot.Views
                     PhotoPlaceholder.IsVisible = false;
                 }
 
+                // Charger et afficher la météo si disponible
+                LoadWeatherInfo();
+
                 // Afficher le matériel utilisé
                 // LoadMaterialInfo(); // Temporairement commenté jusqu'à la résolution des erreurs XAML
+            }
+        }
+
+        private async void LoadWeatherInfo()
+        {
+            if (_currentFishCatch == null) return;
+
+            var weather = await _weatherService.GetWeatherForCatchAsync(_currentFishCatch.Id);
+            if (weather != null)
+            {
+                // Afficher les informations météo (vous pouvez créer des labels dans le XAML pour cela)
+                System.Diagnostics.Debug.WriteLine($"Weather for catch: {weather.Temperature}°C, {weather.Description}");
             }
         }
 
@@ -158,6 +178,18 @@ namespace FishingSpot.Views
         private async void OnCloseClicked(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("..");
+        }
+
+        private async void OnShareClicked(object sender, EventArgs e)
+        {
+            if (_currentFishCatch != null)
+            {
+                var success = await _socialShareService.ShareCatchAsync(_currentFishCatch, _currentFishCatch.PhotoPath);
+                if (!success)
+                {
+                    await DisplayAlert("Erreur", "Impossible de partager la capture", "OK");
+                }
+            }
         }
     }
 }

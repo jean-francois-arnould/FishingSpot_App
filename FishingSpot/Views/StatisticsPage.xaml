@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="FishingSpot.Views.StatisticsPage"
+             Title="Statistiques">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <!-- Statistiques générales -->
+            <Frame BackgroundColor="{StaticResource Primary}" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Statistiques Générales" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="White"/>
+
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
+                          ColumnDefinitions="*,*" 
+                          RowSpacing="5">
+
+                        <Label Grid.Row="0" Grid.Column="0" Text="Total captures:" TextColor="White"/>
+                        <Label Grid.Row="0" Grid.Column="1" x:Name="TotalCatchesLabel" 
+                               Text="0" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="End"/>
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Poids total:" TextColor="White"/>
+                        <Label Grid.Row="1" Grid.Column="1" x:Name="TotalWeightLabel" 
+                               Text="0 kg" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="End"/>
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Poids moyen:" TextColor="White"/>
+                        <Label Grid.Row="2" Grid.Column="1" x:Name="AverageWeightLabel" 
+                               Text="0 kg" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="End"/>
+
+                        <Label Grid.Row="3" Grid.Column="0" Text="Taille moyenne:" TextColor="White"/>
+                        <Label Grid.Row="3" Grid.Column="1" x:Name="AverageLengthLabel" 
+                               Text="0 cm" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="End"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Records -->
+            <Frame BorderColor="{StaticResource Primary}" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Records" 
+                           FontSize="18" 
+                           FontAttributes="Bold"/>
+
+                    <Label x:Name="BiggestFishLabel" Text="Plus gros poisson: -" FontSize="14"/>
+                    <Label x:Name="LongestFishLabel" Text="Plus long poisson: -" FontSize="14"/>
+                    <Label x:Name="MostCaughtFishLabel" Text="Poisson le plus pêché: -" FontSize="14"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Graphique captures par mois -->
+            <Frame BorderColor="{StaticResource Primary}" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Captures par Mois" 
+                           FontSize="18" 
+                           FontAttributes="Bold"/>
+                    <skia:SKCanvasView x:Name="MonthlyChartView"
+                                       HeightRequest="200"
+                                       PaintSurface="OnMonthlyChartPaintSurface"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Graphique captures par poisson -->
+            <Frame BorderColor="{StaticResource Primary}" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Répartition par Poisson" 
+                           FontSize="18" 
+                           FontAttributes="Bold"/>
+                    <skia:SKCanvasView x:Name="FishChartView"
+                                       HeightRequest="200"
+                                       PaintSurface="OnFishChartPaintSurface"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Top lieux de pêche -->
+            <Frame BorderColor="{StaticResource Primary}" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Top Lieux de Pêche" 
+                           FontSize="18" 
+                           FontAttributes="Bold"/>
+                    <CollectionView x:Name="LocationsCollectionView">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="5" ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0" Text="{Binding Name}"/>
+                                    <Label Grid.Column="1" Text="{Binding Count}" 
+                                           FontAttributes="Bold"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Boutons d'export -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Grid.Column="0" 
+                        Text="Exporter CSV" 
+                        Clicked="OnExportCsvClicked"
+                        BackgroundColor="{StaticResource Primary}"/>
+                <Button Grid.Column="1" 
+                        Text="Exporter PDF" 
+                        Clicked="OnExportPdfClicked"
+                        BackgroundColor="{StaticResource Primary}"/>
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

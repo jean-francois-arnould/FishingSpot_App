@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using FishingSpot.Services;
 using FishingSpot.Views;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace FishingSpot
 {
@@ -11,6 +12,7 @@ namespace FishingSpot
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseSkiaSharp()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -23,8 +25,13 @@ namespace FishingSpot
 
             // Enregistrement des services
             builder.Services.AddSingleton<DatabaseService>();
+            builder.Services.AddSingleton<SQLiteDatabaseService>();
             builder.Services.AddSingleton<MaterialService>();
             builder.Services.AddSingleton<SetupService>();
+            builder.Services.AddSingleton<WeatherService>();
+            builder.Services.AddSingleton<ExportService>();
+            builder.Services.AddSingleton<StatisticsService>();
+            builder.Services.AddSingleton<SocialShareService>();
 
             // Enregistrement des pages
             builder.Services.AddTransient<FishDocumentationPage>();
@@ -36,6 +43,8 @@ namespace FishingSpot
             builder.Services.AddTransient<MaterialManagementPage>();
             builder.Services.AddTransient<AddSetupPage>();
             builder.Services.AddTransient<SelectSetupPage>();
+            builder.Services.AddTransient<StatisticsPage>();
+            builder.Services.AddTransient<CalendarPage>();
 
             return builder.Build();
         }
