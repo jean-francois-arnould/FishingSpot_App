@@ -4,9 +4,6 @@ Application mobile de gestion de pêche développée avec .NET MAUI pour iOS et 
 
 ## Fonctionnalités
 
-### 📚 Documentation Poissons
-- Guide détaillé de 7 espèces de poissons populaires
-- Informations sur l'habitat, les appâts recommandés, et les tailles moyennes
 
 ### 🐟 Mes Poissons
 - Liste de toutes vos prises de pêche
