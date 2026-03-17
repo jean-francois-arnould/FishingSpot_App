@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:FishingSpot.Converters"
+             x:Class="FishingSpot.Views.MyCatchesPage"
+             Title="Mes Poissons">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Barre de recherche -->
+        <SearchBar Grid.Row="0"
+                   x:Name="SearchBar"
+                   Placeholder="Rechercher par nom..."
+                   TextChanged="OnSearchTextChanged"
+                   Margin="10,10,10,0"/>
+
+        <!-- Options de tri et filtres -->
+        <Grid Grid.Row="1" 
+              ColumnDefinitions="*,Auto"
+              Margin="10,5"
+              ColumnSpacing="10">
+
+            <!-- Picker pour le tri -->
+            <Frame Grid.Column="0" 
+                   Padding="5"
+                   CornerRadius="8"
+                   HasShadow="False"
+                   BorderColor="LightGray">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="5">
+                    <Label Grid.Column="0" 
+                           Text="Trier par:"
+                           VerticalOptions="Center"
+                           FontSize="12"/>
+                    <Picker Grid.Column="1"
+                            x:Name="SortPicker"
+                            SelectedIndexChanged="OnSortChanged"
+                            FontSize="12">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>Date (recent)</x:String>
+                                <x:String>Date (ancien)</x:String>
+                                <x:String>Nom (A-Z)</x:String>
+                                <x:String>Nom (Z-A)</x:String>
+                                <x:String>Taille (croissant)</x:String>
+                                <x:String>Taille (decroissant)</x:String>
+                                <x:String>Poids (croissant)</x:String>
+                                <x:String>Poids (decroissant)</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+                </Grid>
+            </Frame>
+
+            <!-- Bouton Filtres -->
+            <Button Grid.Column="1"
+                    Text="Filtres"
+                    Clicked="OnFiltersClicked"
+                    BackgroundColor="#2196F3"
+                    TextColor="White"
+                    CornerRadius="8"
+                    FontSize="12"
+                    Padding="15,5"/>
+        </Grid>
+
+        <!-- Liste des captures -->
+        <CollectionView Grid.Row="2"
+                        x:Name="CatchesCollectionView"
+                        Margin="10"
+                        SelectionMode="Single"
+                        SelectionChanged="OnCatchSelected">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="10">
+                    <Label Text="Aucune capture enregistree"
+                           FontSize="18"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Ajoutez votre premiere prise !"
+                           FontSize="14"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Supprimer"
+                                          BackgroundColor="Red"
+                                          Clicked="OnDeleteSwipe"/>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <!-- Nouvelle carte compacte avec miniature -->
+                        <Frame Margin="10,5"
+                               Padding="0"
+                               CornerRadius="15"
+                               HasShadow="True"
+                               BorderColor="#FFD700"
+                               BackgroundColor="White">
+                            
+                            <Grid ColumnDefinitions="120,*" 
+                                  Padding="10"
+                                  ColumnSpacing="12">
+                                
+                                <!-- Photo miniature -->
+                                <Frame Grid.Column="0"
+                                       Padding="0"
+                                       CornerRadius="12"
+                                       IsClippedToBounds="True"
+                                       HasShadow="False"
+                                       BackgroundColor="#E8F4F8"
+                                       HeightRequest="100"
+                                       WidthRequest="100"
+                                       VerticalOptions="Center">
+                                    <Grid>
+                                        <Label Text="🐟"
+                                               FontSize="40"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"
+                                               TextColor="#4A90E2"/>
+                                        <Image Source="{Binding PhotoPath}"
+                                               Aspect="AspectFill"
+                                               IsVisible="{Binding PhotoPath, Converter={StaticResource StringNotEmptyConverter}}"/>
+                                    </Grid>
+                                </Frame>
+
+                                <!-- Informations principales -->
+                                <VerticalStackLayout Grid.Column="1" 
+                                                     Spacing="8"
+                                                     VerticalOptions="Center">
+                                    
+                                    <!-- Nom du poisson -->
+                                    <Label Text="{Binding FishName}"
+                                           FontSize="20"
+                                           FontAttributes="Bold"
+                                           TextColor="#2C3E50"
+                                           LineBreakMode="TailTruncation"/>
+                                    
+                                    <!-- Taille et Poids sur la même ligne -->
+                                    <HorizontalStackLayout Spacing="15">
+                                        <Frame Padding="8,4"
+                                               CornerRadius="8"
+                                               BackgroundColor="#FFE8A3"
+                                               HasShadow="False">
+                                            <Label FontSize="14"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#D4A574">
+                                                <Label.Text>
+                                                    <Binding Path="Length" StringFormat="📏 {0:F1} cm"/>
+                                                </Label.Text>
+                                            </Label>
+                                        </Frame>
+
+                                        <Frame Padding="8,4"
+                                               CornerRadius="8"
+                                               BackgroundColor="#FFB3BA"
+                                               HasShadow="False">
+                                            <Label FontSize="14"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#D4747A">
+                                                <Label.Text>
+                                                    <Binding Path="Weight" StringFormat="⚖️ {0:F2} kg"/>
+                                                </Label.Text>
+                                            </Label>
+                                        </Frame>
+                                    </HorizontalStackLayout>
+
+                                    <!-- Date -->
+                                    <Label FontSize="12"
+                                           TextColor="Gray">
+                                        <Label.Text>
+                                            <Binding Path="CatchDate" StringFormat="📅 {0:dd/MM/yyyy}"/>
+                                        </Label.Text>
+                                    </Label>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Bouton Ajouter -->
+        <Button Grid.Row="3"
+                Text="Ajouter une Capture"
+                Clicked="OnAddCatchClicked"
+                BackgroundColor="#4CAF50"
+                TextColor="White"
+                Margin="20,10"
+                CornerRadius="8"
+                HeightRequest="50"/>
+    </Grid>
+
+</ContentPage>

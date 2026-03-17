@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- ========================================
+         STYLES MODERNES - FISHINGSPOT
+         Design moderne et dynamique
+    ========================================= -->
+
+    <!-- ===== BUTTONS ===== -->
+
+    <!-- Bouton principal moderne -->
+    <Style x:Key="ModernButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="{StaticResource TextOnPrimary}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="24,14" />
+        <Setter Property="Shadow">
+            <Shadow Brush="{StaticResource Primary}"
+                    Opacity="0.3"
+                    Radius="15"
+                    Offset="0,4" />
+        </Setter>
+    </Style>
+
+    <!-- Bouton secondaire -->
+    <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+        <Setter Property="BackgroundColor" Value="{StaticResource Secondary}" />
+        <Setter Property="Shadow">
+            <Shadow Brush="{StaticResource Secondary}"
+                    Opacity="0.3"
+                    Radius="15"
+                    Offset="0,4" />
+        </Setter>
+    </Style>
+
+    <!-- Bouton outline -->
+    <Style x:Key="OutlineButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{StaticResource Primary}" />
+        <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+        <Setter Property="BorderWidth" Value="2" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="24,12" />
+    </Style>
+
+    <!-- Bouton icône circulaire -->
+    <Style x:Key="CircleIconButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="CornerRadius" Value="30" />
+        <Setter Property="WidthRequest" Value="60" />
+        <Setter Property="HeightRequest" Value="60" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Shadow">
+            <Shadow Brush="{StaticResource Shadow}"
+                    Opacity="0.2"
+                    Radius="20"
+                    Offset="0,6" />
+        </Setter>
+    </Style>
+
+    <!-- ===== FRAMES / CARDS ===== -->
+
+    <!-- Carte moderne avec ombre -->
+    <Style x:Key="ModernCard" TargetType="Frame">
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="BorderColor" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="HasShadow" Value="False" />
+        <Setter Property="Shadow">
+            <Shadow Brush="{StaticResource Shadow}"
+                    Opacity="0.08"
+                    Radius="20"
+                    Offset="0,4" />
+        </Setter>
+    </Style>
+
+    <!-- Carte avec gradient -->
+    <Style x:Key="GradientCard" TargetType="Frame" BasedOn="{StaticResource ModernCard}">
+        <Setter Property="Background" Value="{StaticResource OceanGradient}" />
+    </Style>
+
+    <!-- Carte cliquable -->
+    <Style x:Key="ClickableCard" TargetType="Frame" BasedOn="{StaticResource ModernCard}">
+        <Setter Property="Shadow">
+            <Shadow Brush="{StaticResource Shadow}"
+                    Opacity="0.12"
+                    Radius="25"
+                    Offset="0,6" />
+        </Setter>
+    </Style>
+
+    <!-- Badge/Pill -->
+    <Style x:Key="Badge" TargetType="Frame">
+        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryLight}" />
+        <Setter Property="BorderColor" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="HasShadow" Value="False" />
+    </Style>
+
+    <!-- ===== LABELS ===== -->
+
+    <!-- Titre de page -->
+    <Style x:Key="PageTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+
+    <!-- Titre de section -->
+    <Style x:Key="SectionTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="Margin" Value="0,10,0,8" />
+    </Style>
+
+    <!-- Sous-titre -->
+    <Style x:Key="Subtitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+    </Style>
+
+    <!-- Caption -->
+    <Style x:Key="Caption" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{StaticResource TextTertiary}" />
+    </Style>
+
+    <!-- Label avec emoji -->
+    <Style x:Key="EmojiLabel" TargetType="Label">
+        <Setter Property="FontSize" Value="40" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <!-- ===== ENTRIES ===== -->
+
+    <!-- Entry moderne -->
+    <Style x:Key="ModernEntry" TargetType="Entry">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextTertiary}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="Margin" Value="0,5" />
+    </Style>
+
+    <!-- Editor moderne -->
+    <Style x:Key="ModernEditor" TargetType="Editor">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextTertiary}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="Margin" Value="0,5" />
+        <Setter Property="MinimumHeightRequest" Value="100" />
+    </Style>
+
+    <!-- Container pour entry avec border -->
+    <Style x:Key="EntryContainer" TargetType="Border">
+        <Setter Property="Stroke" Value="{StaticResource Border}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="Padding" Value="15,0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+    </Style>
+
+    <!-- ===== PICKERS ===== -->
+
+    <!-- Picker moderne -->
+    <Style x:Key="ModernPicker" TargetType="Picker">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="TitleColor" Value="{StaticResource TextTertiary}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+    </Style>
+
+    <!-- ===== PAGES ===== -->
+
+    <!-- Page de base -->
+    <Style x:Key="BasePage" TargetType="ContentPage">
+        <Setter Property="BackgroundColor" Value="{StaticResource Background}" />
+    </Style>
+
+    <!-- ===== LAYOUTS ===== -->
+
+    <!-- Container principal de page -->
+    <Style x:Key="PageContainer" TargetType="ScrollView">
+        <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <!-- Section avec background -->
+    <Style x:Key="Section" TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="12" />
+        <Setter Property="Margin" Value="0,10" />
+    </Style>
+
+    <!-- ===== IMAGES ===== -->
+
+    <!-- Avatar circulaire -->
+    <Style x:Key="Avatar" TargetType="Frame">
+        <Setter Property="CornerRadius" Value="60" />
+        <Setter Property="WidthRequest" Value="120" />
+        <Setter Property="HeightRequest" Value="120" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="IsClippedToBounds" Value="True" />
+        <Setter Property="BorderColor" Value="{StaticResource Border}" />
+        <Setter Property="HasShadow" Value="False" />
+        <Setter Property="Shadow">
+            <Shadow Brush="{StaticResource Shadow}"
+                    Opacity="0.15"
+                    Radius="15"
+                    Offset="0,5" />
+        </Setter>
+    </Style>
+
+    <!-- ===== HEADERS ===== -->
+
+    <!-- Header de section pliable -->
+    <Style x:Key="CollapsibleHeader" TargetType="Frame">
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="BorderColor" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,5" />
+        <Setter Property="HasShadow" Value="False" />
+        <Setter Property="Shadow">
+            <Shadow Brush="{StaticResource Shadow}"
+                    Opacity="0.06"
+                    Radius="12"
+                    Offset="0,2" />
+        </Setter>
+    </Style>
+
+    <!-- ===== DIVIDERS ===== -->
+
+    <!-- Séparateur -->
+    <Style x:Key="Divider" TargetType="BoxView">
+        <Setter Property="HeightRequest" Value="1" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Border}" />
+        <Setter Property="Margin" Value="0,15" />
+    </Style>
+
+    <!-- ===== ACTIVITY INDICATORS ===== -->
+
+    <Style TargetType="ActivityIndicator">
+        <Setter Property="Color" Value="{StaticResource Primary}" />
+    </Style>
+
+</ResourceDictionary>

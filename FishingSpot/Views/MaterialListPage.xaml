@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FishingSpot.Views.MaterialListPage"
+             Title="Mon Materiel">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Filtres par type -->
+        <HorizontalScrollView Grid.Row="0" Margin="10">
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="Tous"
+                        Clicked="OnFilterAll"
+                        BackgroundColor="#4A90E2"
+                        TextColor="White"
+                        CornerRadius="15"
+                        Padding="15,8"/>
+                <Button Text="Cannes"
+                        Clicked="OnFilterCanne"
+                        BackgroundColor="#FFE8A3"
+                        TextColor="#8B7355"
+                        CornerRadius="15"
+                        Padding="15,8"/>
+                <Button Text="Fils"
+                        Clicked="OnFilterFil"
+                        BackgroundColor="#FFB3BA"
+                        TextColor="#8B4555"
+                        CornerRadius="15"
+                        Padding="15,8"/>
+                <Button Text="Bas de ligne"
+                        Clicked="OnFilterBasDeLigne"
+                        BackgroundColor="#E3F2E1"
+                        TextColor="#4A7C59"
+                        CornerRadius="15"
+                        Padding="15,8"/>
+                <Button Text="Appats/Leurres"
+                        Clicked="OnFilterAppAt"
+                        BackgroundColor="#E1E8F2"
+                        TextColor="#3D5A7C"
+                        CornerRadius="15"
+                        Padding="15,8"/>
+            </HorizontalStackLayout>
+        </HorizontalScrollView>
+
+        <!-- Liste du matériel -->
+        <CollectionView Grid.Row="1"
+                        x:Name="MaterialCollectionView"
+                        Margin="10"
+                        SelectionMode="Single"
+                        SelectionChanged="OnMaterialSelected">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="10">
+                    <Label Text="Aucun materiel enregistre"
+                           FontSize="18"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Ajoutez votre premier equipement !"
+                           FontSize="14"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="5"
+                           Padding="15"
+                           CornerRadius="15"
+                           HasShadow="True"
+                           BackgroundColor="White">
+                        <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+
+                            <!-- Nom et type -->
+                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="#4A90E2"/>
+                                <Frame Grid.Column="1"
+                                       Padding="8,4"
+                                       CornerRadius="10"
+                                       BackgroundColor="#FFE8A3"
+                                       HasShadow="False">
+                                    <Label Text="{Binding Type}"
+                                           FontSize="10"
+                                           TextColor="#8B7355"
+                                           FontAttributes="Bold"/>
+                                </Frame>
+                            </Grid>
+
+                            <!-- Marque -->
+                            <Label Grid.Row="1"
+                                   Text="{Binding Brand}"
+                                   FontSize="14"
+                                   TextColor="#666"/>
+
+                            <!-- Détails -->
+                            <Label Grid.Row="2"
+                                   FontSize="12"
+                                   TextColor="#999">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Length}"/>
+                                        <Span Text="{Binding Strength}"/>
+                                        <Span Text="{Binding Color}"/>
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Bouton Ajouter -->
+        <Button Grid.Row="2"
+                Text="Ajouter du Materiel"
+                Clicked="OnAddMaterialClicked"
+                BackgroundColor="#4CAF50"
+                TextColor="White"
+                Margin="20,10"
+                CornerRadius="8"
+                HeightRequest="50"/>
+    </Grid>
+
+</ContentPage>

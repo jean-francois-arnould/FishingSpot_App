@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FishingSpot.Views.AddSetupPage"
+             Title="Nouveau Setup">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="✕"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnCancelClicked" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="20" Spacing="15">
+
+                <Label Text="Informations du Setup"
+                       FontSize="18"
+                       FontAttributes="Bold"/>
+
+                <Entry x:Name="NameEntry"
+                       Placeholder="Nom du setup (ex: Setup Carnassiers)"
+                       PlaceholderColor="Gray"/>
+
+                <Editor x:Name="DescriptionEditor"
+                        Placeholder="Description (optionnel)"
+                        HeightRequest="80"
+                        AutoSize="TextChanges"/>
+
+                <Label Text="Composition du Setup"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       Margin="0,20,0,0"/>
+
+                <Label Text="Canne"
+                       FontSize="14"/>
+                <Picker x:Name="CannePicker"
+                        Title="Choisir une canne"/>
+
+                <Label Text="Fil"
+                       FontSize="14"/>
+                <Picker x:Name="FilPicker"
+                        Title="Choisir un fil"/>
+
+                <Label Text="Bas de ligne"
+                       FontSize="14"/>
+                <Picker x:Name="BasDeLignePicker"
+                        Title="Choisir un bas de ligne"/>
+
+                <Label Text="Appât ou Leurre"
+                       FontSize="14"/>
+                <Picker x:Name="AppAtPicker"
+                        Title="Choisir un appât/leurre"/>
+
+                <Label Text="Notes (optionnel)"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       Margin="0,20,0,0"/>
+
+                <Editor x:Name="NotesEditor"
+                        Placeholder="Notes sur ce setup..."
+                        HeightRequest="100"
+                        AutoSize="TextChanges"/>
+
+                <CheckBox x:Name="IsActiveCheckBox"
+                          IsChecked="False"/>
+                <Label Text="Définir comme setup actif"
+                       VerticalOptions="Center"
+                       Margin="-10,0,0,0"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Boutons en bas -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*"
+              ColumnSpacing="10"
+              Padding="20,10"
+              BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}">
+
+            <Button Grid.Column="0"
+                    Text="Cancel"
+                    Clicked="OnCancelClicked"
+                    BackgroundColor="#E0E0E0"
+                    TextColor="Black"
+                    CornerRadius="8"
+                    HeightRequest="50"/>
+
+            <Button Grid.Column="1"
+                    Text="Save"
+                    Clicked="OnSaveClicked"
+                    BackgroundColor="#4CAF50"
+                    TextColor="White"
+                    CornerRadius="8"
+                    HeightRequest="50"/>
+        </Grid>
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:FishingSpot.Converters"
+             x:Class="FishingSpot.Views.MaterialManagementPage"
+             Style="{StaticResource BasePage}"
+             Title="Mon Matériel">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView Style="{StaticResource PageContainer}">
+        <VerticalStackLayout Spacing="20">
+
+            <!-- En-tête de page avec gradient -->
+            <Frame Background="{StaticResource OceanGradient}"
+                   CornerRadius="24"
+                   Padding="24"
+                   HasShadow="False"
+                   Shadow="{Shadow Brush={StaticResource Shadow}, Opacity=0.15, Radius=25, Offset='0,8'}">
+                <VerticalStackLayout Spacing="15">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="🎣" FontSize="36"/>
+                        <Label Text="SETUP ACTUEL"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="24"
+                               TextColor="White"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
+                    <BoxView HeightRequest="1" BackgroundColor="#FFFFFF40"/>
+
+                    <VerticalStackLayout Spacing="8">
+                        <Label x:Name="ActiveSetupName"
+                               Text="Setup Carnassiers"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="20"
+                               TextColor="White"/>
+                        <Label x:Name="ActiveSetupSummary"
+                               Text="🎣 Spinning Pro | 🧵 PowerPro | 🔗 Fluoro | 🐟 Rapala"
+                               FontFamily="OpenSansRegular"
+                               FontSize="14"
+                               TextColor="#E0F7FA"
+                               LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
+                        <Button Grid.Column="0"
+                                Text="✏️ Modifier"
+                                Clicked="OnEditActiveSetupClicked"
+                                Style="{StaticResource OutlineButton}"
+                                TextColor="White"
+                                BorderColor="White"/>
+                        <Button Grid.Column="1"
+                                Text="🔄 Changer"
+                                Clicked="OnChangeSetupClicked"
+                                BackgroundColor="White"
+                                TextColor="{StaticResource Primary}"
+                                Style="{StaticResource ModernButton}"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Tous les Setups -->
+            <VerticalStackLayout Spacing="12">
+                <Frame Style="{StaticResource CollapsibleHeader}"
+                       BackgroundColor="{StaticResource CardSetup}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSetupsHeaderTapped"/>
+                    </Frame.GestureRecognizers>
+                    <Grid Padding="18" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Label Grid.Column="0"
+                               Text="📦"
+                               FontSize="28"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="MES SETUPS"
+                               Style="{StaticResource SectionTitle}"
+                               VerticalOptions="Center"
+                               Margin="12,0,0,0"/>
+                        <Label Grid.Column="2"
+                               Text="▼"
+                               FontSize="16"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center"
+                               Margin="0,0,8,0"/>
+                        <Button Grid.Column="3"
+                                Text="+"
+                                Clicked="OnAddSetupClicked"
+                                Style="{StaticResource CircleIconButton}"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                CornerRadius="25"
+                                FontSize="22"
+                                BackgroundColor="{StaticResource Tertiary}"/>
+                    </Grid>
+                </Frame>
+
+                <CollectionView x:Name="SetupsCollectionView"
+                                SelectionMode="None"
+                                IsVisible="False">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Style="{StaticResource ClickableCard}"
+                                   Margin="0,8"
+                                   BackgroundColor="{StaticResource CardSetup}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnSetupTapped"/>
+                                </Frame.GestureRecognizers>
+                                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="{Binding Name}"
+                                           FontFamily="OpenSansSemibold"
+                                           FontSize="18"
+                                           TextColor="{StaticResource TextPrimary}"/>
+                                    <Label Grid.Row="1" Grid.Column="0"
+                                           Text="{Binding Description}"
+                                           Style="{StaticResource Subtitle}"
+                                           Margin="0,4,0,0"/>
+                                    <Frame Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                                           Style="{StaticResource Badge}"
+                                           BackgroundColor="{StaticResource Success}"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding IsActive}">
+                                        <Label Text="✓ ACTIF"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="11"
+                                               TextColor="White"/>
+                                    </Frame>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Section Cannes -->
+            <VerticalStackLayout Spacing="12">
+                <Frame Style="{StaticResource CollapsibleHeader}"
+                       BackgroundColor="{StaticResource CardCanne}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCannesHeaderTapped"/>
+                    </Frame.GestureRecognizers>
+                    <Grid Padding="18" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Label Grid.Column="0"
+                               Text="🎣"
+                               FontSize="28"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="CANNES"
+                               Style="{StaticResource SectionTitle}"
+                               VerticalOptions="Center"
+                               Margin="12,0,0,0"/>
+                        <Label Grid.Column="2"
+                               Text="▼"
+                               FontSize="16"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center"
+                               Margin="0,0,8,0"/>
+                        <Button Grid.Column="3"
+                                Text="+"
+                                Clicked="OnAddCanneClicked"
+                                Style="{StaticResource CircleIconButton}"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                CornerRadius="25"
+                                FontSize="22"
+                                BackgroundColor="#F97316"/>
+                    </Grid>
+                </Frame>
+
+                <CollectionView x:Name="CannesCollectionView"
+                                SelectionMode="None"
+                                IsVisible="False">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Style="{StaticResource ClickableCard}"
+                                   Margin="0,6"
+                                   BackgroundColor="{StaticResource CardCanne}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMaterialTapped"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Frame Grid.Column="0"
+                                           WidthRequest="50"
+                                           HeightRequest="50"
+                                           CornerRadius="25"
+                                           Padding="0"
+                                           BackgroundColor="#F97316"
+                                           VerticalOptions="Start"
+                                           HasShadow="False">
+                                        <Label Text="🎣"
+                                               FontSize="24"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="4" Margin="15,0,0,0">
+                                        <Label Text="{Binding Name}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="16"
+                                               TextColor="{StaticResource TextPrimary}"/>
+                                        <Label Text="{Binding Brand}"
+                                               Style="{StaticResource Subtitle}"/>
+                                        <Label Text="{Binding Length}"
+                                               Style="{StaticResource Caption}"
+                                               IsVisible="{Binding Length, Converter={StaticResource StringNotEmptyConverter}}"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Section Fils -->
+            <VerticalStackLayout Spacing="12">
+                <Frame Style="{StaticResource CollapsibleHeader}"
+                       BackgroundColor="{StaticResource CardFil}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFilsHeaderTapped"/>
+                    </Frame.GestureRecognizers>
+                    <Grid Padding="18" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Label Grid.Column="0"
+                               Text="🧵"
+                               FontSize="28"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="FILS"
+                               Style="{StaticResource SectionTitle}"
+                               VerticalOptions="Center"
+                               Margin="12,0,0,0"/>
+                        <Label Grid.Column="2"
+                               Text="▼"
+                               FontSize="16"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center"
+                               Margin="0,0,8,0"/>
+                        <Button Grid.Column="3"
+                                Text="+"
+                                Clicked="OnAddFilClicked"
+                                Style="{StaticResource CircleIconButton}"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                CornerRadius="25"
+                                FontSize="22"
+                                BackgroundColor="{StaticResource Secondary}"/>
+                    </Grid>
+                </Frame>
+
+                <CollectionView x:Name="FilsCollectionView"
+                                SelectionMode="None"
+                                IsVisible="False">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Style="{StaticResource ClickableCard}"
+                                   Margin="0,6"
+                                   BackgroundColor="{StaticResource CardFil}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMaterialTapped"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Frame Grid.Column="0"
+                                           WidthRequest="50"
+                                           HeightRequest="50"
+                                           CornerRadius="25"
+                                           Padding="0"
+                                           BackgroundColor="{StaticResource Secondary}"
+                                           VerticalOptions="Start"
+                                           HasShadow="False">
+                                        <Label Text="🧵"
+                                               FontSize="24"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="4" Margin="15,0,0,0">
+                                        <Label Text="{Binding Name}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="16"
+                                               TextColor="{StaticResource TextPrimary}"/>
+                                        <Label Text="{Binding Brand}"
+                                               Style="{StaticResource Subtitle}"/>
+                                        <Label Text="{Binding Strength}"
+                                               Style="{StaticResource Caption}"
+                                               IsVisible="{Binding Strength, Converter={StaticResource StringNotEmptyConverter}}"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Section Bas de Ligne -->
+            <VerticalStackLayout Spacing="12">
+                <Frame Style="{StaticResource CollapsibleHeader}"
+                       BackgroundColor="{StaticResource CardBasLigne}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBasDeLigneHeaderTapped"/>
+                    </Frame.GestureRecognizers>
+                    <Grid Padding="18" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Label Grid.Column="0"
+                               Text="🔗"
+                               FontSize="28"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="BAS DE LIGNE"
+                               Style="{StaticResource SectionTitle}"
+                               VerticalOptions="Center"
+                               Margin="12,0,0,0"/>
+                        <Label Grid.Column="2"
+                               Text="▼"
+                               FontSize="16"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center"
+                               Margin="0,0,8,0"/>
+                        <Button Grid.Column="3"
+                                Text="+"
+                                Clicked="OnAddBasDeLigneClicked"
+                                Style="{StaticResource CircleIconButton}"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                CornerRadius="25"
+                                FontSize="22"
+                                BackgroundColor="{StaticResource Info}"/>
+                    </Grid>
+                </Frame>
+
+                <CollectionView x:Name="BasDeLigneCollectionView"
+                                SelectionMode="None"
+                                IsVisible="False">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Style="{StaticResource ClickableCard}"
+                                   Margin="0,6"
+                                   BackgroundColor="{StaticResource CardBasLigne}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMaterialTapped"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Frame Grid.Column="0"
+                                           WidthRequest="50"
+                                           HeightRequest="50"
+                                           CornerRadius="25"
+                                           Padding="0"
+                                           BackgroundColor="{StaticResource Info}"
+                                           VerticalOptions="Start"
+                                           HasShadow="False">
+                                        <Label Text="🔗"
+                                               FontSize="24"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="4" Margin="15,0,0,0">
+                                        <Label Text="{Binding Name}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="16"
+                                               TextColor="{StaticResource TextPrimary}"/>
+                                        <Label Text="{Binding Brand}"
+                                               Style="{StaticResource Subtitle}"/>
+                                        <Label Text="{Binding Strength}"
+                                               Style="{StaticResource Caption}"
+                                               IsVisible="{Binding Strength, Converter={StaticResource StringNotEmptyConverter}}"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Section Appâts/Leurres -->
+            <VerticalStackLayout Spacing="12">
+                <Frame Style="{StaticResource CollapsibleHeader}"
+                       BackgroundColor="{StaticResource CardAppat}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAppatsHeaderTapped"/>
+                    </Frame.GestureRecognizers>
+                    <Grid Padding="18" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Label Grid.Column="0"
+                               Text="🐟"
+                               FontSize="28"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="APPÂTS ET LEURRES"
+                               Style="{StaticResource SectionTitle}"
+                               VerticalOptions="Center"
+                               Margin="12,0,0,0"/>
+                        <Label Grid.Column="2"
+                               Text="▼"
+                               FontSize="16"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center"
+                               Margin="0,0,8,0"/>
+                        <Button Grid.Column="3"
+                                Text="+"
+                                Clicked="OnAddAppAtClicked"
+                                Style="{StaticResource CircleIconButton}"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                CornerRadius="25"
+                                FontSize="22"
+                                BackgroundColor="{StaticResource Accent}"/>
+                    </Grid>
+                </Frame>
+
+                <CollectionView x:Name="AppatsCollectionView"
+                                SelectionMode="None"
+                                IsVisible="False">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Style="{StaticResource ClickableCard}"
+                                   Margin="0,6"
+                                   BackgroundColor="{StaticResource CardAppat}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMaterialTapped"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Frame Grid.Column="0"
+                                           WidthRequest="50"
+                                           HeightRequest="50"
+                                           CornerRadius="25"
+                                           Padding="0"
+                                           BackgroundColor="{StaticResource Accent}"
+                                           VerticalOptions="Start"
+                                           HasShadow="False">
+                                        <Label Text="🐟"
+                                               FontSize="24"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="4" Margin="15,0,0,0">
+                                        <Label Text="{Binding Name}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="16"
+                                               TextColor="{StaticResource TextPrimary}"/>
+                                        <Label Text="{Binding Brand}"
+                                               Style="{StaticResource Subtitle}"/>
+                                        <Label Text="{Binding Color}"
+                                               Style="{StaticResource Caption}"
+                                               IsVisible="{Binding Color, Converter={StaticResource StringNotEmptyConverter}}"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

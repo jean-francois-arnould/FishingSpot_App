@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FishingSpot.Views.SelectSetupPage"
+             Title="Choisir un Setup">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="✕"
+                     Order="Primary"
+                     Priority="0"
+                     Clicked="OnCloseClicked" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <Frame Grid.Row="0" 
+               Padding="20"
+               Margin="15,15,15,10"
+               CornerRadius="15"
+               BackgroundColor="#4CAF50"
+               HasShadow="True">
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Sélectionnez votre setup actif"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       HorizontalOptions="Center"/>
+                <Label Text="Le setup actif sera utilisé par défaut"
+                       FontSize="13"
+                       TextColor="#E8F5E9"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Liste des setups -->
+        <ScrollView Grid.Row="1" Padding="15,0,15,15">
+            <VerticalStackLayout x:Name="SetupsContainer" Spacing="20">
+                <!-- Les setups seront ajoutés ici dynamiquement -->
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>
