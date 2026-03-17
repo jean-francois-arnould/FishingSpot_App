@@ -1,0 +1,44 @@
+name: Deploy AltStore Source
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'altstore-source.json'
+      - 'publish/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Create deployment directory
+        run: |
+          mkdir -p deploy
+          cp altstore-source.json deploy/
+          if [ -d "publish/ios" ]; then
+            cp -r publish/ios/* deploy/
+          fi
+          if [ -d "assets" ]; then
+            cp -r assets/* deploy/
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './deploy'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
