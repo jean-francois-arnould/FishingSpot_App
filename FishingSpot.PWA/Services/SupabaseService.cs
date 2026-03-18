@@ -133,5 +133,191 @@ namespace FishingSpot.PWA.Services
                 return false;
             }
         }
+
+        // Fishing Setups Methods
+        public async Task<List<FishingSetup>> GetAllSetupsAsync()
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>("/rest/v1/fishing_setups?select=*&order=is_favorite.desc,created_at.desc");
+                return response ?? new List<FishingSetup>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting setups: {ex.Message}");
+                return new List<FishingSetup>();
+            }
+        }
+
+        public async Task<FishingSetup?> GetSetupByIdAsync(int id)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>($"/rest/v1/fishing_setups?id=eq.{id}&select=*");
+                return response?.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting setup: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<int> AddSetupAsync(FishingSetup setup)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                if (_authService.CurrentUser != null)
+                {
+                    setup.UserId = _authService.CurrentUser.Id;
+                }
+
+                setup.CreatedAt = DateTime.UtcNow;
+                var json = JsonSerializer.Serialize(setup);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _httpClient.DefaultRequestHeaders.Remove("Prefer");
+                _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
+
+                var response = await _httpClient.PostAsync("/rest/v1/fishing_setups", content);
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<List<FishingSetup>>();
+                return result?.FirstOrDefault()?.Id ?? 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding setup: {ex.Message}");
+                return 0;
+            }
+        }
+
+        public async Task<bool> UpdateSetupAsync(FishingSetup setup)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var json = JsonSerializer.Serialize(setup);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PatchAsync($"/rest/v1/fishing_setups?id=eq.{setup.Id}", content);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating setup: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteSetupAsync(int id)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"/rest/v1/fishing_setups?id=eq.{id}");
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting setup: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ============================================
+        // NOUVEAU : Gestion du setup actuel
+        // ============================================
+        public async Task<FishingSetup?> GetCurrentSetupAsync()
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>("/rest/v1/fishing_setups?is_current=eq.true&select=*");
+                return response?.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la récupération du setup actuel: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> SetCurrentSetupAsync(int setupId)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                // D'abord, désactiver tous les setups actuels
+                var allSetups = await GetAllSetupsAsync();
+                foreach (var setup in allSetups.Where(s => s.IsCurrent))
+                {
+                    setup.IsCurrent = false;
+                    await UpdateSetupAsync(setup);
+                }
+
+                // Ensuite, activer le setup sélectionné
+                var selectedSetup = await GetSetupByIdAsync(setupId);
+                if (selectedSetup != null)
+                {
+                    selectedSetup.IsCurrent = true;
+                    return await UpdateSetupAsync(selectedSetup);
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la définition du setup actuel: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ============================================
+        // NOUVEAU : Upload de photos vers Supabase Storage
+        // ============================================
+        public async Task<string?> UploadPhotoAsync(Stream photoStream, string fileName)
+        {
+            SetAuthHeaders();
+            try
+            {
+                // Créer un nom de fichier unique
+                var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
+                var filePath = $"catches/{uniqueFileName}";
+
+                // Préparer le contenu
+                using var content = new StreamContent(photoStream);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+
+                // Upload vers Supabase Storage
+                var response = await _httpClient.PostAsync($"/storage/v1/object/fishing-photos/{filePath}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Retourner l'URL publique
+                    var supabaseUrl = _httpClient.BaseAddress?.ToString().TrimEnd('/');
+                    return $"{supabaseUrl}/storage/v1/object/public/fishing-photos/{filePath}";
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Erreur upload photo: {errorContent}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de l'upload de la photo: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

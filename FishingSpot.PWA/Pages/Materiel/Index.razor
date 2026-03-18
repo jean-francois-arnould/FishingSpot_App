@@ -1,0 +1,201 @@
+@page "/materiel"
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Mon Matériel</PageTitle>
+
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/catches">Mes Prises</a>
+                <a class="nav-link" href="/setups">Montages</a>
+                <a class="nav-link active" href="/materiel">Matériel</a>
+                <a class="nav-link" href="/profile">Profil</a>
+            </div>
+            <div class="d-flex">
+                <span class="navbar-text me-3">
+                    👋 @AuthService.CurrentUser?.Email
+                </span>
+                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>🎣 Mon Matériel de Pêche</h1>
+        <p class="text-muted">Gérez votre équipement pour créer des montages personnalisés</p>
+
+        @if (isLoading)
+        {
+            <div class="text-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4 mt-3">
+                <!-- CANNES -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">🎣 Cannes</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">@rodsCount</h2>
+                            <p class="text-muted">Cannes enregistrées</p>
+                            <a href="/materiel/cannes" class="btn btn-primary w-100">
+                                Gérer mes cannes →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MOULINETS -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">🎡 Moulinets</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">@reelsCount</h2>
+                            <p class="text-muted">Moulinets enregistrés</p>
+                            <a href="/materiel/moulinets" class="btn btn-success w-100">
+                                Gérer mes moulinets →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILS -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">🧵 Fils</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">@linesCount</h2>
+                            <p class="text-muted">Fils enregistrés</p>
+                            <a href="/materiel/fils" class="btn btn-info w-100">
+                                Gérer mes fils →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LEURRES -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">🪝 Leurres</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">@luresCount</h2>
+                            <p class="text-muted">Leurres enregistrés</p>
+                            <a href="/materiel/leurres" class="btn btn-warning w-100">
+                                Gérer mes leurres →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BAS DE LIGNE -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-secondary">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">⛓️ Bas de ligne</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">@leadersCount</h2>
+                            <p class="text-muted">Bas de ligne enregistrés</p>
+                            <a href="/materiel/bas-de-ligne" class="btn btn-secondary w-100">
+                                Gérer mes bas de ligne →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HAMEÇONS -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">🪝 Hameçons</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">@hooksCount</h2>
+                            <p class="text-muted">Hameçons enregistrés</p>
+                            <a href="/materiel/hamecons" class="btn btn-danger w-100">
+                                Gérer mes hameçons →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-5">
+                <h5>💡 Astuce</h5>
+                <p>Enregistrez votre matériel pour créer des <strong>montages personnalisés</strong> et les associer à vos prises !</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private bool isLoading = true;
+    private int rodsCount = 0;
+    private int reelsCount = 0;
+    private int linesCount = 0;
+    private int luresCount = 0;
+    private int leadersCount = 0;
+    private int hooksCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        try
+        {
+            // Charger les compteurs en parallèle
+            var rodsTask = EquipmentService.GetAllRodsAsync();
+            var reelsTask = EquipmentService.GetAllReelsAsync();
+            var linesTask = EquipmentService.GetAllLinesAsync();
+            var luresTask = EquipmentService.GetAllLuresAsync();
+            var leadersTask = EquipmentService.GetAllLeadersAsync();
+            var hooksTask = EquipmentService.GetAllHooksAsync();
+
+            await Task.WhenAll(rodsTask, reelsTask, linesTask, luresTask, leadersTask, hooksTask);
+
+            rodsCount = rodsTask.Result.Count;
+            reelsCount = reelsTask.Result.Count;
+            linesCount = linesTask.Result.Count;
+            luresCount = luresTask.Result.Count;
+            leadersCount = leadersTask.Result.Count;
+            hooksCount = hooksTask.Result.Count;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des compteurs: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

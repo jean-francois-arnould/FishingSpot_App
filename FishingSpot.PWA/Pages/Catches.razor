@@ -12,6 +12,12 @@
         <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
             <div class="container-fluid">
                 <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link active" href="/catches">Mes Prises</a>
+                    <a class="nav-link" href="/montages">Montages</a>
+                    <a class="nav-link" href="/materiel">Matériel</a>
+                    <a class="nav-link" href="/profile">Profil</a>
+                </div>
                 <div class="d-flex">
                     <span class="navbar-text me-3">
                         👋 @AuthService.CurrentUser?.Email
@@ -54,22 +60,27 @@
                     {
                         <div class="col-md-4 mb-3">
                             <div class="card h-100">
-                                @if (!string.IsNullOrEmpty(fishCatch.PhotoPath))
+                                @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
                                 {
-                                    <img src="@fishCatch.PhotoPath" class="card-img-top" alt="@fishCatch.FishName" />
+                                    <img src="@fishCatch.PhotoUrl" class="card-img-top" alt="@fishCatch.FishName" style="max-height: 200px; object-fit: cover;" />
                                 }
                                 <div class="card-body">
-                                    <h5 class="card-title">@fishCatch.FishName</h5>
+                                    <h5 class="card-title">🐟 @fishCatch.FishName</h5>
                                     <p class="card-text">
-                                        <strong>Date:</strong> @fishCatch.CatchDate.ToShortDateString()<br />
-                                        <strong>Location:</strong> @fishCatch.LocationName<br />
-                                        <strong>Length:</strong> @fishCatch.Length cm<br />
-                                        <strong>Weight:</strong> @fishCatch.Weight kg
+                                        <strong>📅 Date:</strong> @fishCatch.CatchDate.ToShortDateString()<br />
+                                        <strong>📍 Location:</strong> @fishCatch.LocationName<br />
+                                        <strong>📏 Length:</strong> @fishCatch.Length cm<br />
+                                        <strong>⚖️ Weight:</strong> @fishCatch.Weight kg
                                     </p>
                                     @if (!string.IsNullOrEmpty(fishCatch.Notes))
                                     {
-                                        <p class="card-text"><small class="text-muted">@fishCatch.Notes</small></p>
+                                        <p class="card-text"><small class="text-muted">💭 @fishCatch.Notes</small></p>
                                     }
+                                </div>
+                                <div class="card-footer">
+                                    <button class="btn btn-sm btn-outline-primary w-100" @onclick="() => NavigateToEditCatch(fishCatch.Id)">
+                                        ✏️ Edit Catch
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -115,7 +126,11 @@
 
     private void NavigateToAddCatch()
     {
-        // TODO: Créer une page pour ajouter une prise
         Navigation.NavigateTo("/catches/add");
+    }
+
+    private void NavigateToEditCatch(int catchId)
+    {
+        Navigation.NavigateTo($"/catches/edit/{catchId}");
     }
 }

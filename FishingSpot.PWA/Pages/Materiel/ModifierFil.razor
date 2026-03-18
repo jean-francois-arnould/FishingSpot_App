@@ -1,0 +1,137 @@
+@page "/materiel/fils/modifier/{LineId:int}"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<h3 class="mb-4">🧵 Modifier le Fil</h3>
+
+@if (isLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border text-info" role="status">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+    </div>
+}
+else if (line == null)
+{
+    <div class="alert alert-danger">
+        Fil non trouvé.
+    </div>
+}
+else
+{
+    <EditForm Model="@line" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="brand" class="form-label">Marque *</label>
+            <InputText id="brand" class="form-control" @bind-Value="line.Brand" required />
+        </div>
+
+        <div class="mb-3">
+            <label for="type" class="form-label">Type *</label>
+            <InputText id="type" class="form-control" @bind-Value="line.Type" required />
+        </div>
+
+        <div class="mb-3">
+            <label for="strength" class="form-label">Résistance (ex: 20lb, 10kg)</label>
+            <InputText id="strength" class="form-control" @bind-Value="line.Strength" />
+        </div>
+
+        <div class="mb-3">
+            <label for="diameter" class="form-label">Diamètre (ex: 0.30mm)</label>
+            <InputText id="diameter" class="form-control" @bind-Value="line.Diameter" />
+        </div>
+
+        <div class="mb-3">
+            <label for="color" class="form-label">Couleur</label>
+            <InputText id="color" class="form-control" @bind-Value="line.Color" />
+        </div>
+
+        <div class="mb-3">
+            <label for="notes" class="form-label">Notes</label>
+            <InputTextArea id="notes" class="form-control" @bind-Value="line.Notes" rows="3" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-success" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                }
+                <i class="bi bi-check-circle"></i> Enregistrer
+            </button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                <i class="bi bi-x-circle"></i> Annuler
+            </button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int LineId { get; set; }
+
+    private Line? line;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var lines = await EquipmentService.GetAllLinesAsync();
+            line = lines.FirstOrDefault(l => l.Id == LineId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement: {ex.Message}";
+            Console.WriteLine($"Erreur: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (line == null || string.IsNullOrWhiteSpace(line.Brand) || string.IsNullOrWhiteSpace(line.Type))
+        {
+            errorMessage = "La marque et le type sont requis.";
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            await EquipmentService.UpdateLineAsync(line);
+            Navigation.NavigateTo("/materiel/fils");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de la modification: {ex.Message}";
+            Console.WriteLine($"Erreur: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/materiel/fils");
+    }
+}

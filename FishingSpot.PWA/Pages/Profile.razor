@@ -9,11 +9,32 @@
 <PageTitle>Mon Compte</PageTitle>
 
 <AuthorizeView>
-    <div class="container" style="max-width: 800px; margin-top: 30px;">
-        <h2>👤 Mon Compte</h2>
-        <p class="text-muted">Email: @AuthService.CurrentUser?.Email</p>
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link" href="/catches">Mes Prises</a>
+                    <a class="nav-link" href="/montages">Montages</a>
+                    <a class="nav-link" href="/materiel">Matériel</a>
+                    <a class="nav-link active" href="/profile">Profil</a>
+                </div>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">
+                        👋 @AuthService.CurrentUser?.Email
+                    </span>
+                    <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
+                        Déconnexion
+                    </button>
+                </div>
+            </div>
+        </nav>
 
-        <hr class="my-4" />
+        <div class="container" style="max-width: 800px;">
+            <h2>👤 Mon Compte</h2>
+            <p class="text-muted">Email: @AuthService.CurrentUser?.Email</p>
+
+            <hr class="my-4" />
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
@@ -136,6 +157,7 @@
                 </div>
             </div>
         }
+        </div>
     </div>
 </AuthorizeView>
 

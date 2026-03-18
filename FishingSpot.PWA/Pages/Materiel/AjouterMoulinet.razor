@@ -1,0 +1,130 @@
+@page "/materiel/moulinets/ajouter"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Ajouter un Moulinet</PageTitle>
+
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/catches">Mes Prises</a>
+                <a class="nav-link" href="/setups">Montages</a>
+                <a class="nav-link active" href="/materiel">Matériel</a>
+                <a class="nav-link" href="/profile">Profil</a>
+            </div>
+            <div class="d-flex">
+                <span class="navbar-text me-3">👋 @AuthService.CurrentUser?.Email</span>
+                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 800px;">
+        <a href="/materiel/moulinets" class="btn btn-outline-secondary btn-sm mb-3">← Retour aux moulinets</a>
+        <h2>🎡 Ajouter un Moulinet</h2>
+        <p class="text-muted">Enregistrez un nouveau moulinet dans votre matériel</p>
+        <hr class="my-4" />
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">@errorMessage</div>
+        }
+
+        <EditForm Model="@newReel" OnValidSubmit="HandleSubmit">
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white"><h5 class="mb-0">Informations principales</h5></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="brand" class="form-label">Marque *</label>
+                        <InputText id="brand" class="form-control" @bind-Value="newReel.Brand" placeholder="Shimano, Daiwa, Penn..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="model" class="form-label">Modèle *</label>
+                        <InputText id="model" class="form-control" @bind-Value="newReel.Model" placeholder="Stradic, BG..." required />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-secondary text-white"><h5 class="mb-0">Caractéristiques</h5></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Type</label>
+                        <InputText id="type" class="form-control" @bind-Value="newReel.Type" placeholder="Spinning, Baitcasting, Casting..." />
+                        <small class="text-muted">Spinning, Baitcasting, Casting</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gearRatio" class="form-label">Ratio</label>
+                        <InputText id="gearRatio" class="form-control" @bind-Value="newReel.GearRatio" placeholder="5.0:1, 6.2:1..." />
+                        <small class="text-muted">Exemple : 5.0:1, 6.2:1</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white"><h5 class="mb-0">Notes</h5></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes personnelles</label>
+                        <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="newReel.Notes" placeholder="État, capacité de ligne, utilisation..." />
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">Annuler</button>
+                <button type="submit" class="btn btn-success btn-lg" disabled="@isSaving">
+                    @if (isSaving) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                    ✅ Enregistrer
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private Reel newReel = new Reel();
+    private string? errorMessage;
+    private bool isSaving;
+
+    protected override void OnInitialized()
+    {
+        if (!AuthService.IsAuthenticated) Navigation.NavigateTo("/login");
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = null;
+        if (string.IsNullOrWhiteSpace(newReel.Brand)) { errorMessage = "La marque est obligatoire."; return; }
+        if (string.IsNullOrWhiteSpace(newReel.Model)) { errorMessage = "Le modèle est obligatoire."; return; }
+
+        isSaving = true;
+        try
+        {
+            var reelId = await EquipmentService.AddReelAsync(newReel);
+            if (reelId > 0) Navigation.NavigateTo("/materiel/moulinets");
+            else errorMessage = "Erreur lors de l'enregistrement.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur: {ex.Message}");
+            errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/materiel/moulinets");
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

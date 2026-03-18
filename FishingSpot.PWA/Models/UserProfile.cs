@@ -5,7 +5,7 @@ namespace FishingSpot.PWA.Models
     public class UserProfile
     {
         [JsonPropertyName("id")]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [JsonPropertyName("user_id")]
         public string UserId { get; set; } = string.Empty;

@@ -1,0 +1,227 @@
+@page "/materiel/cannes"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Mes Cannes</PageTitle>
+
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/catches">Mes Prises</a>
+                <a class="nav-link" href="/setups">Montages</a>
+                <a class="nav-link active" href="/materiel">Matériel</a>
+                <a class="nav-link" href="/profile">Profil</a>
+            </div>
+            <div class="d-flex">
+                <span class="navbar-text me-3">
+                    👋 @AuthService.CurrentUser?.Email
+                </span>
+                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="/materiel" class="btn btn-outline-secondary btn-sm mb-2">
+                    ← Retour au matériel
+                </a>
+                <h1>🎣 Mes Cannes</h1>
+            </div>
+            <a href="/materiel/cannes/ajouter" class="btn btn-primary btn-lg">
+                ➕ Ajouter une canne
+            </a>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="text-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-2">Chargement des cannes...</p>
+            </div>
+        }
+        else if (rods == null || !rods.Any())
+        {
+            <div class="alert alert-info text-center my-5">
+                <h4>Aucune canne enregistrée</h4>
+                <p>Commencez par ajouter votre première canne !</p>
+                <a href="/materiel/cannes/ajouter" class="btn btn-primary mt-3">
+                    ➕ Ajouter ma première canne
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var rod in rods)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">@rod.Brand @rod.Model</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(rod.Length))
+                                {
+                                    <p class="mb-2">
+                                        <strong>📏 Longueur :</strong> @rod.Length
+                                    </p>
+                                }
+                                @if (!string.IsNullOrEmpty(rod.Power))
+                                {
+                                    <p class="mb-2">
+                                        <strong>💪 Puissance :</strong> @rod.Power
+                                    </p>
+                                }
+                                @if (!string.IsNullOrEmpty(rod.Action))
+                                {
+                                    <p class="mb-2">
+                                        <strong>⚡ Action :</strong> @rod.Action
+                                    </p>
+                                }
+                                @if (!string.IsNullOrEmpty(rod.Notes))
+                                {
+                                    <p class="card-text mt-3">
+                                        <small class="text-muted">💭 @rod.Notes</small>
+                                    </p>
+                                }
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="/materiel/cannes/modifier/@rod.Id" class="btn btn-outline-primary">
+                                        ✏️ Modifier
+                                    </a>
+                                    <button class="btn btn-outline-danger" @onclick="() => ShowDeleteConfirmation(rod)">
+                                        🗑️ Supprimer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+@if (showDeleteModal && rodToDelete != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">⚠️ Confirmer la suppression</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CancelDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer cette canne ?</p>
+                    <p><strong>@rodToDelete.Brand @rodToDelete.Model</strong></p>
+                    <p class="text-danger">⚠️ Les montages utilisant cette canne ne seront pas supprimés mais perdront cette référence.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">
+                        Annuler
+                    </button>
+                    <button type="button" class="btn btn-danger" @onclick="HandleDelete" disabled="@isDeleting">
+                        @if (isDeleting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Rod>? rods;
+    private bool isLoading = true;
+    private bool showDeleteModal = false;
+    private bool isDeleting = false;
+    private Rod? rodToDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadRods();
+    }
+
+    private async Task LoadRods()
+    {
+        isLoading = true;
+        try
+        {
+            rods = await EquipmentService.GetAllRodsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des cannes: {ex.Message}");
+            rods = new List<Rod>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowDeleteConfirmation(Rod rod)
+    {
+        rodToDelete = rod;
+        showDeleteModal = true;
+    }
+
+    private void CancelDelete()
+    {
+        rodToDelete = null;
+        showDeleteModal = false;
+    }
+
+    private async Task HandleDelete()
+    {
+        if (rodToDelete == null) return;
+
+        isDeleting = true;
+        try
+        {
+            var success = await EquipmentService.DeleteRodAsync(rodToDelete.Id);
+            if (success)
+            {
+                showDeleteModal = false;
+                rodToDelete = null;
+                await LoadRods(); // Recharger la liste
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la suppression: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

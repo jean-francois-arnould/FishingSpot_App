@@ -1,0 +1,140 @@
+@page "/materiel/moulinets/modifier/{ReelId:int}"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Modifier un Moulinet</PageTitle>
+
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/catches">Mes Prises</a>
+                <a class="nav-link" href="/setups">Montages</a>
+                <a class="nav-link active" href="/materiel">Matériel</a>
+                <a class="nav-link" href="/profile">Profil</a>
+            </div>
+            <div class="d-flex">
+                <span class="navbar-text me-3">👋 @AuthService.CurrentUser?.Email</span>
+                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 800px;">
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-success" role="status"></div>
+                <p class="mt-2">Chargement...</p>
+            </div>
+        }
+        else if (reel == null)
+        {
+            <div class="alert alert-danger">
+                <h4>Moulinet introuvable</h4>
+                <a href="/materiel/moulinets" class="btn btn-success">Retour aux moulinets</a>
+            </div>
+        }
+        else
+        {
+            <a href="/materiel/moulinets" class="btn btn-outline-secondary btn-sm mb-3">← Retour aux moulinets</a>
+            <h2>✏️ Modifier un Moulinet</h2>
+            <p class="text-muted">@reel.Brand @reel.Model</p>
+            <hr class="my-4" />
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@errorMessage</div>
+            }
+
+            <EditForm Model="@reel" OnValidSubmit="HandleSubmit">
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white"><h5 class="mb-0">Informations principales</h5></div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="brand" class="form-label">Marque *</label>
+                            <InputText id="brand" class="form-control" @bind-Value="reel.Brand" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="model" class="form-label">Modèle *</label>
+                            <InputText id="model" class="form-control" @bind-Value="reel.Model" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-secondary text-white"><h5 class="mb-0">Caractéristiques</h5></div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <InputText id="type" class="form-control" @bind-Value="reel.Type" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="gearRatio" class="form-label">Ratio</label>
+                            <InputText id="gearRatio" class="form-control" @bind-Value="reel.GearRatio" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white"><h5 class="mb-0">Notes</h5></div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes personnelles</label>
+                            <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="reel.Notes" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">Annuler</button>
+                    <button type="submit" class="btn btn-success btn-lg" disabled="@isSaving">
+                        @if (isSaving) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                        ✅ Enregistrer les modifications
+                    </button>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int ReelId { get; set; }
+    private Reel? reel;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated) { Navigation.NavigateTo("/login"); return; }
+        try { reel = await EquipmentService.GetReelByIdAsync(ReelId); }
+        catch (Exception ex) { Console.WriteLine($"Erreur: {ex.Message}"); errorMessage = $"Erreur: {ex.Message}"; }
+        finally { isLoading = false; }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (reel == null) return;
+        errorMessage = null;
+        if (string.IsNullOrWhiteSpace(reel.Brand)) { errorMessage = "La marque est obligatoire."; return; }
+        if (string.IsNullOrWhiteSpace(reel.Model)) { errorMessage = "Le modèle est obligatoire."; return; }
+
+        isSaving = true;
+        try
+        {
+            var success = await EquipmentService.UpdateReelAsync(reel);
+            if (success) Navigation.NavigateTo("/materiel/moulinets");
+            else errorMessage = "Erreur lors de la modification.";
+        }
+        catch (Exception ex) { Console.WriteLine($"Erreur: {ex.Message}"); errorMessage = $"Erreur: {ex.Message}"; }
+        finally { isSaving = false; }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/materiel/moulinets");
+    private async Task HandleLogout() { await AuthService.SignOutAsync(); Navigation.NavigateTo("/"); }
+}

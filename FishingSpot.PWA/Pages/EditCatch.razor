@@ -1,0 +1,604 @@
+@page "/catches/edit/{CatchId:int}"
+@using FishingSpot.PWA.Models
+@using FishingSpot.PWA.Services
+@using Microsoft.JSInterop
+@inject ISupabaseService SupabaseService
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Edit Catch</PageTitle>
+
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/catches">Mes Prises</a>
+                <a class="nav-link" href="/montages">Montages</a>
+                <a class="nav-link" href="/materiel">Matériel</a>
+                <a class="nav-link" href="/profile">Profil</a>
+            </div>
+            <div class="d-flex">
+                <span class="navbar-text me-3">
+                    👋 @AuthService.CurrentUser?.Email
+                </span>
+                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 800px;">
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading catch details...</p>
+        </div>
+    }
+    else if (catchToEdit == null)
+    {
+        <div class="alert alert-danger">
+            <h4>Catch not found</h4>
+            <p>The catch you're trying to edit doesn't exist or you don't have permission to edit it.</p>
+            <a href="/catches" class="btn btn-primary">Return to Catches</a>
+        </div>
+    }
+    else
+    {
+        <h2>✏️ Edit Catch</h2>
+        <p class="text-muted">Update your fishing catch details</p>
+
+        <hr class="my-4" />
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success" role="alert">
+                @successMessage
+            </div>
+        }
+
+        <EditForm Model="@catchToEdit" OnValidSubmit="HandleUpdateCatch">
+            <DataAnnotationsValidator />
+
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">🐟 Fish Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="fishName" class="form-label">Fish Species *</label>
+                        <InputText id="fishName" class="form-control" @bind-Value="catchToEdit.FishName" 
+                                   placeholder="e.g., Bass, Trout, Pike..." required />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="length" class="form-label">Length (cm)</label>
+                            <InputNumber id="length" class="form-control" @bind-Value="catchToEdit.Length" 
+                                       placeholder="30" step="0.1" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="weight" class="form-label">Weight (kg)</label>
+                            <InputNumber id="weight" class="form-control" @bind-Value="catchToEdit.Weight" 
+                                       placeholder="2.5" step="0.1" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">📍 Location & Time</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="locationName" class="form-label">Lieu *</label>
+                        <InputText id="locationName" class="form-control" @bind-Value="catchToEdit.LocationName" 
+                                   placeholder="Ex: Lac Léman, Rivière Thames..." required />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label for="latitude" class="form-label">Latitude</label>
+                            <InputNumber id="latitude" class="form-control" @bind-Value="catchToEdit.Latitude" 
+                                       placeholder="46.2044" step="0.0001" />
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label for="longitude" class="form-label">Longitude</label>
+                            <InputNumber id="longitude" class="form-control" @bind-Value="catchToEdit.Longitude" 
+                                       placeholder="6.1432" step="0.0001" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100" @onclick="GetCurrentLocation" disabled="@isGettingLocation">
+                                @if (isGettingLocation)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                }
+                                else
+                                {
+                                    <span>📍</span>
+                                }
+                            </button>
+                            <small class="text-muted d-block text-center">Me localiser</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="catchDate" class="form-label">Date *</label>
+                            <InputDate id="catchDate" class="form-control" @bind-Value="catchToEdit.CatchDate" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="catchTime" class="form-label">Time</label>
+                            <InputText id="catchTime" class="form-control" @bind-Value="catchToEdit.CatchTimeString"
+                                     placeholder="14:30" type="time" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">📝 Additional Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="photoFile" class="form-label">Photo du poisson</label>
+
+                        <!-- Boutons pour choisir la source -->
+                        <div class="btn-group w-100 mb-2" role="group">
+                            <button type="button" class="btn btn-outline-primary" @onclick="OpenGallery" disabled="@isUploadingPhoto">
+                                🖼️ Galerie
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" @onclick="OpenCamera" disabled="@isUploadingPhoto">
+                                📷 Caméra
+                            </button>
+                        </div>
+
+                        <!-- Input file caché pour la galerie -->
+                        <InputFile id="photoFileGallery" class="d-none" OnChange="HandlePhotoSelected" accept="image/*" />
+
+                        <!-- Input file caché pour la caméra (attribut capture) -->
+                        <input type="file" id="photoFileCamera" class="d-none" accept="image/*" capture="environment" @onchange="HandleCameraPhotoSelected" />
+
+                        @if (isUploadingPhoto)
+                        {
+                            <div class="mt-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                <span class="ms-2">Upload en cours...</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(catchToEdit.PhotoUrl))
+                        {
+                            <div class="mt-2">
+                                <img src="@catchToEdit.PhotoUrl" alt="Aperçu" class="img-thumbnail" style="max-height: 200px;" />
+                                <button type="button" class="btn btn-sm btn-danger ms-2" @onclick="RemovePhoto">
+                                    ❌ Supprimer
+                                </button>
+                            </div>
+                        }
+                        <small class="text-muted d-block mt-1">Choisissez une photo depuis votre galerie ou prenez-en une avec la caméra</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="catchToEdit.Notes" 
+                                     placeholder="Weather conditions, bait used, fishing technique..." />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="setupId" class="form-label">Montage</label>
+                        <InputSelect id="setupId" class="form-control" @bind-Value="selectedSetupId">
+                            <option value="">-- Aucun montage --</option>
+                            @if (availableSetups != null)
+                            {
+                                @foreach (var setup in availableSetups)
+                                {
+                                    <option value="@setup.Id">
+                                        @(setup.IsCurrent ? "✅ " : "")@(setup.IsFavorite ? "⭐ " : "")@(string.IsNullOrEmpty(setup.Description) ? "Montage sans nom" : setup.Description)
+                                    </option>
+                                }
+                            }
+                        </InputSelect>
+                        <small class="text-muted">✅ = Montage actuel | ⭐ = Favori</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">
+                    Cancel
+                </button>
+                <div>
+                    <button type="button" class="btn btn-danger me-2" @onclick="ShowDeleteConfirmation">
+                        🗑️ Delete
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        ✅ Update Catch
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+
+        @if (showDeleteConfirm)
+        {
+            <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">⚠️ Confirm Delete</h5>
+                            <button type="button" class="btn-close btn-close-white" @onclick="CancelDelete"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete this catch?</p>
+                            <p><strong>@catchToEdit.FishName</strong> caught at <strong>@catchToEdit.LocationName</strong></p>
+                            <p class="text-danger">This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                            <button type="button" class="btn btn-danger" @onclick="HandleDeleteCatch" disabled="@isDeleting">
+                                @if (isDeleting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Delete Catch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int CatchId { get; set; }
+
+    private FishCatch? catchToEdit;
+    private List<FishingSetup>? availableSetups;
+    private string selectedSetupId = "";
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool isDeleting;
+    private bool showDeleteConfirm;
+    private bool isUploadingPhoto;
+    private bool isGettingLocation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        try
+        {
+            catchToEdit = await SupabaseService.GetCatchByIdAsync(CatchId);
+            availableSetups = await SupabaseService.GetAllSetupsAsync();
+
+            // Pré-remplir le montage sélectionné
+            if (catchToEdit?.SetupId.HasValue ?? false)
+            {
+                selectedSetupId = catchToEdit.SetupId.Value.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading catch: {ex.Message}");
+            errorMessage = $"Error loading catch: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
+    {
+        if (catchToEdit == null) return;
+
+        isUploadingPhoto = true;
+        errorMessage = null;
+
+        try
+        {
+            var file = e.File;
+            if (file != null)
+            {
+                if (file.Size > 5 * 1024 * 1024)
+                {
+                    errorMessage = "La photo est trop volumineuse (max 5 MB).";
+                    return;
+                }
+
+                if (!file.ContentType.StartsWith("image/"))
+                {
+                    errorMessage = "Seules les images sont acceptées.";
+                    return;
+                }
+
+                using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+                var photoUrl = await SupabaseService.UploadPhotoAsync(stream, file.Name);
+
+                if (!string.IsNullOrEmpty(photoUrl))
+                {
+                    catchToEdit.PhotoUrl = photoUrl;
+                    successMessage = "✅ Photo uploadée avec succès !";
+                    await Task.Delay(2000);
+                    successMessage = null;
+                }
+                else
+                {
+                    errorMessage = "Erreur lors de l'upload de la photo.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error uploading photo: {ex.Message}");
+            errorMessage = $"Erreur lors de l'upload: {ex.Message}";
+        }
+        finally
+        {
+            isUploadingPhoto = false;
+        }
+    }
+
+    private async Task OpenGallery()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileGallery').click()");
+    }
+
+    private async Task OpenCamera()
+    {
+        isUploadingPhoto = true;
+        errorMessage = null;
+
+        try
+        {
+            // Essayer d'utiliser la nouvelle API getUserMedia
+            var blobRef = await JSRuntime.InvokeAsync<IJSObjectReference>("openCamera");
+
+            if (blobRef != null)
+            {
+                // La photo a été prise avec getUserMedia
+                await JSRuntime.InvokeVoidAsync("uploadPhotoBlob", blobRef, DotNetObjectReference.Create(this));
+            }
+            else
+            {
+                // Fallback vers l'input file avec capture
+                await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileCamera').click()");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur caméra getUserMedia, fallback vers input file: {ex.Message}");
+            // Fallback vers l'input file
+            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileCamera').click()");
+            isUploadingPhoto = false;
+        }
+    }
+
+    private async Task HandleCameraPhotoSelected(ChangeEventArgs e)
+    {
+        await JSRuntime.InvokeVoidAsync("uploadPhotoFromCamera", "photoFileCamera", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public async Task HandleCameraPhotoUpload(string fileName, byte[] fileData)
+    {
+        if (catchToEdit == null) return;
+
+        isUploadingPhoto = true;
+        errorMessage = null;
+
+        try
+        {
+            if (fileData != null && fileData.Length > 0)
+            {
+                if (fileData.Length > 5 * 1024 * 1024)
+                {
+                    errorMessage = "La photo est trop volumineuse (max 5 MB).";
+                    return;
+                }
+
+                using var stream = new MemoryStream(fileData);
+                var photoUrl = await SupabaseService.UploadPhotoAsync(stream, fileName);
+
+                if (!string.IsNullOrEmpty(photoUrl))
+                {
+                    catchToEdit.PhotoUrl = photoUrl;
+                    successMessage = "✅ Photo uploadée avec succès !";
+                    await Task.Delay(2000);
+                    successMessage = null;
+                }
+                else
+                {
+                    errorMessage = "Erreur lors de l'upload de la photo.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error uploading photo: {ex.Message}");
+            errorMessage = $"Erreur lors de l'upload: {ex.Message}";
+        }
+        finally
+        {
+            isUploadingPhoto = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RemovePhoto()
+    {
+        if (catchToEdit != null)
+        {
+            catchToEdit.PhotoUrl = null;
+        }
+    }
+
+    private async Task GetCurrentLocation()
+    {
+        if (catchToEdit == null) return;
+
+        isGettingLocation = true;
+        errorMessage = null;
+
+        try
+        {
+            var position = await JSRuntime.InvokeAsync<GeolocationPosition>("getCurrentPosition");
+
+            if (position != null)
+            {
+                catchToEdit.Latitude = position.Latitude;
+                catchToEdit.Longitude = position.Longitude;
+                successMessage = "📍 Position récupérée avec succès !";
+                await Task.Delay(2000);
+                successMessage = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting location: {ex.Message}");
+            errorMessage = "Impossible de récupérer votre position.";
+        }
+        finally
+        {
+            isGettingLocation = false;
+        }
+    }
+
+    private async Task HandleUpdateCatch()
+    {
+        if (catchToEdit == null) return;
+
+        errorMessage = null;
+        successMessage = null;
+
+        if (string.IsNullOrWhiteSpace(catchToEdit.FishName))
+        {
+            errorMessage = "Le nom de l'espèce est requis.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(catchToEdit.LocationName))
+        {
+            errorMessage = "Le lieu est requis.";
+            return;
+        }
+
+        // Convertir le SetupId sélectionné
+        if (!string.IsNullOrEmpty(selectedSetupId) && int.TryParse(selectedSetupId, out int setupId))
+        {
+            catchToEdit.SetupId = setupId;
+        }
+        else
+        {
+            catchToEdit.SetupId = null;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            var success = await SupabaseService.UpdateCatchAsync(catchToEdit);
+
+            if (success)
+            {
+                successMessage = "✅ Catch updated successfully!";
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/catches");
+            }
+            else
+            {
+                errorMessage = "Failed to update catch. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating catch: {ex.Message}");
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+    }
+
+    private async Task HandleDeleteCatch()
+    {
+        if (catchToEdit == null) return;
+
+        isDeleting = true;
+
+        try
+        {
+            var success = await SupabaseService.DeleteCatchAsync(catchToEdit.Id);
+
+            if (success)
+            {
+                Navigation.NavigateTo("/catches");
+            }
+            else
+            {
+                errorMessage = "Failed to delete catch. Please try again.";
+                showDeleteConfirm = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting catch: {ex.Message}");
+            errorMessage = $"Error: {ex.Message}";
+            showDeleteConfirm = false;
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/catches");
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+}
