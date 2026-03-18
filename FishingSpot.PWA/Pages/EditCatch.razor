@@ -4,6 +4,7 @@
 @using Microsoft.JSInterop
 @inject ISupabaseService SupabaseService
 @inject IAuthService AuthService
+@inject IUserProfileService ProfileService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -21,7 +22,9 @@
             </div>
             <div class="d-flex">
                 <span class="navbar-text me-3">
-                    👋 @AuthService.CurrentUser?.Email
+                    👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.FirstName) 
+                        ? $"{userProfile.FirstName} {userProfile.LastName}" 
+                        : AuthService.CurrentUser?.Email)
                 </span>
                 <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
                     Déconnexion
@@ -276,6 +279,7 @@
 
     private FishCatch? catchToEdit;
     private List<FishingSetup>? availableSetups;
+    private UserProfile? userProfile;
     private string selectedSetupId = "";
     private string? errorMessage;
     private string? successMessage;
@@ -296,8 +300,16 @@
 
         try
         {
-            catchToEdit = await SupabaseService.GetCatchByIdAsync(CatchId);
-            availableSetups = await SupabaseService.GetAllSetupsAsync();
+            // Charger le profil, la prise et les setups en parallèle
+            var profileTask = ProfileService.GetProfileAsync();
+            var catchTask = SupabaseService.GetCatchByIdAsync(CatchId);
+            var setupsTask = SupabaseService.GetAllSetupsAsync();
+
+            await Task.WhenAll(profileTask, catchTask, setupsTask);
+
+            userProfile = await profileTask;
+            catchToEdit = await catchTask;
+            availableSetups = await setupsTask;
 
             // Pré-remplir le montage sélectionné
             if (catchToEdit?.SetupId.HasValue ?? false)

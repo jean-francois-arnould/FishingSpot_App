@@ -4,60 +4,88 @@
 @using FishingSpot.PWA.Services
 @inject ISupabaseService SupabaseService
 @inject IEquipmentService EquipmentService
+@inject IAuthService AuthService
+@inject IUserProfileService ProfileService
 @inject NavigationManager Navigation
 
-<h3 class="mb-4">🎣 Créer un Montage</h3>
+<PageTitle>Créer un Montage</PageTitle>
 
-@if (isLoadingEquipment)
-{
-    <div class="text-center">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Chargement du matériel...</span>
-        </div>
-    </div>
-}
-else
-{
-    <EditForm Model="@newSetup" OnValidSubmit="HandleSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="mb-3">
-            <label for="description" class="form-label">Nom du montage</label>
-            <InputText id="description" class="form-control" @bind-Value="newSetup.Description" placeholder="Ex: Montage carnassier été" />
-            <small class="form-text text-muted">Donnez un nom descriptif à votre montage</small>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="rod" class="form-label">🎣 Canne</label>
-                <InputSelect id="rod" class="form-select" @bind-Value="selectedRodId">
-                    <option value="">-- Aucune --</option>
-                    @foreach (var rod in rods)
-                    {
-                        <option value="@rod.Id">@rod.Brand @rod.Model (@rod.Length)</option>
-                    }
-                </InputSelect>
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/catches">Mes Prises</a>
+                <a class="nav-link active" href="/montages">Montages</a>
+                <a class="nav-link" href="/materiel">Matériel</a>
+                <a class="nav-link" href="/profile">Profil</a>
             </div>
-
-            <div class="col-md-6">
-                <label for="reel" class="form-label">🎡 Moulinet</label>
-                <InputSelect id="reel" class="form-select" @bind-Value="selectedReelId">
-                    <option value="">-- Aucun --</option>
-                    @foreach (var reel in reels)
-                    {
-                        <option value="@reel.Id">@reel.Brand @reel.Model</option>
-                    }
-                </InputSelect>
+            <div class="d-flex">
+                <span class="navbar-text me-3">
+                    👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.FirstName) 
+                        ? $"{userProfile.FirstName} {userProfile.LastName}" 
+                        : AuthService.CurrentUser?.Email)
+                </span>
+                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
+                    Déconnexion
+                </button>
             </div>
         </div>
+    </nav>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="line" class="form-label">🧵 Fil</label>
-                <InputSelect id="line" class="form-select" @bind-Value="selectedLineId">
-                    <option value="">-- Aucun --</option>
-                    @foreach (var line in lines)
+    <div class="container">
+        <h3 class="mb-4">🎣 Créer un Montage</h3>
+
+        @if (isLoadingEquipment)
+        {
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement du matériel...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@newSetup" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Nom du montage</label>
+                    <InputText id="description" class="form-control" @bind-Value="newSetup.Description" placeholder="Ex: Montage carnassier été" />
+                    <small class="form-text text-muted">Donnez un nom descriptif à votre montage</small>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="rod" class="form-label">🎣 Canne</label>
+                        <InputSelect id="rod" class="form-select" @bind-Value="selectedRodId">
+                            <option value="">-- Aucune --</option>
+                            @foreach (var rod in rods)
+                            {
+                                <option value="@rod.Id">@rod.Brand @rod.Model (@rod.Length)</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="reel" class="form-label">🎡 Moulinet</label>
+                        <InputSelect id="reel" class="form-select" @bind-Value="selectedReelId">
+                            <option value="">-- Aucun --</option>
+                            @foreach (var reel in reels)
+                            {
+                                <option value="@reel.Id">@reel.Brand @reel.Model</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="line" class="form-label">🧵 Fil</label>
+                        <InputSelect id="line" class="form-select" @bind-Value="selectedLineId">
+                            <option value="">-- Aucun --</option>
+                            @foreach (var line in lines)
                     {
                         <option value="@line.Id">@line.Brand @line.Type @(!string.IsNullOrEmpty(line.Strength) ? $"({line.Strength})" : "")</option>
                     }
@@ -124,23 +152,26 @@ else
             <div class="alert alert-warning">@warningMessage</div>
         }
 
-        <div class="mt-3">
-            <button type="submit" class="btn btn-success" disabled="@isSubmitting">
-                @if (isSubmitting)
-                {
-                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-success" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </button>
+                    </div>
+                </EditForm>
                 }
-                <i class="bi bi-check-circle"></i> Enregistrer
-            </button>
-            <button type="button" class="btn btn-secondary" @onclick="Cancel">
-                <i class="bi bi-x-circle"></i> Annuler
-            </button>
+            </div>
         </div>
-    </EditForm>
-}
 
 @code {
     private FishingSetup newSetup = new();
+    private UserProfile? userProfile;
     private bool setAsCurrent = false;
 
     // Listes d'équipement
@@ -166,7 +197,19 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAllEquipment();
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        // Charger le profil et l'équipement en parallèle
+        var profileTask = ProfileService.GetProfileAsync();
+        var equipmentTask = LoadAllEquipment();
+
+        await Task.WhenAll(profileTask, equipmentTask);
+
+        userProfile = await profileTask;
     }
 
     private async Task LoadAllEquipment()
@@ -247,5 +290,11 @@ else
     private void Cancel()
     {
         Navigation.NavigateTo("/montages");
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/login");
     }
 }

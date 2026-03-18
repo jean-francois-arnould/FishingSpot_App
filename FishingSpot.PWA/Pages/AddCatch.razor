@@ -4,6 +4,7 @@
 @using Microsoft.JSInterop
 @inject ISupabaseService SupabaseService
 @inject IAuthService AuthService
+@inject IUserProfileService ProfileService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -21,7 +22,9 @@
             </div>
             <div class="d-flex">
                 <span class="navbar-text me-3">
-                    👋 @AuthService.CurrentUser?.Email
+                    👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.FirstName) 
+                        ? $"{userProfile.FirstName} {userProfile.LastName}" 
+                        : AuthService.CurrentUser?.Email)
                 </span>
                 <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
                     Déconnexion
@@ -228,6 +231,7 @@
     };
 
     private List<FishingSetup>? availableSetups;
+    private UserProfile? userProfile;
     private string selectedSetupId = "";
     private string? errorMessage;
     private string? successMessage;
@@ -243,13 +247,20 @@
             return;
         }
 
-        // Load available setups
+        // Load available setups and user profile
         try
         {
-            availableSetups = await SupabaseService.GetAllSetupsAsync();
+            // Charger le profil et les setups en parallèle
+            var profileTask = ProfileService.GetProfileAsync();
+            var setupsTask = SupabaseService.GetAllSetupsAsync();
+
+            await Task.WhenAll(profileTask, setupsTask);
+
+            userProfile = await profileTask;
+            availableSetups = await setupsTask;
 
             // Pré-sélectionner le montage actuel s'il existe
-            var currentSetup = availableSetups.FirstOrDefault(s => s.IsCurrent);
+            var currentSetup = availableSetups?.FirstOrDefault(s => s.IsCurrent);
             if (currentSetup != null)
             {
                 selectedSetupId = currentSetup.Id.ToString();

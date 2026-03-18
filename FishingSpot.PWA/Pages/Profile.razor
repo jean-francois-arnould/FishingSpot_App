@@ -21,7 +21,9 @@
                 </div>
                 <div class="d-flex">
                     <span class="navbar-text me-3">
-                        👋 @AuthService.CurrentUser?.Email
+                        👋 @(profile != null && !string.IsNullOrEmpty(profile.FirstName) 
+                            ? $"{profile.FirstName} {profile.LastName}" 
+                            : AuthService.CurrentUser?.Email)
                     </span>
                     <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
                         Déconnexion

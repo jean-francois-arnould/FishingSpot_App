@@ -25,6 +25,9 @@ namespace FishingSpot.PWA.Models
         [JsonPropertyName("city")]
         public string City { get; set; } = string.Empty;
 
+        [JsonPropertyName("postal_code")]
+        public string PostalCode { get; set; } = string.Empty;
+
         [JsonPropertyName("favorite_spot")]
         public string FavoriteSpot { get; set; } = string.Empty;
 
