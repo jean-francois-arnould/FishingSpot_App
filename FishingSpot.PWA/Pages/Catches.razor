@@ -1,0 +1,121 @@
+@page "/catches"
+@using FishingSpot.PWA.Models
+@using FishingSpot.PWA.Services
+@inject ISupabaseService SupabaseService
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>My Catches</PageTitle>
+
+<AuthorizeView>
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">🎣 FishingSpot</a>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">
+                        👋 @AuthService.CurrentUser?.Email
+                    </span>
+                    <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
+                        Déconnexion
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>🎣 My Fishing Catches</h1>
+                <button class="btn btn-primary btn-lg" @onclick="NavigateToAddCatch">
+                    ➕ Add New Catch
+                </button>
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading catches...</p>
+                </div>
+            }
+            else if (catches == null || !catches.Any())
+            {
+                <div class="alert alert-info text-center my-5">
+                    <h4>No catches recorded yet. Start fishing! 🐟</h4>
+                    <p>Click the "Add New Catch" button above to record your first catch!</p>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var fishCatch in catches)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                @if (!string.IsNullOrEmpty(fishCatch.PhotoPath))
+                                {
+                                    <img src="@fishCatch.PhotoPath" class="card-img-top" alt="@fishCatch.FishName" />
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title">@fishCatch.FishName</h5>
+                                    <p class="card-text">
+                                        <strong>Date:</strong> @fishCatch.CatchDate.ToShortDateString()<br />
+                                        <strong>Location:</strong> @fishCatch.LocationName<br />
+                                        <strong>Length:</strong> @fishCatch.Length cm<br />
+                                        <strong>Weight:</strong> @fishCatch.Weight kg
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(fishCatch.Notes))
+                                    {
+                                        <p class="card-text"><small class="text-muted">@fishCatch.Notes</small></p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</AuthorizeView>
+
+@code {
+    private List<FishCatch>? catches;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        try
+        {
+            catches = await SupabaseService.GetAllCatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading catches: {ex.Message}");
+            catches = new List<FishCatch>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    private void NavigateToAddCatch()
+    {
+        // TODO: Créer une page pour ajouter une prise
+        Navigation.NavigateTo("/catches/add");
+    }
+}

@@ -1,0 +1,254 @@
+@page "/profile"
+@using FishingSpot.PWA.Models
+@using FishingSpot.PWA.Services
+@using FishingSpot.PWA.Components
+@inject IAuthService AuthService
+@inject IUserProfileService ProfileService
+@inject NavigationManager Navigation
+
+<PageTitle>Mon Compte</PageTitle>
+
+<AuthorizeView>
+    <div class="container" style="max-width: 800px; margin-top: 30px;">
+        <h2>👤 Mon Compte</h2>
+        <p class="text-muted">Email: @AuthService.CurrentUser?.Email</p>
+
+        <hr class="my-4" />
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success" role="alert">
+                @successMessage
+            </div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@profile" OnValidSubmit="HandleSaveProfile">
+                <h4>Informations personnelles</h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="firstName" class="form-label">Prénom</label>
+                        <InputText id="firstName" class="form-control" @bind-Value="profile.FirstName" placeholder="Jean" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="lastName" class="form-label">Nom</label>
+                        <InputText id="lastName" class="form-control" @bind-Value="profile.LastName" placeholder="Dupont" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label">Téléphone</label>
+                        <InputText id="phone" class="form-control" @bind-Value="profile.Phone" placeholder="+33 6 12 34 56 78" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="country" class="form-label">Pays</label>
+                        <InputText id="country" class="form-control" @bind-Value="profile.Country" placeholder="France" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="city" class="form-label">Ville</label>
+                        <InputText id="city" class="form-control" @bind-Value="profile.City" placeholder="Paris" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="favoriteSpot" class="form-label">Spot favori</label>
+                        <InputText id="favoriteSpot" class="form-control" @bind-Value="profile.FavoriteSpot" placeholder="Lac de Sainte-Croix" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="bio" class="form-label">Bio / Notes</label>
+                    <InputTextArea id="bio" class="form-control" rows="3" @bind-Value="profile.Bio" placeholder="Dites-nous en plus sur vous et votre passion pour la pêche..." />
+                </div>
+
+                <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Enregistrer
+                </button>
+            </EditForm>
+
+            <hr class="my-5" />
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">⚠️ Zone dangereuse</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Déconnexion</h6>
+                    <p class="text-muted">Se déconnecter de votre compte</p>
+                    <button class="btn btn-outline-secondary mb-4" @onclick="HandleLogout">
+                        <span class="bi bi-box-arrow-right"></span> Se déconnecter
+                    </button>
+
+                    <hr />
+
+                    <h6 class="text-danger">Supprimer mon compte</h6>
+                    <p class="text-muted">Cette action est irréversible. Toutes vos données (profil et prises) seront définitivement supprimées.</p>
+
+                    @if (showDeleteConfirmation)
+                    {
+                        <div class="alert alert-warning">
+                            <p class="mb-2"><strong>Êtes-vous vraiment sûr(e)?</strong></p>
+                            <p class="mb-3">Cette action supprimera:</p>
+                            <ul>
+                                <li>Votre profil utilisateur</li>
+                                <li>Toutes vos prises de pêche</li>
+                                <li>Toutes vos données associées</li>
+                            </ul>
+                            <p class="text-danger"><strong>Cette action est définitive et ne peut pas être annulée!</strong></p>
+                            <button class="btn btn-danger me-2" @onclick="ConfirmDeleteAccount" disabled="@isDeleting">
+                                @if (isDeleting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Oui, supprimer définitivement
+                            </button>
+                            <button class="btn btn-secondary" @onclick="CancelDelete">Annuler</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-danger" @onclick="ShowDeleteConfirmation">
+                            <span class="bi bi-trash"></span> Supprimer mon compte
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</AuthorizeView>
+
+@code {
+    private UserProfile profile = new();
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool showDeleteConfirmation = false;
+    private bool isDeleting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        try
+        {
+            var existingProfile = await ProfileService.GetProfileAsync();
+            if (existingProfile != null)
+            {
+                profile = existingProfile;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement du profil: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSaveProfile()
+    {
+        errorMessage = null;
+        successMessage = null;
+        isSaving = true;
+
+        try
+        {
+            var success = await ProfileService.CreateOrUpdateProfileAsync(profile);
+
+            if (success)
+            {
+                successMessage = "Profil enregistré avec succès!";
+            }
+            else
+            {
+                errorMessage = "Erreur lors de l'enregistrement du profil.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        showDeleteConfirmation = true;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirmation = false;
+    }
+
+    private async Task ConfirmDeleteAccount()
+    {
+        errorMessage = null;
+        successMessage = null;
+        isDeleting = true;
+
+        try
+        {
+            var success = await ProfileService.DeleteAccountAsync();
+
+            if (success)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Erreur lors de la suppression du compte.";
+                showDeleteConfirmation = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+            showDeleteConfirmation = false;
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}

@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# IMPORTANT: Ne pas commiter les clés Supabase!
+# Si vous commitez appsettings.json avec vos vraies clés, utilisez GitHub Secrets à la place
+# FishingSpot.PWA/wwwroot/appsettings.json
+
 # User-specific files
 *.rsuser
 *.suo

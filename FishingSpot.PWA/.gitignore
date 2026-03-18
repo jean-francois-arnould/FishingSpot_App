@@ -1,0 +1,12 @@
+# Blazor WebAssembly
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Configuration sensible - NE PAS COMMITTER
+wwwroot/appsettings.json
+
+# Keep a template
+!wwwroot/appsettings.template.json

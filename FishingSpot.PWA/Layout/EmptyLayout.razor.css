@@ -1,0 +1,10 @@
+.main-full {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.main-full .content {
+    width: 100%;
+    max-width: 100%;
+}

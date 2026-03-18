@@ -1,0 +1,63 @@
+﻿@page "/"
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>FishingSpot - Fishing Tracker</PageTitle>
+
+<div class="container text-center" style="margin-top: 100px;">
+    <h1 class="display-3">🎣 FishingSpot</h1>
+    <p class="lead">Suivez toutes vos prises de pêche en un seul endroit</p>
+
+    @if (AuthService.IsAuthenticated)
+    {
+        <div class="mt-5">
+            <h3>Bienvenue @AuthService.CurrentUser?.Email! 👋</h3>
+            <p>Prêt à enregistrer vos prises?</p>
+            <a href="/catches" class="btn btn-primary btn-lg mt-3">Voir mes prises 🐟</a>
+            <a href="/profile" class="btn btn-outline-secondary btn-lg mt-3 ms-2">Mon compte</a>
+        </div>
+    }
+    else
+    {
+        <div class="mt-5">
+            <h3>Commencez maintenant!</h3>
+            <p>Créez un compte gratuit pour suivre vos prises de pêche</p>
+            <div class="mt-4">
+                <a href="/register" class="btn btn-success btn-lg me-3">
+                    <span class="bi bi-person-plus-fill"></span> Créer un compte
+                </a>
+                <a href="/login" class="btn btn-outline-primary btn-lg">
+                    <span class="bi bi-box-arrow-in-right"></span> Se connecter
+                </a>
+            </div>
+        </div>
+
+        <div class="row mt-5 pt-5">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3>📍 Localisation</h3>
+                        <p>Enregistrez l'emplacement exact de vos prises</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3>📸 Photos</h3>
+                        <p>Immortalisez vos plus belles prises</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3>📊 Statistiques</h3>
+                        <p>Suivez vos performances de pêche</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

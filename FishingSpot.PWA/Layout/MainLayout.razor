@@ -1,0 +1,32 @@
+﻿@inherits LayoutComponentBase
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+
+@if (_initialized)
+{
+    <div class="page">
+        <main>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _initialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.InitializeAsync();
+        _initialized = true;
+    }
+}
