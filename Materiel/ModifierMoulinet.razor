@@ -113,7 +113,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!AuthService.IsAuthenticated) { Navigation.NavigateTo("/login"); return; }
+        if (!AuthService.IsAuthenticated) { Navigation.NavigateTo("/FishingSpot_App/login"); return; }
         try { reel = await EquipmentService.GetReelByIdAsync(ReelId); }
         catch (Exception ex) { Console.WriteLine($"Erreur: {ex.Message}"); errorMessage = $"Erreur: {ex.Message}"; }
         finally { isLoading = false; }
@@ -130,13 +130,13 @@
         try
         {
             var success = await EquipmentService.UpdateReelAsync(reel);
-            if (success) Navigation.NavigateTo("/materiel/moulinets");
+            if (success) Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets");
             else errorMessage = "Erreur lors de la modification.";
         }
         catch (Exception ex) { Console.WriteLine($"Erreur: {ex.Message}"); errorMessage = $"Erreur: {ex.Message}"; }
         finally { isSaving = false; }
     }
 
-    private void Cancel() => Navigation.NavigateTo("/materiel/moulinets");
-    private async Task HandleLogout() { await AuthService.SignOutAsync(); Navigation.NavigateTo("/"); }
+    private void Cancel() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets");
+    private async Task HandleLogout() { await AuthService.SignOutAsync(); Navigation.NavigateTo("/FishingSpot_App/"); }
 }

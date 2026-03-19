@@ -171,7 +171,7 @@
     {
         if (!AuthService.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/FishingSpot_App/login");
             return;
         }
 
@@ -274,12 +274,12 @@
 
     private void AddSetup()
     {
-        Navigation.NavigateTo("/montages/ajouter");
+        Navigation.NavigateTo("/FishingSpot_App/montages/ajouter");
     }
 
     private void EditSetup(int id)
     {
-        Navigation.NavigateTo($"/montages/modifier/{id}");
+        Navigation.NavigateTo($"/FishingSpot_App/montages/modifier/{id}");
     }
 
     private void ShowDeleteConfirmation(FishingSetup setup)
@@ -315,7 +315,7 @@
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/login");
+        Navigation.NavigateTo("/FishingSpot_App/login");
     }
 
     // Classe pour organiser les détails de l'équipement

@@ -96,7 +96,7 @@
 
     protected override void OnInitialized()
     {
-        if (!AuthService.IsAuthenticated) Navigation.NavigateTo("/login");
+        if (!AuthService.IsAuthenticated) Navigation.NavigateTo("/FishingSpot_App/login");
     }
 
     private async Task HandleSubmit()
@@ -109,7 +109,7 @@
         try
         {
             var reelId = await EquipmentService.AddReelAsync(newReel);
-            if (reelId > 0) Navigation.NavigateTo("/materiel/moulinets");
+            if (reelId > 0) Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets");
             else errorMessage = "Erreur lors de l'enregistrement.";
         }
         catch (Exception ex)
@@ -123,10 +123,10 @@
         }
     }
 
-    private void Cancel() => Navigation.NavigateTo("/materiel/moulinets");
+    private void Cancel() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets");
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/FishingSpot_App/");
     }
 }

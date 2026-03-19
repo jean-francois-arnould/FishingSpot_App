@@ -80,7 +80,7 @@
         try
         {
             await EquipmentService.AddLineAsync(newLine);
-            Navigation.NavigateTo("/materiel/fils");
+            Navigation.NavigateTo("/FishingSpot_App/materiel/fils");
         }
         catch (Exception ex)
         {
@@ -95,6 +95,6 @@
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/materiel/fils");
+        Navigation.NavigateTo("/FishingSpot_App/materiel/fils");
     }
 }

@@ -150,7 +150,7 @@
     {
         if (!AuthService.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/FishingSpot_App/login");
             return;
         }
 
@@ -195,7 +195,7 @@
 
             if (success)
             {
-                Navigation.NavigateTo("/materiel/cannes");
+                Navigation.NavigateTo("/FishingSpot_App/materiel/cannes");
             }
             else
             {
@@ -215,12 +215,12 @@
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/materiel/cannes");
+        Navigation.NavigateTo("/FishingSpot_App/materiel/cannes");
     }
 
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/FishingSpot_App/");
     }
 }

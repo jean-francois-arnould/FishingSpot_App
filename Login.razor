@@ -68,7 +68,7 @@
     {
         if (AuthService.IsAuthenticated)
         {
-            Navigation.NavigateTo("/catches");
+            Navigation.NavigateTo("/FishingSpot_App/catches");
         }
     }
 
@@ -86,7 +86,7 @@
             {
                 successMessage = message;
                 await Task.Delay(500);
-                Navigation.NavigateTo("/catches");
+                Navigation.NavigateTo("/FishingSpot_App/catches");
             }
             else
             {

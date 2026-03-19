@@ -176,7 +176,7 @@
     {
         if (!AuthService.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/FishingSpot_App/login");
             return;
         }
 
@@ -230,7 +230,7 @@
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/FishingSpot_App/");
     }
 
     private void ShowDeleteConfirmation()
@@ -257,7 +257,7 @@
 
             if (success)
             {
-                Navigation.NavigateTo("/");
+                Navigation.NavigateTo("/FishingSpot_App/");
             }
             else
             {

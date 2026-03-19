@@ -201,7 +201,7 @@
     {
         if (!AuthService.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/FishingSpot_App/login");
             return;
         }
 
@@ -276,7 +276,7 @@
                 await SupabaseService.SetCurrentSetupAsync(createdSetupId);
             }
 
-            Navigation.NavigateTo("/montages");
+            Navigation.NavigateTo("/FishingSpot_App/montages");
         }
         catch (Exception ex)
         {
@@ -291,12 +291,12 @@
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/montages");
+        Navigation.NavigateTo("/FishingSpot_App/montages");
     }
 
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/login");
+        Navigation.NavigateTo("/FishingSpot_App/login");
     }
 }

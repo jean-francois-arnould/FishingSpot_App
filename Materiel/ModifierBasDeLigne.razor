@@ -110,7 +110,7 @@ else
         try
         {
             await EquipmentService.UpdateLeaderAsync(leader);
-            Navigation.NavigateTo("/materiel/bas-de-ligne");
+            Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne");
         }
         catch (Exception ex)
         {
@@ -125,6 +125,6 @@ else
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/materiel/bas-de-ligne");
+        Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne");
     }
 }

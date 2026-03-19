@@ -295,7 +295,7 @@
     {
         if (!AuthService.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/FishingSpot_App/login");
             return;
         }
 
@@ -544,7 +544,7 @@
             {
                 successMessage = "✅ Catch updated successfully!";
                 await Task.Delay(1500);
-                Navigation.NavigateTo("/catches");
+                Navigation.NavigateTo("/FishingSpot_App/catches");
             }
             else
             {
@@ -584,7 +584,7 @@
 
             if (success)
             {
-                Navigation.NavigateTo("/catches");
+                Navigation.NavigateTo("/FishingSpot_App/catches");
             }
             else
             {
@@ -606,12 +606,12 @@
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/catches");
+        Navigation.NavigateTo("/FishingSpot_App/catches");
     }
 
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/FishingSpot_App/");
     }
 }
