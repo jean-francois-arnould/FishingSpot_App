@@ -32,6 +32,17 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'preview'
 
+      - name: Create appsettings.json with Supabase secrets
+        run: |
+          cat > wwwroot/appsettings.json << EOF
+          {
+            "Supabase": {
+              "Url": "${{ secrets.SUPABASE_URL }}",
+              "Key": "${{ secrets.SUPABASE_KEY }}"
+            }
+          }
+          EOF
+
       - name: Publish
         run: dotnet publish FishingSpot.PWA.csproj -c Release -o output --nologo
 
