@@ -419,10 +419,14 @@ h6 { font-size: 1rem; }
 }
 
 /* ===== FLOATING ACTION BUTTON ===== */
-.fab {
+.fab-container {
     position: fixed;
     bottom: 85px;
     right: 1rem;
+    z-index: 900;
+}
+
+.fab {
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -435,7 +439,7 @@ h6 { font-size: 1rem; }
     box-shadow: var(--shadow-lg);
     cursor: pointer;
     transition: var(--transition);
-    z-index: 900;
+    border: none;
 }
 
 .fab:hover {
@@ -444,6 +448,72 @@ h6 { font-size: 1rem; }
 
 .fab:active {
     transform: scale(0.95);
+}
+
+.fab-active {
+    transform: rotate(45deg);
+}
+
+.fab-icon {
+    line-height: 1;
+}
+
+/* FAB Menu */
+.fab-menu {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    animation: fadeInUp 0.3s ease;
+}
+
+.fab-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border: none;
+    border-radius: 28px;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.fab-menu-item:hover {
+    transform: translateX(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.fab-menu-icon {
+    font-size: 1.25rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.fab-menu-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ===== BADGES ===== */

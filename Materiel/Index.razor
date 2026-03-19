@@ -218,6 +218,42 @@
     }
 </div>
 
+<!-- Floating Action Button avec menu -->
+<div class="fab-container">
+    @if (showFabMenu)
+    {
+        <div class="fab-menu">
+            <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/cannes/ajouter")'>
+                <span class="fab-menu-icon">🎣</span>
+                <span class="fab-menu-label">Canne</span>
+            </button>
+            <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets/ajouter")'>
+                <span class="fab-menu-icon">🎡</span>
+                <span class="fab-menu-label">Moulinet</span>
+            </button>
+            <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/fils/ajouter")'>
+                <span class="fab-menu-icon">🧵</span>
+                <span class="fab-menu-label">Fil</span>
+            </button>
+            <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/leurres/ajouter")'>
+                <span class="fab-menu-icon">🐟</span>
+                <span class="fab-menu-label">Leurre</span>
+            </button>
+            <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons/ajouter")'>
+                <span class="fab-menu-icon">🪝</span>
+                <span class="fab-menu-label">Hameçon</span>
+            </button>
+            <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne/ajouter")'>
+                <span class="fab-menu-icon">⛓️</span>
+                <span class="fab-menu-label">Bas de ligne</span>
+            </button>
+        </div>
+    }
+    <button class="fab @(showFabMenu ? "fab-active" : "")" @onclick="ToggleFabMenu" title="Ajouter du matériel">
+        <span class="fab-icon">@(showFabMenu ? "×" : "+")</span>
+    </button>
+</div>
+
 @code {
     private bool isLoading = true;
     private int rodsCount = 0;
@@ -227,6 +263,7 @@
     private int leadersCount = 0;
     private int hooksCount = 0;
     private string? expandedSection = null;
+    private bool showFabMenu = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -275,6 +312,11 @@
         {
             expandedSection = section;
         }
+    }
+
+    private void ToggleFabMenu()
+    {
+        showFabMenu = !showFabMenu;
     }
 
     private async Task HandleLogout()
