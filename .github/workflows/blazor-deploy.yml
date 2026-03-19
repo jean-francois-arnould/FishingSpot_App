@@ -35,11 +35,8 @@ jobs:
       - name: Publish
         run: dotnet publish FishingSpot.PWA.csproj -c Release -o output --nologo
 
-      - name: Copy 404.html for SPA routing (before fixing base href)
+      - name: Copy 404.html for SPA routing
         run: cp 404.html output/wwwroot/404.html
-
-      - name: Fix base href for GitHub Pages
-        run: sed -i 's/<base href="\/" \/>/<base href="\/FishingSpot_App\/" \/>/g' output/wwwroot/index.html
 
       - name: Fix manifest for PWA
         run: |
