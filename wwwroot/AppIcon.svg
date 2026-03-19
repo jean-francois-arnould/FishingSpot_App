@@ -10,7 +10,7 @@
     </linearGradient>
     <filter id="shadow" x="0" y="0" width="512" height="512" filterUnits="userSpaceOnUse">
       <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.18"></feDropShadow>
-    </filter>
+    </filter> 
   </defs>
 
   <!-- Background -->
