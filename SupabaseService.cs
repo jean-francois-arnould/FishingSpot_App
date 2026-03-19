@@ -81,21 +81,31 @@ namespace FishingSpot.PWA.Services
 
                 fishCatch.CreatedAt = DateTime.UtcNow;
                 var json = JsonSerializer.Serialize(fishCatch);
+                Console.WriteLine($"Sending catch JSON: {json}");
+
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
                 _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
 
                 var response = await _httpClient.PostAsync("/rest/v1/fish_catches", content);
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response status: {response.StatusCode}");
+                Console.WriteLine($"Response body: {responseBody}");
+
                 response.EnsureSuccessStatusCode();
 
                 var result = await response.Content.ReadFromJsonAsync<List<FishCatch>>();
-                return result?.FirstOrDefault()?.Id ?? 0;
+                var id = result?.FirstOrDefault()?.Id ?? 0;
+                Console.WriteLine($"Returned catch ID: {id}");
+                return id;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error adding catch: {ex.Message}");
-                return 0;
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
             }
         }
 

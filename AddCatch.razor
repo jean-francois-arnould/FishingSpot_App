@@ -322,8 +322,8 @@
 
             if (position != null)
             {
-                newCatch.Latitude = position.Latitude.ToString();
-                newCatch.Longitude = position.Longitude.ToString();
+                newCatch.Latitude = position.Latitude;
+                newCatch.Longitude = position.Longitude;
 
                 // Reverse geocoding pour obtenir le nom du lieu
                 try
@@ -367,8 +367,6 @@
             return;
         }
 
-        // Le lieu n'est plus obligatoire
-
         // Convertir le SetupId sélectionné
         if (!string.IsNullOrEmpty(selectedSetupId) && int.TryParse(selectedSetupId, out int setupId))
         {
@@ -380,10 +378,13 @@
         }
 
         isSaving = true;
+        StateHasChanged();
 
         try
         {
+            Console.WriteLine($"Saving catch: {newCatch.FishName}, Lat: {newCatch.Latitude}, Lon: {newCatch.Longitude}");
             var catchId = await SupabaseService.AddCatchAsync(newCatch);
+            Console.WriteLine($"Catch saved with ID: {catchId}");
 
             if (catchId > 0)
             {
@@ -392,15 +393,18 @@
             }
             else
             {
-                errorMessage = "Erreur lors de la sauvegarde. Veuillez réessayer.";
+                errorMessage = "❌ Erreur lors de la sauvegarde. Le serveur n'a pas retourné d'ID. Vérifiez votre connexion et que vous êtes connecté.";
                 isSaving = false;
+                StateHasChanged();
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error adding catch: {ex.Message}");
-            errorMessage = $"Erreur: {ex.Message}";
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            errorMessage = $"❌ Erreur: {ex.Message}";
             isSaving = false;
+            StateHasChanged();
         }
     }
 

@@ -76,8 +76,8 @@
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
+                            latitude: position.coords.latitude.toFixed(6),
+                            longitude: position.coords.longitude.toFixed(6),
                             accuracy: position.coords.accuracy
                         });
                     },
