@@ -89,10 +89,10 @@
                     <div class="form-group">
                         <label for="latitude" class="form-label">Coordonnées GPS</label>
                         <div class="gps-fields">
-                            <InputNumber id="latitude" class="form-control" @bind-Value="catchToEdit.Latitude" 
-                                       placeholder="Latitude" step="0.0001" />
-                            <InputNumber id="longitude" class="form-control" @bind-Value="catchToEdit.Longitude" 
-                                       placeholder="Longitude" step="0.0001" />
+                            <input type="number" id="latitude" class="form-control" @bind="catchToEdit.Latitude" 
+                                   placeholder="Latitude" step="0.000001" inputmode="decimal" />
+                            <input type="number" id="longitude" class="form-control" @bind="catchToEdit.Longitude" 
+                                   placeholder="Longitude" step="0.000001" inputmode="decimal" />
                             <button type="button" class="btn btn-outline-primary" @onclick="GetCurrentLocation" disabled="@isGettingLocation">
                                 @if (isGettingLocation)
                                 {
@@ -104,6 +104,7 @@
                                 }
                             </button>
                         </div>
+                        <small class="text-muted">Les coordonnées GPS sont optionnelles</small>
                     </div>
 
                     <div class="form-row">
