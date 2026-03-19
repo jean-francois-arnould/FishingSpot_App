@@ -2,7 +2,7 @@ name: Deploy Blazor to GitHub Pages
 
 on:
   push:
-    branches: [ WAP ]
+    branches: [ WAP, main ]
   workflow_dispatch:
 
 permissions:
@@ -33,7 +33,7 @@ jobs:
           dotnet-quality: 'preview'
 
       - name: Publish
-        run: dotnet publish FishingSpot.PWA/FishingSpot.PWA.csproj -c Release -o output --nologo
+        run: dotnet publish -c Release -o output --nologo
 
       - name: Fix base href for GitHub Pages
         run: sed -i 's/<base href="\/" \/>/<base href="\/FishingSpot_App\/" \/>/g' output/wwwroot/index.html
