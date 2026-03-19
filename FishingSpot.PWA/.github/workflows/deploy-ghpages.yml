@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ WAP ]  # Déclenche sur push vers la branche WAP
+    branches: [ WAP, main ]  # Déclenche sur push vers WAP ou main
   workflow_dispatch:  # Permet de déclencher manuellement
 
 permissions:
@@ -33,7 +33,7 @@ jobs:
       run: dotnet restore
 
     - name: Build and publish
-      run: dotnet publish -c Release -o publish
+      run: dotnet publish -c Release -o publish --nologo
 
     - name: Change base-tag in index.html for GitHub Pages
       run: |
@@ -44,8 +44,14 @@ jobs:
         sed -i 's/"id": "\.\/",/"id": "\/FishingSpot_App\/",/g' publish/wwwroot/manifest.webmanifest
         sed -i 's/"start_url": "\.\/",/"start_url": "\/FishingSpot_App\/",/g' publish/wwwroot/manifest.webmanifest
 
+    - name: Copy index.html to 404.html for SPA routing
+      run: cp publish/wwwroot/index.html publish/wwwroot/404.html
+
     - name: Add .nojekyll file
       run: touch publish/wwwroot/.nojekyll
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
