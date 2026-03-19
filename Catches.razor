@@ -7,92 +7,64 @@
 @inject IUserProfileService ProfileService
 @inject NavigationManager Navigation
 
-<PageTitle>My Catches</PageTitle>
+<PageTitle>Mes Prises</PageTitle>
 
 <AuthorizeView>
-    <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="/FishingSpot_App/">🎣 FishingSpot</a>
-                <div class="navbar-nav me-auto">
-                    <a class="nav-link active" href="/FishingSpot_App/catches">Mes Prises</a>
-                    <a class="nav-link" href="/FishingSpot_App/montages">Montages</a>
-                    <a class="nav-link" href="/FishingSpot_App/materiel">Matériel</a>
-                    <a class="nav-link" href="/FishingSpot_App/profile">Profil</a>
-                </div>
-                <div class="d-flex">
-                    <span class="navbar-text me-3">
-                        👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.FirstName) 
-                            ? $"{userProfile.FirstName} {userProfile.LastName}" 
-                            : AuthService.CurrentUser?.Email)
-                    </span>
-                    <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
-                        Déconnexion
-                    </button>
-                </div>
+    <div class="page-content">
+        @if (isLoading)
+        {
+            <div class="empty-state">
+                <div class="spinner"></div>
+                <p class="mt-3">Chargement des prises...</p>
             </div>
-        </nav>
-
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>🎣 My Fishing Catches</h1>
-                <button class="btn btn-primary btn-lg" @onclick="NavigateToAddCatch">
-                    ➕ Add New Catch
+        }
+        else if (catches == null || !catches.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-state-icon">🐟</div>
+                <h3>Aucune prise enregistrée</h3>
+                <p class="text-muted">Commencez par ajouter votre première prise de pêche !</p>
+                <button class="btn btn-primary" @onclick="NavigateToAddCatch">
+                    ➕ Ajouter une prise
                 </button>
             </div>
-
-            @if (isLoading)
-            {
-                <div class="text-center my-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Loading catches...</p>
-                </div>
-            }
-            else if (catches == null || !catches.Any())
-            {
-                <div class="alert alert-info text-center my-5">
-                    <h4>No catches recorded yet. Start fishing! 🐟</h4>
-                    <p>Click the "Add New Catch" button above to record your first catch!</p>
-                </div>
-            }
-            else
-            {
-                <div class="row">
-                    @foreach (var fishCatch in catches)
-                    {
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
-                                {
-                                    <img src="@fishCatch.PhotoUrl" class="card-img-top" alt="@fishCatch.FishName" style="max-height: 200px; object-fit: cover;" />
-                                }
-                                <div class="card-body">
-                                    <h5 class="card-title">🐟 @fishCatch.FishName</h5>
-                                    <p class="card-text">
-                                        <strong>📅 Date:</strong> @fishCatch.CatchDate.ToShortDateString()<br />
-                                        <strong>📍 Location:</strong> @fishCatch.LocationName<br />
-                                        <strong>📏 Length:</strong> @fishCatch.Length cm<br />
-                                        <strong>⚖️ Weight:</strong> @fishCatch.Weight kg
-                                    </p>
-                                    @if (!string.IsNullOrEmpty(fishCatch.Notes))
-                                    {
-                                        <p class="card-text"><small class="text-muted">💭 @fishCatch.Notes</small></p>
-                                    }
-                                </div>
-                                <div class="card-footer">
-                                    <button class="btn btn-sm btn-outline-primary w-100" @onclick="() => NavigateToEditCatch(fishCatch.Id)">
-                                        ✏️ Edit Catch
-                                    </button>
-                                </div>
+        }
+        else
+        {
+            <div class="catch-list">
+                @foreach (var fishCatch in catches)
+                {
+                    <div class="list-item" @onclick="() => NavigateToEditCatch(fishCatch.Id)">
+                        @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
+                        {
+                            <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="list-item-img" />
+                        }
+                        else
+                        {
+                            <div class="list-item-icon">🐟</div>
+                        }
+                        <div class="list-item-content">
+                            <div class="list-item-title">@fishCatch.FishName</div>
+                            <div class="list-item-subtitle">
+                                📍 @fishCatch.LocationName
+                            </div>
+                            <div class="list-item-meta">
+                                <span class="badge badge-info">@fishCatch.Length cm</span>
+                                <span class="badge badge-info">@fishCatch.Weight kg</span>
+                                <span class="badge badge-secondary">@fishCatch.CatchDate.ToShortDateString()</span>
                             </div>
                         </div>
-                    }
-                </div>
-            }
-        </div>
+                        <div class="list-item-action">›</div>
+                    </div>
+                }
+            </div>
+        }
     </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab" @onclick="NavigateToAddCatch" title="Ajouter une prise">
+        <span class="fab-icon">+</span>
+    </button>
 </AuthorizeView>
 
 @code {

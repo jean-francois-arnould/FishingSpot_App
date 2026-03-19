@@ -9,48 +9,19 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
-<PageTitle>Add New Catch</PageTitle>
+<PageTitle>Ajouter une prise</PageTitle>
 
-<div class="container-fluid">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/FishingSpot_App/">🎣 FishingSpot</a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" href="/FishingSpot_App/catches">Mes Prises</a>
-                <a class="nav-link" href="/FishingSpot_App/montages">Montages</a>
-                <a class="nav-link" href="/FishingSpot_App/materiel">Matériel</a>
-                <a class="nav-link" href="/FishingSpot_App/profile">Profil</a>
-            </div>
-            <div class="d-flex">
-                <span class="navbar-text me-3">
-                    👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.FirstName) 
-                        ? $"{userProfile.FirstName} {userProfile.LastName}" 
-                        : AuthService.CurrentUser?.Email)
-                </span>
-                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
-                    Déconnexion
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container" style="max-width: 800px;">
-
-    <h2>🎣 Add New Catch</h2>
-    <p class="text-muted">Record your fishing catch details</p>
-
-    <hr class="my-4" />
-
+<div class="page-content">
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger">
             @errorMessage
         </div>
     }
 
     @if (!string.IsNullOrEmpty(successMessage))
     {
-        <div class="alert alert-success" role="alert">
+        <div class="alert alert-success">
             @successMessage
         </div>
     }
@@ -58,25 +29,25 @@
     <EditForm Model="@newCatch" OnValidSubmit="HandleAddCatch">
         <DataAnnotationsValidator />
 
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">🐟 Fish Information</h5>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🐟 Information du poisson</h3>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <label for="fishName" class="form-label">Fish Species *</label>
+                <div class="form-group">
+                    <label for="fishName" class="form-label">Espèce *</label>
                     <InputText id="fishName" class="form-control" @bind-Value="newCatch.FishName" 
-                               placeholder="e.g., Bass, Trout, Pike..." required />
+                               placeholder="Ex: Brochet, Truite, Carpe..." required />
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="length" class="form-label">Length (cm)</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="length" class="form-label">📏 Longueur (cm)</label>
                         <InputNumber id="length" class="form-control" @bind-Value="newCatch.Length" 
                                    placeholder="30" step="0.1" />
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="weight" class="form-label">Weight (kg)</label>
+                    <div class="form-group">
+                        <label for="weight" class="form-label">⚖️ Poids (kg)</label>
                         <InputNumber id="weight" class="form-control" @bind-Value="newCatch.Weight" 
                                    placeholder="2.5" step="0.1" />
                     </div>
@@ -84,50 +55,43 @@
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">📍 Location & Time</h5>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">📍 Lieu et date</h3>
             </div>
             <div class="card-body">
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="locationName" class="form-label">Lieu *</label>
                     <InputText id="locationName" class="form-control" @bind-Value="newCatch.LocationName" 
-                               placeholder="Ex: Lac Léman, Rivière Thames..." required />
+                               placeholder="Ex: Lac Léman, Rivière Loire..." required />
                 </div>
 
-                <div class="row">
-                    <div class="col-md-5 mb-3">
-                        <label for="latitude" class="form-label">Latitude</label>
+                <div class="form-group">
+                    <label for="latitude" class="form-label">Coordonnées GPS</label>
+                    <div class="form-row">
                         <InputNumber id="latitude" class="form-control" @bind-Value="newCatch.Latitude" 
-                                   placeholder="46.2044" step="0.0001" />
-                    </div>
-                    <div class="col-md-5 mb-3">
-                        <label for="longitude" class="form-label">Longitude</label>
+                                   placeholder="Latitude" step="0.0001" style="flex: 1;" />
                         <InputNumber id="longitude" class="form-control" @bind-Value="newCatch.Longitude" 
-                                   placeholder="6.1432" step="0.0001" />
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="button" class="btn btn-primary w-100" @onclick="GetCurrentLocation" disabled="@isGettingLocation">
+                                   placeholder="Longitude" step="0.0001" style="flex: 1; margin-left: 8px;" />
+                        <button type="button" class="btn btn-outline-primary" @onclick="GetCurrentLocation" disabled="@isGettingLocation" style="margin-left: 8px;">
                             @if (isGettingLocation)
                             {
-                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <div class="spinner"></div>
                             }
                             else
                             {
                                 <span>📍</span>
                             }
                         </button>
-                        <small class="text-muted d-block text-center">Me localiser</small>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+                <div class="form-row">
+                    <div class="form-group">
                         <label for="catchDate" class="form-label">Date *</label>
                         <InputDate id="catchDate" class="form-control" @bind-Value="newCatch.CatchDate" required />
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="form-group">
                         <label for="catchTime" class="form-label">Heure</label>
                         <InputText id="catchTime" class="form-control" @bind-Value="newCatch.CatchTimeString" 
                                  placeholder="14:30" type="time" />
@@ -136,16 +100,14 @@
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">📸 Photo et Détails</h5>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">📸 Photo et détails</h3>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <label for="photoFile" class="form-label">Photo du poisson</label>
-
-                    <!-- Boutons pour choisir la source -->
-                    <div class="btn-group w-100 mb-2" role="group">
+                <div class="form-group">
+                    <label class="form-label">Photo</label>
+                    <div class="btn-group">
                         <button type="button" class="btn btn-outline-primary" @onclick="OpenGallery" disabled="@isUploadingPhoto">
                             🖼️ Galerie
                         </button>
@@ -154,39 +116,35 @@
                         </button>
                     </div>
 
-                    <!-- Input file caché pour la galerie -->
-                    <InputFile id="photoFileGallery" class="d-none" OnChange="HandlePhotoSelected" accept="image/*" />
-
-                    <!-- Input file caché pour la caméra (attribut capture) -->
-                    <input type="file" id="photoFileCamera" class="d-none" accept="image/*" capture="environment" @onchange="HandleCameraPhotoSelected" />
+                    <InputFile id="photoFileGallery" style="display: none;" OnChange="HandlePhotoSelected" accept="image/*" />
+                    <input type="file" id="photoFileCamera" style="display: none;" accept="image/*" capture="environment" @onchange="HandleCameraPhotoSelected" />
 
                     @if (isUploadingPhoto)
                     {
-                        <div class="mt-2">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                            <span class="ms-2">Upload en cours...</span>
+                        <div class="upload-status">
+                            <div class="spinner"></div>
+                            <span>Upload en cours...</span>
                         </div>
                     }
                     @if (!string.IsNullOrEmpty(newCatch.PhotoUrl))
                     {
-                        <div class="mt-2">
-                            <img src="@newCatch.PhotoUrl" alt="Aperçu" class="img-thumbnail" style="max-height: 200px;" />
-                            <button type="button" class="btn btn-sm btn-danger ms-2" @onclick="RemovePhoto">
+                        <div class="photo-preview">
+                            <img src="@newCatch.PhotoUrl" alt="Aperçu" class="preview-img" />
+                            <button type="button" class="btn btn-sm btn-danger" @onclick="RemovePhoto">
                                 ❌ Supprimer
                             </button>
                         </div>
                     }
-                    <small class="text-muted d-block mt-1">Choisissez une photo depuis votre galerie ou prenez-en une avec la caméra</small>
                 </div>
 
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="notes" class="form-label">Notes</label>
                     <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="newCatch.Notes" 
-                                 placeholder="Conditions météo, appât utilisé, technique de pêche..." />
+                                 placeholder="Conditions météo, appât, technique..." />
                 </div>
 
-                <div class="mb-3">
-                    <label for="setupId" class="form-label">Montage</label>
+                <div class="form-group">
+                    <label for="setupId" class="form-label">Montage utilisé</label>
                     <InputSelect id="setupId" class="form-control" @bind-Value="selectedSetupId">
                         <option value="">-- Aucun montage --</option>
                         @if (availableSetups != null)
@@ -199,29 +157,23 @@
                             }
                         }
                     </InputSelect>
-                    <small class="text-muted">✅ = Montage actuel | ⭐ = Favori</small>
-                    <small class="text-muted">
-                        Optional: Link this catch to a fishing setup. 
-                        <a href="/FishingSpot_App/setups/add" target="_blank">Create new setup</a>
-                    </small>
                 </div>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between mt-4">
+        <div class="form-actions">
             <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">
-                Cancel
+                Annuler
             </button>
-            <button type="submit" class="btn btn-primary btn-lg" disabled="@isSaving">
+            <button type="submit" class="btn btn-primary" disabled="@isSaving">
                 @if (isSaving)
                 {
-                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    <div class="spinner"></div>
                 }
-                ✅ Save Catch
+                ✅ Enregistrer
             </button>
         </div>
     </EditForm>
-    </div>
 </div>
 
 @code {

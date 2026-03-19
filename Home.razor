@@ -6,59 +6,94 @@
 
 <PageTitle>FishingSpot - Fishing Tracker</PageTitle>
 
-<div class="container text-center" style="margin-top: 100px;">
-    <h1 class="display-3">🎣 FishingSpot</h1>
-    <p class="lead">Suivez toutes vos prises de pêche en un seul endroit</p>
+@if (AuthService.IsAuthenticated)
+{
+    <!-- Utilisateur connecté -->
+    <div class="empty-state">
+        <div class="empty-state-icon">👋</div>
+        <h1>Bienvenue @AuthService.CurrentUser?.Email!</h1>
+        <p class="empty-state-text">Prêt pour votre prochaine session de pêche ?</p>
+    </div>
 
-    @if (AuthService.IsAuthenticated)
-    {
-        <div class="mt-5">
-            <h3>Bienvenue @AuthService.CurrentUser?.Email! 👋</h3>
-            <p>Prêt à enregistrer vos prises?</p>
-            <a href="/FishingSpot_App/catches" class="btn btn-primary btn-lg mt-3">Mon espace 🐟</a>
-            <a href="/FishingSpot_App/profile" class="btn btn-outline-secondary btn-lg mt-3 ms-2">Mon compte</a>
+    <div class="card">
+        <div class="card-header">🎣 Actions Rapides</div>
+        <div class="d-flex flex-column gap-2">
+            <a href="/FishingSpot_App/catches/add" class="btn btn-primary btn-lg">
+                ➕ Enregistrer une prise
+            </a>
+            <a href="/FishingSpot_App/catches" class="btn btn-outline-primary">
+                📋 Voir mes prises
+            </a>
         </div>
-    }
-    else
-    {
-        <div class="mt-5">
-            <h3>Commencez maintenant!</h3>
-            <p>Créez un compte gratuit pour suivre vos prises de pêche</p>
-            <div class="mt-4">
-                <a href="/FishingSpot_App/register" class="btn btn-success btn-lg me-3">
-                    <span class="bi bi-person-plus-fill"></span> Créer un compte
-                </a>
-                <a href="/FishingSpot_App/login" class="btn btn-outline-primary btn-lg">
-                    <span class="bi bi-box-arrow-in-right"></span> Se connecter
-                </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">⚡ Raccourcis</div>
+        <div class="list-item" @onclick="@(() => Navigation.NavigateTo("/FishingSpot_App/materiel"))">
+            <div class="list-item-icon">🎣</div>
+            <div class="list-item-content">
+                <div class="list-item-title">Matériel</div>
+                <div class="list-item-subtitle">Gérer votre équipement</div>
+            </div>
+            <div class="list-item-action">→</div>
+        </div>
+
+        <div class="list-item" @onclick="@(() => Navigation.NavigateTo("/FishingSpot_App/montages"))">
+            <div class="list-item-icon">🪝</div>
+            <div class="list-item-content">
+                <div class="list-item-title">Montages</div>
+                <div class="list-item-subtitle">Vos configurations favorites</div>
+            </div>
+            <div class="list-item-action">→</div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Utilisateur non connecté -->
+    <div class="empty-state">
+        <div class="empty-state-icon">🎣</div>
+        <h1>FishingSpot</h1>
+        <p class="empty-state-text">Suivez toutes vos prises de pêche en un seul endroit</p>
+    </div>
+
+    <div class="card">
+        <h3 class="text-center mb-3">Commencez maintenant !</h3>
+        <p class="text-center mb-3">Créez un compte gratuit pour suivre vos prises de pêche</p>
+        <div class="d-flex flex-column gap-2">
+            <a href="/FishingSpot_App/register" class="btn btn-success btn-lg">
+                ✨ Créer un compte
+            </a>
+            <a href="/FishingSpot_App/login" class="btn btn-outline-primary">
+                🔐 Se connecter
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">✨ Fonctionnalités</div>
+        <div class="list-item">
+            <div class="list-item-icon">📍</div>
+            <div class="list-item-content">
+                <div class="list-item-title">Localisation GPS</div>
+                <div class="list-item-subtitle">Enregistrez l'emplacement exact</div>
             </div>
         </div>
 
-        <div class="row mt-5 pt-5">
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3>📍 Localisation</h3>
-                        <p>Enregistrez l'emplacement exact de vos prises</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3>📸 Photos</h3>
-                        <p>Immortalisez vos plus belles prises</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3>📊 Statistiques</h3>
-                        <p>Suivez vos performances de pêche</p>
-                    </div>
-                </div>
+        <div class="list-item">
+            <div class="list-item-icon">📸</div>
+            <div class="list-item-content">
+                <div class="list-item-title">Photos</div>
+                <div class="list-item-subtitle">Immortalisez vos prises</div>
             </div>
         </div>
-    }
-</div>
+
+        <div class="list-item">
+            <div class="list-item-icon">📊</div>
+            <div class="list-item-content">
+                <div class="list-item-title">Statistiques</div>
+                <div class="list-item-subtitle">Suivez vos performances</div>
+            </div>
+        </div>
+    </div>
+}
