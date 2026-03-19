@@ -61,9 +61,9 @@
             </div>
             <div class="card-body">
                 <div class="form-group">
-                    <label for="locationName" class="form-label">Lieu *</label>
+                    <label for="locationName" class="form-label">Lieu</label>
                     <InputText id="locationName" class="form-control" @bind-Value="newCatch.LocationName" 
-                               placeholder="Ex: Lac Léman, Rivière Loire..." required />
+                               placeholder="Ex: Lac Léman, Rivière Loire..." />
                 </div>
 
                 <div class="form-group">
@@ -117,7 +117,7 @@
                     </div>
 
                     <InputFile id="photoFileGallery" style="display: none;" OnChange="HandlePhotoSelected" accept="image/*" />
-                    <input type="file" id="photoFileCamera" style="display: none;" accept="image/*" capture="environment" @onchange="HandleCameraPhotoSelected" />
+                    <InputFile id="photoFileCamera" style="display: none;" OnChange="HandlePhotoSelected" accept="image/*" capture="environment" />
 
                     @if (isUploadingPhoto)
                     {
@@ -230,6 +230,7 @@
     {
         isUploadingPhoto = true;
         errorMessage = null;
+        string? tempPhotoUrl = null;
 
         try
         {
@@ -250,13 +251,21 @@
                     return;
                 }
 
-                // Upload vers Supabase Storage
-                using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+                // Créer un aperçu local IMMÉDIATEMENT avec data URL
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).ReadAsync(buffer);
+                var base64 = Convert.ToBase64String(buffer);
+                tempPhotoUrl = $"data:{file.ContentType};base64,{base64}";
+                newCatch.PhotoUrl = tempPhotoUrl; // Afficher l'aperçu immédiatement
+                StateHasChanged();
+
+                // Upload vers Supabase Storage en arrière-plan
+                var stream = new MemoryStream(buffer);
                 var photoUrl = await SupabaseService.UploadPhotoAsync(stream, file.Name);
 
                 if (!string.IsNullOrEmpty(photoUrl))
                 {
-                    newCatch.PhotoUrl = photoUrl;
+                    newCatch.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
                     successMessage = "✅ Photo uploadée avec succès !";
                     await Task.Delay(2000);
                     successMessage = null;
@@ -264,6 +273,7 @@
                 else
                 {
                     errorMessage = "Erreur lors de l'upload de la photo. Vérifiez que le bucket 'fishing-photos' existe dans Supabase Storage.";
+                    newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local
                 }
             }
         }
@@ -271,6 +281,10 @@
         {
             Console.WriteLine($"Error uploading photo: {ex.Message}");
             errorMessage = $"Erreur lors de l'upload: {ex.Message}";
+            if (!string.IsNullOrEmpty(tempPhotoUrl))
+            {
+                newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local en cas d'erreur
+            }
         }
         finally
         {
@@ -286,84 +300,8 @@
 
     private async Task OpenCamera()
     {
-        isUploadingPhoto = true;
-        errorMessage = null;
-
-        try
-        {
-            // Essayer d'utiliser la nouvelle API getUserMedia
-            var blobRef = await JSRuntime.InvokeAsync<IJSObjectReference>("openCamera");
-
-            if (blobRef != null)
-            {
-                // La photo a été prise avec getUserMedia
-                await JSRuntime.InvokeVoidAsync("uploadPhotoBlob", blobRef, DotNetObjectReference.Create(this));
-            }
-            else
-            {
-                // Fallback vers l'input file avec capture
-                await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileCamera').click()");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur caméra getUserMedia, fallback vers input file: {ex.Message}");
-            // Fallback vers l'input file
-            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileCamera').click()");
-            isUploadingPhoto = false;
-        }
-    }
-
-    private async Task HandleCameraPhotoSelected(ChangeEventArgs e)
-    {
-        // Pour l'input HTML natif, nous devons utiliser JavaScript pour récupérer le fichier
-        await JSRuntime.InvokeVoidAsync("uploadPhotoFromCamera", "photoFileCamera", DotNetObjectReference.Create(this));
-    }
-
-    [JSInvokable]
-    public async Task HandleCameraPhotoUpload(string fileName, byte[] fileData)
-    {
-        isUploadingPhoto = true;
-        errorMessage = null;
-
-        try
-        {
-            if (fileData != null && fileData.Length > 0)
-            {
-                // Vérifier la taille (max 5 MB)
-                if (fileData.Length > 5 * 1024 * 1024)
-                {
-                    errorMessage = "La photo est trop volumineuse (max 5 MB).";
-                    return;
-                }
-
-                // Upload vers Supabase Storage
-                using var stream = new MemoryStream(fileData);
-                var photoUrl = await SupabaseService.UploadPhotoAsync(stream, fileName);
-
-                if (!string.IsNullOrEmpty(photoUrl))
-                {
-                    newCatch.PhotoUrl = photoUrl;
-                    successMessage = "✅ Photo uploadée avec succès !";
-                    await Task.Delay(2000);
-                    successMessage = null;
-                }
-                else
-                {
-                    errorMessage = "Erreur lors de l'upload de la photo. Vérifiez que le bucket 'fishing-photos' existe dans Supabase Storage.";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error uploading photo: {ex.Message}");
-            errorMessage = $"Erreur lors de l'upload: {ex.Message}";
-        }
-        finally
-        {
-            isUploadingPhoto = false;
-            StateHasChanged();
-        }
+        // Utiliser simplement l'input file avec l'attribut capture pour mobile
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileCamera').click()");
     }
 
     private void RemovePhoto()
@@ -385,7 +323,22 @@
             {
                 newCatch.Latitude = position.Latitude;
                 newCatch.Longitude = position.Longitude;
-                successMessage = "📍 Position récupérée avec succès !";
+
+                // Reverse geocoding pour obtenir le nom du lieu
+                try
+                {
+                    var locationName = await JSRuntime.InvokeAsync<string>("reverseGeocode", position.Latitude, position.Longitude);
+                    if (!string.IsNullOrEmpty(locationName))
+                    {
+                        newCatch.LocationName = locationName;
+                    }
+                    successMessage = "📍 Position et lieu récupérés avec succès !";
+                }
+                catch
+                {
+                    successMessage = "📍 Position récupérée (lieu non trouvé)";
+                }
+
                 await Task.Delay(2000);
                 successMessage = null;
             }
@@ -413,11 +366,7 @@
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(newCatch.LocationName))
-        {
-            errorMessage = "Le lieu est requis.";
-            return;
-        }
+        // Le lieu n'est plus obligatoire
 
         // Convertir le SetupId sélectionné
         if (!string.IsNullOrEmpty(selectedSetupId) && int.TryParse(selectedSetupId, out int setupId))
