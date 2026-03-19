@@ -1,9 +1,12 @@
 # Blazor WebAssembly
 bin/
 obj/
+publish/
 .vs/
 *.user
 *.suo
+*.csproj.user
+launchSettings.json
 
 # Configuration sensible - NE PAS COMMITTER
 wwwroot/appsettings.json
