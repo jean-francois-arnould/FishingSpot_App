@@ -43,6 +43,9 @@ jobs:
           sed -i 's/"id": "\.\/",/"id": "\/FishingSpot_App\/",/g' output/wwwroot/manifest.webmanifest
           sed -i 's/"start_url": "\.\/",/"start_url": "\/FishingSpot_App\/",/g' output/wwwroot/manifest.webmanifest
 
+      - name: Fix service worker base path
+        run: sed -i 's/const base = "\/";/const base = "\/FishingSpot_App\/";/g' output/wwwroot/service-worker.published.js
+
       - name: Add 404.html for SPA routing
         run: cp output/wwwroot/index.html output/wwwroot/404.html
 

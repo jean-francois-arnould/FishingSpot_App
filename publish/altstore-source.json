@@ -1,0 +1,52 @@
+{
+  "name": "FishingSpot Source",
+  "identifier": "com.fishingspot.source",
+  "subtitle": "Carnet de pêche numérique",
+  "description": "Application de gestion de captures de pêche avec météo, statistiques et export PDF/CSV",
+  "iconURL": "https://votre-site.com/icon.png",
+  "headerURL": "https://votre-site.com/header.png",
+  "website": "https://github.com/jean-francois-arnould/FishingSpot_App",
+  "tintColor": "#4A90E2",
+  "featuredApps": [
+    "com.companyname.fishingspot"
+  ],
+  "apps": [
+    {
+      "name": "FishingSpot",
+      "bundleIdentifier": "com.companyname.fishingspot",
+      "developerName": "Votre Nom",
+      "subtitle": "Votre carnet de pêche numérique",
+      "localizedDescription": "FishingSpot est une application complète pour les pêcheurs :\n\n✓ Enregistrez vos captures avec photo et GPS\n✓ Météo en temps réel\n✓ Statistiques et graphiques\n✓ Export PDF/CSV\n✓ Calendrier de pêche\n✓ Gestion de matériel\n✓ Mode hors ligne complet",
+      "iconURL": "https://votre-site.com/fishingspot-icon.png",
+      "tintColor": "#4A90E2",
+      "category": "utilities",
+      "screenshotURLs": [
+        "https://votre-site.com/screenshot1.png",
+        "https://votre-site.com/screenshot2.png",
+        "https://votre-site.com/screenshot3.png"
+      ],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "date": "2024-01-15",
+          "localizedDescription": "Version initiale avec toutes les fonctionnalités principales",
+          "downloadURL": "https://votre-site.com/FishingSpot-1.0.0.ipa",
+          "size": 50000000,
+          "minOSVersion": "15.0"
+        }
+      ],
+      "appPermissions": {
+        "photos": {
+          "usageDescription": "Prendre des photos de vos captures"
+        },
+        "camera": {
+          "usageDescription": "Capturer vos prises de pêche"
+        },
+        "location": {
+          "usageDescription": "Enregistrer les lieux de pêche"
+        }
+      }
+    }
+  ],
+  "news": []
+}
