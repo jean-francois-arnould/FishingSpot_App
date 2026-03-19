@@ -12,7 +12,12 @@
 - **Solution** : Spécifié explicitement le fichier projet dans le workflow
 - **Résultat** : Le build fonctionne maintenant
 
-### 3️⃣ Nettoyage du projet ✅ TERMINÉ
+### 3️⃣ Erreur service-worker.published.js ✅ RÉSOLU
+- **Cause** : Le workflow tentait de modifier un fichier qui n'existe pas après publication
+- **Solution** : Modifié le workflow pour modifier `service-worker.js` au lieu de `.published.js`
+- **Résultat** : Le service worker sera correctement configuré
+
+### 4️⃣ Nettoyage du projet ✅ TERMINÉ
 - Supprimé 30+ fichiers de documentation redondants
 - Supprimé les branches inutiles (WAP)
 - Organisé les fichiers SQL dans un dossier `database/`
@@ -31,7 +36,8 @@
 8. ✅ NotFound.razor
 
 ### Fichiers de configuration
-- ✅ `.github/workflows/blazor-deploy.yml` - Spécifie le projet + ordre correct
+- ✅ `.github/workflows/blazor-deploy.yml` - Corrigé pour modifier service-worker.js
+- ✅ `FishingSpot.PWA.csproj` - Supprimé référence au workflow inexistant
 - ✅ `.gitignore` - Ajouté output/ et autres dossiers temporaires
 
 ### Fichiers supprimés

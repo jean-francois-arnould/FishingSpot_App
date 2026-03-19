@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <None Include=".github\workflows\blazor-deploy.yml" />
-    <None Include=".github\workflows\deploy-ghpages.yml" />
   </ItemGroup>
 
 </Project>

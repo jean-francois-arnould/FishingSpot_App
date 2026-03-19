@@ -47,7 +47,7 @@ jobs:
           sed -i 's/"start_url": "\.\/",/"start_url": "\/FishingSpot_App\/",/g' output/wwwroot/manifest.webmanifest
 
       - name: Fix service worker base path
-        run: sed -i 's/const base = "\/";/const base = "\/FishingSpot_App\/";/g' output/wwwroot/service-worker.published.js
+        run: sed -i 's/const base = "\/";/const base = "\/FishingSpot_App\/";/g' output/wwwroot/service-worker.js
 
       - name: Add .nojekyll
         run: touch output/wwwroot/.nojekyll
