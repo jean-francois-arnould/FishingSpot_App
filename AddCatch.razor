@@ -360,6 +360,16 @@
         errorMessage = null;
         successMessage = null;
 
+        // Vérifier l'authentification
+        if (!AuthService.IsAuthenticated || AuthService.CurrentUser == null)
+        {
+            errorMessage = "❌ Vous devez être connecté pour enregistrer une prise. Veuillez vous reconnecter.";
+            Console.WriteLine("User not authenticated - redirecting to login");
+            await Task.Delay(2000);
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
         // Validation basique
         if (string.IsNullOrWhiteSpace(newCatch.FishName))
         {
@@ -382,7 +392,10 @@
 
         try
         {
+            Console.WriteLine($"User authenticated: {AuthService.CurrentUser.Email}");
+            Console.WriteLine($"Access token present: {!string.IsNullOrEmpty(AuthService.AccessToken)}");
             Console.WriteLine($"Saving catch: {newCatch.FishName}, Lat: {newCatch.Latitude}, Lon: {newCatch.Longitude}");
+
             var catchId = await SupabaseService.AddCatchAsync(newCatch);
             Console.WriteLine($"Catch saved with ID: {catchId}");
 
@@ -402,7 +415,18 @@
         {
             Console.WriteLine($"Error adding catch: {ex.Message}");
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            errorMessage = $"❌ Erreur: {ex.Message}";
+
+            if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
+            {
+                errorMessage = "❌ Session expirée. Veuillez vous reconnecter.";
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/FishingSpot_App/login");
+            }
+            else
+            {
+                errorMessage = $"❌ Erreur: {ex.Message}";
+            }
+
             isSaving = false;
             StateHasChanged();
         }
