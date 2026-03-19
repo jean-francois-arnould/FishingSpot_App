@@ -225,6 +225,9 @@
         {
             Console.WriteLine($"Error loading setups: {ex.Message}");
         }
+
+        // Lancer la géolocalisation automatiquement au chargement
+        await GetCurrentLocation();
     }
 
     private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
