@@ -1,32 +1,109 @@
 ﻿@inherits LayoutComponentBase
 @using FishingSpot.PWA.Services
 @inject IAuthService AuthService
+@inject NavigationManager Navigation
 
 @if (_initialized)
 {
-    <div class="page">
-        <main>
-            <article class="content px-4">
-                @Body
-            </article>
+    <div class="app-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-title">
+                <span>🎣</span>
+                <span>FishingSpot</span>
+            </div>
+            <div class="top-bar-actions">
+                @if (AuthService.IsAuthenticated)
+                {
+                    <button class="top-bar-btn" @onclick="HandleLogout" title="Déconnexion">
+                        <span>🚪</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="content">
+            @Body
         </main>
+
+        <!-- Bottom Navigation (Mobile) -->
+        @if (AuthService.IsAuthenticated)
+        {
+            <nav class="bottom-nav">
+                <a href="/FishingSpot_App/" class="bottom-nav-item @(IsActive("/FishingSpot_App/") ? "active" : "")">
+                    <div class="bottom-nav-icon">🏠</div>
+                    <div class="bottom-nav-label">Accueil</div>
+                </a>
+
+                <a href="/FishingSpot_App/catches" class="bottom-nav-item @(IsActive("/FishingSpot_App/catches") ? "active" : "")">
+                    <div class="bottom-nav-icon">🐟</div>
+                    <div class="bottom-nav-label">Prises</div>
+                </a>
+
+                <a href="/FishingSpot_App/materiel" class="bottom-nav-item @(IsActive("/FishingSpot_App/materiel") ? "active" : "")">
+                    <div class="bottom-nav-icon">🎣</div>
+                    <div class="bottom-nav-label">Matériel</div>
+                </a>
+
+                <a href="/FishingSpot_App/montages" class="bottom-nav-item @(IsActive("/FishingSpot_App/montages") ? "active" : "")">
+                    <div class="bottom-nav-icon">🪝</div>
+                    <div class="bottom-nav-label">Montages</div>
+                </a>
+
+                <a href="/FishingSpot_App/profile" class="bottom-nav-item @(IsActive("/FishingSpot_App/profile") ? "active" : "")">
+                    <div class="bottom-nav-icon">👤</div>
+                    <div class="bottom-nav-label">Profil</div>
+                </a>
+            </nav>
+        }
     </div>
 }
 else
 {
-    <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+    <div class="loading-overlay">
+        <div class="spinner"></div>
     </div>
 }
 
 @code {
     private bool _initialized = false;
+    private string currentUrl = "";
 
     protected override async Task OnInitializedAsync()
     {
         await AuthService.InitializeAsync();
         _initialized = true;
+        currentUrl = Navigation.Uri;
+        Navigation.LocationChanged += OnLocationChanged;
+        AuthService.OnAuthStateChanged += OnAuthChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        currentUrl = e.Location;
+        StateHasChanged();
+    }
+
+    private void OnAuthChanged(Models.User? user)
+    {
+        StateHasChanged();
+    }
+
+    private bool IsActive(string path)
+    {
+        return currentUrl.Contains(path);
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/FishingSpot_App/");
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        AuthService.OnAuthStateChanged -= OnAuthChanged;
     }
 }
