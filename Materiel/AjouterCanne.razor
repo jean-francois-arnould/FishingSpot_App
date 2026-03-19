@@ -1,0 +1,121 @@
+
+@page "/materiel/cannes/ajouter"
+@page "/FishingSpot_App/materiel/cannes/ajouter"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Ajouter une Canne</PageTitle>
+
+<div class="page-content">
+    <a href="/FishingSpot_App/materiel/cannes" class="btn btn-outline-secondary btn-sm mb-3">← Retour aux cannes</a>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <EditForm Model="@newRod" OnValidSubmit="HandleSubmit">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🎣 Ajouter une canne</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="brand" class="form-label">Marque *</label>
+                    <InputText id="brand" class="form-control" @bind-Value="newRod.Brand" placeholder="Shimano, Daiwa, Abu Garcia..." required />
+                </div>
+
+                <div class="form-group">
+                    <label for="model" class="form-label">Modèle *</label>
+                    <InputText id="model" class="form-control" @bind-Value="newRod.Model" placeholder="Zodias, Procaster..." required />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="length" class="form-label">📏 Longueur (m)</label>
+                        <InputNumber id="length" class="form-control" @bind-Value="newRod.Length" placeholder="2.10" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="power" class="form-label">💪 Puissance</label>
+                        <InputText id="power" class="form-control" @bind-Value="newRod.Power" placeholder="M, MH, H..." />
+                        <small class="text-muted">UL, L, ML, M, MH, H, XH</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="action" class="form-label">Action</label>
+                    <InputText id="action" class="form-control" @bind-Value="newRod.Action" placeholder="Fast, Moderate..." />
+                    <small class="text-muted">Slow, Moderate, Fast, Extra Fast</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes" class="form-label">Notes</label>
+                    <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="newRod.Notes" placeholder="État, technique de pêche, utilisation..." />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">Annuler</button>
+            <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                @if (isSaving) { <div class="spinner"></div> }
+                ✅ Enregistrer
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private Rod newRod = new Rod();
+    private string? errorMessage;
+    private bool isSaving;
+
+    protected override void OnInitialized()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(newRod.Brand) || string.IsNullOrWhiteSpace(newRod.Model))
+        {
+            errorMessage = "La marque et le modèle sont requis.";
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            var rodId = await EquipmentService.AddRodAsync(newRod);
+            if (rodId > 0)
+            {
+                Navigation.NavigateTo("/FishingSpot_App/materiel/cannes");
+            }
+            else
+            {
+                errorMessage = "Erreur lors de l'enregistrement de la canne.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/FishingSpot_App/materiel/cannes");
+    }
+}
