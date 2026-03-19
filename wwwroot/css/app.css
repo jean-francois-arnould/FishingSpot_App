@@ -573,11 +573,12 @@ h6 { font-size: 1rem; }
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    align-items: flex-start;
+    align-items: center;
+    width: 100%;
 }
 
 .preview-img {
-    max-width: 100%;
+    max-width: 300px;
     max-height: 300px;
     width: auto;
     height: auto;
@@ -585,6 +586,7 @@ h6 { font-size: 1rem; }
     border-radius: var(--border-radius-sm);
     border: 2px solid var(--grey-light);
     box-shadow: var(--shadow-sm);
+    display: block;
 }
 
 .upload-status {
@@ -601,11 +603,13 @@ h6 { font-size: 1rem; }
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+    width: 100%;
 }
 
 /* Mobile optimization for photo preview */
 @media (max-width: 576px) {
     .preview-img {
+        max-width: 200px;
         max-height: 200px;
     }
 }
