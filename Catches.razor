@@ -34,7 +34,7 @@
             <div class="catch-list">
                 @foreach (var fishCatch in catches)
                 {
-                    <div class="list-item" @onclick="() => NavigateToEditCatch(fishCatch.Id)">
+                    <div class="list-item" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
                         @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
                         {
                             <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="list-item-img" />
@@ -113,8 +113,13 @@
         Navigation.NavigateTo("/FishingSpot_App/catches/add");
     }
 
+    private void NavigateToCatchDetail(int catchId)
+    {
+        Navigation.NavigateTo($"/FishingSpot_App/catches/{catchId}");
+    }
+
     private void NavigateToEditCatch(int catchId)
     {
-        Navigation.NavigateTo($"/FishingSpot_App/catches/edit/{catchId}");
+        Navigation.NavigateTo($"/FishingSpot_App/edit-catch/{catchId}");
     }
 }
