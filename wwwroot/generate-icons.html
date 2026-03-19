@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur d'icônes PNG depuis SVG</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .preview {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .icon-preview {
+            text-align: center;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 200px;
+        }
+        canvas {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: linear-gradient(135deg, #0066cc, #0084ff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .success {
+            color: #10b981;
+            margin-top: 20px;
+            padding: 15px;
+            background: #d1fae5;
+            border-radius: 8px;
+            display: none;
+        }
+        .instructions {
+            background: #e0f2fe;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border-left: 4px solid #0ea5e9;
+        }
+        .instructions h3 {
+            color: #0369a1;
+            margin-top: 0;
+        }
+        .instructions ol {
+            color: #0f172a;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Générateur d'icônes PWA</h1>
+        <p class="subtitle">Convertissez AppIcon.svg en PNG pour votre application</p>
+
+        <div class="preview">
+            <div class="icon-preview">
+                <h3>512x512</h3>
+                <canvas id="canvas512" width="512" height="512"></canvas>
+                <button onclick="downloadIcon(512)">⬇️ Télécharger icon-512.png</button>
+            </div>
+            <div class="icon-preview">
+                <h3>192x192</h3>
+                <canvas id="canvas192" width="192" height="192"></canvas>
+                <button onclick="downloadIcon(192)">⬇️ Télécharger icon-192.png</button>
+            </div>
+        </div>
+
+        <div class="success" id="successMsg">
+            ✅ Icône téléchargée ! Placez-la dans le dossier <strong>wwwroot/</strong>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Cliquez sur les boutons ci-dessus pour télécharger les deux icônes</li>
+                <li>Placez <strong>icon-512.png</strong> et <strong>icon-192.png</strong> dans le dossier <strong>wwwroot/</strong></li>
+                <li>Remplacez les anciennes icônes si nécessaire</li>
+                <li>Rebuild et déployez votre application</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Charger le SVG et le dessiner sur les canvas
+        async function loadAndDrawSVG() {
+            try {
+                const response = await fetch('AppIcon.svg');
+                const svgText = await response.text();
+
+                // Créer un élément SVG
+                const parser = new DOMParser();
+                const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+                const svgElement = svgDoc.documentElement;
+
+                // Dessiner sur chaque canvas
+                await drawSVGOnCanvas(svgElement, 'canvas512', 512);
+                await drawSVGOnCanvas(svgElement, 'canvas192', 192);
+            } catch (error) {
+                console.error('Erreur lors du chargement du SVG:', error);
+                alert('Erreur: Assurez-vous que AppIcon.svg est dans le même dossier que ce fichier HTML');
+            }
+        }
+
+        function drawSVGOnCanvas(svgElement, canvasId, size) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext('2d');
+
+                // Créer un blob depuis le SVG
+                const svgString = new XMLSerializer().serializeToString(svgElement);
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+
+                // Créer une image
+                const img = new Image();
+                img.onload = function() {
+                    // Dessiner sur le canvas
+                    ctx.clearRect(0, 0, size, size);
+                    ctx.drawImage(img, 0, 0, size, size);
+                    URL.revokeObjectURL(url);
+                    resolve();
+                };
+                img.onerror = function() {
+                    URL.revokeObjectURL(url);
+                    reject(new Error('Erreur lors du chargement de l\'image'));
+                };
+                img.src = url;
+            });
+        }
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            // Afficher le message de succès
+            const successMsg = document.getElementById('successMsg');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+        }
+
+        // Charger automatiquement au chargement de la page
+        window.onload = loadAndDrawSVG;
+    </script>
+</body>
+</html>

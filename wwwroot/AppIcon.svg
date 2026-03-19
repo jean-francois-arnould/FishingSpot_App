@@ -1,0 +1,71 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="64" x2="416" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0EA5E9"></stop>
+      <stop offset="1" stop-color="#0369A1"></stop>
+    </linearGradient>
+    <linearGradient id="fish" x1="150" y1="180" x2="360" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"></stop>
+      <stop offset="1" stop-color="#CBD5E1"></stop>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="512" height="512" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.18"></feDropShadow>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect x="56" y="56" width="400" height="400" rx="96" fill="url(#bg)"></rect>
+
+  <!-- Soft wave -->
+  <path d="M96 348C128 330 154 330 186 348C218 366 244 366 276 348C308 330 334 330 366 348C389 361 407 363 424 358" stroke="#7DD3FC" stroke-width="14" stroke-linecap="round" opacity="0.45"></path>
+
+  <!-- Gear box / inventory card -->
+  <g filter="url(#shadow)">
+    <rect x="118" y="116" width="128" height="164" rx="24" fill="#E0F2FE" opacity="0.95"></rect>
+    <rect x="118" y="116" width="128" height="164" rx="24" stroke="#BAE6FD" stroke-width="4"></rect>
+    
+    <!-- checklist -->
+    <circle cx="150" cy="160" r="10" fill="#0EA5E9"></circle>
+    <path d="M145 160L149 164L157 154" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+    <rect x="170" y="154" width="46" height="10" rx="5" fill="#7DD3FC"></rect>
+
+    <circle cx="150" cy="202" r="10" fill="#0EA5E9"></circle>
+    <path d="M145 202L149 206L157 196" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+    <rect x="170" y="196" width="34" height="10" rx="5" fill="#7DD3FC"></rect>
+
+    <!-- small lure -->
+    <path d="M145 244C145 232 155 224 170 224C186 224 196 232 196 244C196 256 186 264 170 264C155 264 145 256 145 244Z" fill="#38BDF8"></path>
+    <circle cx="156" cy="242" r="3.5" fill="#082F49"></circle>
+    <path d="M197 244C204 244 209 248 212 254" stroke="#0F172A" stroke-width="4" stroke-linecap="round"></path>
+    <path d="M212 254C212 261 206 266 200 266" stroke="#0F172A" stroke-width="4" stroke-linecap="round"></path>
+  </g>
+
+  <!-- Fish -->
+  <g filter="url(#shadow)">
+    <path d="M348 181C310 181 278 204 260 234C236 231 218 222 198 206C198 246 211 265 235 278C212 291 198 310 198 350C219 333 237 324 261 322C280 349 311 367 348 367C413 367 452 325 452 274C452 223 413 181 348 181Z" fill="url(#fish)"></path>
+    <path d="M348 181C310 181 278 204 260 234C236 231 218 222 198 206C198 246 211 265 235 278C212 291 198 310 198 350C219 333 237 324 261 322C280 349 311 367 348 367C413 367 452 325 452 274C452 223 413 181 348 181Z" stroke="#E2E8F0" stroke-width="6"></path>
+
+    <!-- Tail detail -->
+    <path d="M225 234C231 251 240 265 253 275C240 285 230 299 225 318" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"></path>
+
+    <!-- Fish fin -->
+    <path d="M301 206C320 217 333 231 339 251C317 247 300 237 289 222C288 216 293 210 301 206Z" fill="#BFDBFE"></path>
+
+    <!-- Eye -->
+    <circle cx="390" cy="249" r="12" fill="#0F172A"></circle>
+    <circle cx="394" cy="245" r="4" fill="white"></circle>
+
+    <!-- Smile -->
+    <path d="M410 286C399 299 380 307 362 307" stroke="#64748B" stroke-width="6" stroke-linecap="round"></path>
+  </g>
+
+  <!-- Hook -->
+  <path d="M382 112C412 112 434 132 434 161V223" stroke="#F8FAFC" stroke-width="16" stroke-linecap="round"></path>
+  <path d="M434 223V278C434 307 416 328 389 336" stroke="#F8FAFC" stroke-width="16" stroke-linecap="round"></path>
+  <path d="M389 336C365 343 345 330 345 309C345 291 358 278 376 278" stroke="#F8FAFC" stroke-width="16" stroke-linecap="round"></path>
+
+  <!-- Small bubble accents -->
+  <circle cx="126" cy="358" r="8" fill="#BAE6FD" opacity="0.9"></circle>
+  <circle cx="153" cy="384" r="5" fill="#BAE6FD" opacity="0.75"></circle>
+  <circle cx="397" cy="140" r="6" fill="#E0F2FE" opacity="0.8"></circle>
+</svg>
