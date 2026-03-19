@@ -2,7 +2,7 @@ name: Deploy Blazor to GitHub Pages
 
 on:
   push:
-    branches: [ WAP, main ]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -35,6 +35,9 @@ jobs:
       - name: Publish
         run: dotnet publish -c Release -o output --nologo
 
+      - name: Copy 404.html for SPA routing (before fixing base href)
+        run: cp 404.html output/wwwroot/404.html
+
       - name: Fix base href for GitHub Pages
         run: sed -i 's/<base href="\/" \/>/<base href="\/FishingSpot_App\/" \/>/g' output/wwwroot/index.html
 
@@ -45,9 +48,6 @@ jobs:
 
       - name: Fix service worker base path
         run: sed -i 's/const base = "\/";/const base = "\/FishingSpot_App\/";/g' output/wwwroot/service-worker.published.js
-
-      - name: Add 404.html for SPA routing
-        run: cp output/wwwroot/index.html output/wwwroot/404.html
 
       - name: Add .nojekyll
         run: touch output/wwwroot/.nojekyll
