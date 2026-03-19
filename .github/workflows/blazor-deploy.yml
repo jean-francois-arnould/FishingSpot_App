@@ -33,7 +33,7 @@ jobs:
           dotnet-quality: 'preview'
 
       - name: Publish
-        run: dotnet publish -c Release -o output --nologo
+        run: dotnet publish FishingSpot.PWA.csproj -c Release -o output --nologo
 
       - name: Copy 404.html for SPA routing (before fixing base href)
         run: cp 404.html output/wwwroot/404.html
