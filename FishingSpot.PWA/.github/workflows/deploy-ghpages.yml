@@ -1,0 +1,66 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ WAP ]  # Déclenche sur push vers la branche WAP
+  workflow_dispatch:  # Permet de déclencher manuellement
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Empêche les déploiements concurrents
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        dotnet-quality: 'preview'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build and publish
+      run: dotnet publish -c Release -o publish
+
+    - name: Change base-tag in index.html for GitHub Pages
+      run: |
+        sed -i 's/<base href="\/" \/>/<base href="\/FishingSpot_App\/" \/>/g' publish/wwwroot/index.html
+
+    - name: Update manifest for GitHub Pages
+      run: |
+        sed -i 's/"id": "\.\/",/"id": "\/FishingSpot_App\/",/g' publish/wwwroot/manifest.webmanifest
+        sed -i 's/"start_url": "\.\/",/"start_url": "\/FishingSpot_App\/",/g' publish/wwwroot/manifest.webmanifest
+
+    - name: Add .nojekyll file
+      run: touch publish/wwwroot/.nojekyll
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: 'publish/wwwroot'
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
