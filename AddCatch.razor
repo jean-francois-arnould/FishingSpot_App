@@ -67,12 +67,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="latitude" class="form-label">Coordonnées GPS</label>
+                    <label for="latitude" class="form-label">Coordonnées GPS (optionnel)</label>
                     <div class="gps-fields">
-                        <input type="number" id="latitude" class="form-control" @bind="newCatch.Latitude" 
-                               placeholder="Latitude" step="0.000001" inputmode="decimal" />
-                        <input type="number" id="longitude" class="form-control" @bind="newCatch.Longitude" 
-                               placeholder="Longitude" step="0.000001" inputmode="decimal" />
+                        <input type="text" id="latitude" class="form-control" @bind="newCatch.Latitude" 
+                               placeholder="Latitude" inputmode="decimal" />
+                        <input type="text" id="longitude" class="form-control" @bind="newCatch.Longitude" 
+                               placeholder="Longitude" inputmode="decimal" />
                         <button type="button" class="btn btn-outline-primary" @onclick="GetCurrentLocation" disabled="@isGettingLocation">
                             @if (isGettingLocation)
                             {
@@ -84,7 +84,7 @@
                             }
                         </button>
                     </div>
-                    <small class="text-muted">Les coordonnées GPS sont optionnelles</small>
+                    <small class="text-muted">Cliquez sur 📍 pour remplir automatiquement</small>
                 </div>
 
                 <div class="form-row">
@@ -322,8 +322,8 @@
 
             if (position != null)
             {
-                newCatch.Latitude = position.Latitude;
-                newCatch.Longitude = position.Longitude;
+                newCatch.Latitude = position.Latitude.ToString();
+                newCatch.Longitude = position.Longitude.ToString();
 
                 // Reverse geocoding pour obtenir le nom du lieu
                 try
@@ -387,22 +387,19 @@
 
             if (catchId > 0)
             {
-                successMessage = "✅ Catch saved successfully!";
-                await Task.Delay(1500);
-                Navigation.NavigateTo("/FishingSpot_App/catches");
+                // Redirection immédiate vers la liste sans attendre
+                Navigation.NavigateTo("/FishingSpot_App/catches", forceLoad: true);
             }
             else
             {
-                errorMessage = "Failed to save catch. Please try again.";
+                errorMessage = "Erreur lors de la sauvegarde. Veuillez réessayer.";
+                isSaving = false;
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error adding catch: {ex.Message}");
-            errorMessage = $"Error: {ex.Message}";
-        }
-        finally
-        {
+            errorMessage = $"Erreur: {ex.Message}";
             isSaving = false;
         }
     }

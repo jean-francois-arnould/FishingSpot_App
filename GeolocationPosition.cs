@@ -2,8 +2,8 @@ namespace FishingSpot.PWA.Models
 {
     public class GeolocationPosition
     {
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
+        public string? Latitude { get; set; } = string.Empty;
+        public string? Longitude { get; set; } = string.Empty;
         public double? Accuracy { get; set; }
     }
 }

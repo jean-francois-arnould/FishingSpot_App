@@ -375,24 +375,48 @@ h6 { font-size: 1rem; }
 .list-item-icon {
     font-size: 2rem;
     color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.list-item-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--border-radius-sm);
+    flex-shrink: 0;
 }
 
 .list-item-content {
     flex: 1;
+    min-width: 0;
 }
 
 .list-item-title {
     font-weight: 600;
     margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .list-item-subtitle {
     font-size: 0.875rem;
     color: var(--grey);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.list-item-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
 }
 
 .list-item-action {
     color: var(--grey);
+    flex-shrink: 0;
 }
 
 /* ===== EMPTY STATE ===== */
