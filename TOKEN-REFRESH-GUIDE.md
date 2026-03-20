@@ -7,12 +7,54 @@
 - ❌ Erreur "JWT expired" lors de la sauvegarde
 - ❌ Obligation de se reconnecter manuellement
 - ❌ Perte du contexte utilisateur
+- ❌ Aucun avertissement à l'utilisateur
 
 **APRÈS** :
 - ✅ Token rafraîchi automatiquement toutes les heures
 - ✅ Rafraîchissement transparent (en arrière-plan)
 - ✅ Plus besoin de se reconnecter
 - ✅ Session persistante tant que l'app est ouverte
+- ✅ **Notification élégante si la session expire**
+
+---
+
+## 🔔 Notification d'expiration de session
+
+### Quand apparaît-elle ?
+
+La notification s'affiche uniquement si :
+- ❌ Le refresh token a expiré (après 30 jours d'inactivité)
+- ❌ Le refresh token est invalide ou révoqué
+- ❌ Erreur de connexion au serveur Supabase
+- ❌ Token corrompu ou manipulation détectée
+
+### À quoi ressemble-t-elle ?
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│              ⚠️                      │
+│                                     │
+│        Session expirée              │
+│                                     │
+│  Votre session a expiré pour des    │
+│  raisons de sécurité.               │
+│  Veuillez vous reconnecter pour     │
+│  continuer.                         │
+│                                     │
+│     [ 🔑 Se reconnecter ]          │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Comportement
+
+1. **Modal élégante** avec fond semi-transparent
+2. **Emoji d'avertissement** (⚠️) pour attirer l'attention
+3. **Message clair** expliquant la situation
+4. **Bouton "Se reconnecter"** bien visible
+5. **Redirection automatique** après 10 secondes
+6. **Nettoyage complet** des tokens expirés
 
 ---
 
