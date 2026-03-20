@@ -60,13 +60,26 @@ namespace FishingSpot.PWA.Services
                         if (_tokenExpiresAt <= DateTime.UtcNow.AddMinutes(5))
                         {
                             Console.WriteLine("🔄 Token expiré ou proche de l'expiration, rafraîchissement...");
-                            await RefreshTokenAsync();
+                            var refreshSuccess = await RefreshTokenAsync();
+
+                            // Si le rafraîchissement échoue, déconnecter l'utilisateur
+                            if (!refreshSuccess)
+                            {
+                                Console.WriteLine("❌ Impossible de rafraîchir le token, déconnexion...");
+                                await SignOutAsync();
+                            }
                         }
                         else
                         {
                             // Planifier le rafraîchissement automatique
                             ScheduleTokenRefresh();
                         }
+                    }
+                    else if (string.IsNullOrEmpty(expiresAtStr))
+                    {
+                        // Pas d'expiration enregistrée, déconnecter par sécurité
+                        Console.WriteLine("⚠️ Date d'expiration du token manquante, déconnexion par sécurité...");
+                        await SignOutAsync();
                     }
 
                     OnAuthStateChanged?.Invoke(_currentUser);
