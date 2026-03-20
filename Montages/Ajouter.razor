@@ -12,42 +12,22 @@
 
 <PageTitle>Créer un Montage</PageTitle>
 
-<div class="container-fluid">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/FishingSpot_App/">🎣 FishingSpot</a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" href="/FishingSpot_App/catches">Mes Prises</a>
-                <a class="nav-link active" href="/FishingSpot_App/montages">Montages</a>
-                <a class="nav-link" href="/FishingSpot_App/materiel">Matériel</a>
-                <a class="nav-link" href="/FishingSpot_App/profile">Profil</a>
-            </div>
-            <div class="d-flex">
-                <span class="navbar-text me-3">
-                    👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.DisplayName) 
-                        ? userProfile.DisplayName 
-                        : AuthService.CurrentUser?.Email)
-                </span>
-                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">
-                    Déconnexion
-                </button>
-            </div>
+<div class="page-content">
+    <a href="/FishingSpot_App/montages" class="btn btn-outline-secondary btn-sm mb-3">
+        ← Retour aux montages
+    </a>
+
+    <h3 class="mb-4">🎣 Créer un Montage</h3>
+
+    @if (isLoadingEquipment)
+    {
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement du matériel...</p>
         </div>
-    </nav>
-
-    <div class="container">
-        <h3 class="mb-4">🎣 Créer un Montage</h3>
-
-        @if (isLoadingEquipment)
-        {
-            <div class="text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Chargement du matériel...</span>
-                </div>
-            </div>
-        }
-        else
-        {
+    }
+    else
+    {
             <EditForm Model="@newSetup" OnValidSubmit="HandleSubmit">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
@@ -155,20 +135,19 @@
         }
 
                     <div class="mt-3">
-                        <button type="submit" class="btn btn-success" disabled="@isSubmitting">
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
                             @if (isSubmitting)
                             {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <div class="spinner"></div>
                             }
-                            <i class="bi bi-check-circle"></i> Enregistrer
+                            ✅ Enregistrer
                         </button>
-                        <button type="button" class="btn btn-secondary" @onclick="Cancel">
-                            <i class="bi bi-x-circle"></i> Annuler
+                        <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">
+                            Annuler
                         </button>
                     </div>
                 </EditForm>
-                }
-            </div>
+            }
         </div>
 
 @code {
@@ -292,11 +271,5 @@
     private void Cancel()
     {
         Navigation.NavigateTo("/FishingSpot_App/montages");
-    }
-
-    private async Task HandleLogout()
-    {
-        await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/FishingSpot_App/login");
     }
 }
