@@ -77,7 +77,13 @@ namespace FishingSpot.PWA.Services
                     rod.UserId = _authService.CurrentUser.Id;
 
                 rod.CreatedAt = DateTime.UtcNow;
-                var json = JsonSerializer.Serialize(rod);
+
+                // Options pour ignorer les valeurs par défaut comme id: 0
+                var options = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                };
+                var json = JsonSerializer.Serialize(rod, options);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
@@ -170,7 +176,12 @@ namespace FishingSpot.PWA.Services
                     reel.UserId = _authService.CurrentUser.Id;
 
                 reel.CreatedAt = DateTime.UtcNow;
-                var json = JsonSerializer.Serialize(reel);
+
+                var options = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                };
+                var json = JsonSerializer.Serialize(reel, options);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
@@ -263,7 +274,12 @@ namespace FishingSpot.PWA.Services
                     line.UserId = _authService.CurrentUser.Id;
 
                 line.CreatedAt = DateTime.UtcNow;
-                var json = JsonSerializer.Serialize(line);
+
+                var options = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                };
+                var json = JsonSerializer.Serialize(line, options);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
@@ -356,7 +372,12 @@ namespace FishingSpot.PWA.Services
                     lure.UserId = _authService.CurrentUser.Id;
 
                 lure.CreatedAt = DateTime.UtcNow;
-                var json = JsonSerializer.Serialize(lure);
+
+                var options = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                };
+                var json = JsonSerializer.Serialize(lure, options);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
@@ -449,7 +470,12 @@ namespace FishingSpot.PWA.Services
                     leader.UserId = _authService.CurrentUser.Id;
 
                 leader.CreatedAt = DateTime.UtcNow;
-                var json = JsonSerializer.Serialize(leader);
+
+                var options = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                };
+                var json = JsonSerializer.Serialize(leader, options);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
@@ -542,7 +568,12 @@ namespace FishingSpot.PWA.Services
                     hook.UserId = _authService.CurrentUser.Id;
 
                 hook.CreatedAt = DateTime.UtcNow;
-                var json = JsonSerializer.Serialize(hook);
+
+                var options = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                };
+                var json = JsonSerializer.Serialize(hook, options);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
