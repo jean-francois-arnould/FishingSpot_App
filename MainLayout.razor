@@ -15,8 +15,12 @@
             <div class="top-bar-actions">
                 @if (AuthService.IsAuthenticated)
                 {
-                    <button class="top-bar-btn" @onclick="HandleLogout" title="Déconnexion">
-                        <span>🚪</span>
+                    <button class="top-bar-btn burger-btn" @onclick="ToggleMenu" title="Menu">
+                        <span class="burger-icon @(isMenuOpen ? "open" : "")">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
                     </button>
                 }
             </div>
@@ -27,11 +31,77 @@
             @Body
         </main>
 
-        <!-- Bottom Navigation (Mobile) -->
+        <!-- Burger Menu Overlay -->
+        @if (AuthService.IsAuthenticated && isMenuOpen)
+        {
+            <div class="menu-overlay" @onclick="CloseMenu"></div>
+        }
+
+        <!-- Burger Menu Sidebar -->
+        @if (AuthService.IsAuthenticated)
+        {
+            <div class="burger-menu @(isMenuOpen ? "open" : "")">
+                <div class="burger-menu-header">
+                    <div class="burger-menu-title">
+                        <span>🎣</span>
+                        <span>Menu</span>
+                    </div>
+                    <button class="menu-close-btn" @onclick="CloseMenu">✕</button>
+                </div>
+
+                <nav class="burger-menu-nav">
+                    <a href="/FishingSpot_App/" class="burger-menu-item @(IsActive("/FishingSpot_App/") && !IsActive("/FishingSpot_App/catches") && !IsActive("/FishingSpot_App/statistiques") ? "active" : "")" @onclick="CloseMenu">
+                        <span class="burger-menu-icon">🏠</span>
+                        <span class="burger-menu-label">Accueil</span>
+                    </a>
+
+                    <a href="/FishingSpot_App/catches" class="burger-menu-item @(IsActive("/FishingSpot_App/catches") ? "active" : "")" @onclick="CloseMenu">
+                        <span class="burger-menu-icon">🐟</span>
+                        <span class="burger-menu-label">Mes Prises</span>
+                    </a>
+
+                    <a href="/FishingSpot_App/statistiques" class="burger-menu-item @(IsActive("/FishingSpot_App/statistiques") ? "active" : "")" @onclick="CloseMenu">
+                        <span class="burger-menu-icon">📊</span>
+                        <span class="burger-menu-label">Statistiques</span>
+                    </a>
+
+                    <a href="/FishingSpot_App/carte" class="burger-menu-item @(IsActive("/FishingSpot_App/carte") ? "active" : "")" @onclick="CloseMenu">
+                        <span class="burger-menu-icon">🗺️</span>
+                        <span class="burger-menu-label">Carte Géopêche</span>
+                    </a>
+
+                    <div class="burger-menu-divider"></div>
+
+                    <a href="/FishingSpot_App/materiel" class="burger-menu-item @(IsActive("/FishingSpot_App/materiel") ? "active" : "")" @onclick="CloseMenu">
+                        <span class="burger-menu-icon">🎣</span>
+                        <span class="burger-menu-label">Mon Matériel</span>
+                    </a>
+
+                    <a href="/FishingSpot_App/montages" class="burger-menu-item @(IsActive("/FishingSpot_App/montages") ? "active" : "")" @onclick="CloseMenu">
+                        <span class="burger-menu-icon">🪝</span>
+                        <span class="burger-menu-label">Mes Montages</span>
+                    </a>
+
+                    <div class="burger-menu-divider"></div>
+
+                    <a href="/FishingSpot_App/profile" class="burger-menu-item @(IsActive("/FishingSpot_App/profile") ? "active" : "")" @onclick="CloseMenu">
+                        <span class="burger-menu-icon">👤</span>
+                        <span class="burger-menu-label">Mon Profil</span>
+                    </a>
+
+                    <button class="burger-menu-item burger-menu-logout" @onclick="HandleLogoutFromMenu">
+                        <span class="burger-menu-icon">🚪</span>
+                        <span class="burger-menu-label">Déconnexion</span>
+                    </button>
+                </nav>
+            </div>
+        }
+
+        <!-- Bottom Navigation (Simplified) -->
         @if (AuthService.IsAuthenticated)
         {
             <nav class="bottom-nav">
-                <a href="/FishingSpot_App/" class="bottom-nav-item @(IsActive("/FishingSpot_App/") ? "active" : "")">
+                <a href="/FishingSpot_App/" class="bottom-nav-item @(IsActive("/FishingSpot_App/") && !IsActive("/FishingSpot_App/catches") && !IsActive("/FishingSpot_App/statistiques") ? "active" : "")">
                     <div class="bottom-nav-icon">🏠</div>
                     <div class="bottom-nav-label">Accueil</div>
                 </a>
@@ -46,25 +116,10 @@
                     <div class="bottom-nav-label">Stats</div>
                 </a>
 
-                <a href="/FishingSpot_App/carte" class="bottom-nav-item @(IsActive("/FishingSpot_App/carte") ? "active" : "")">
-                    <div class="bottom-nav-icon">🗺️</div>
-                    <div class="bottom-nav-label">Carte</div>
-                </a>
-
-                <a href="/FishingSpot_App/materiel" class="bottom-nav-item @(IsActive("/FishingSpot_App/materiel") ? "active" : "")">
-                    <div class="bottom-nav-icon">🎣</div>
-                    <div class="bottom-nav-label">Matériel</div>
-                </a>
-
-                <a href="/FishingSpot_App/montages" class="bottom-nav-item @(IsActive("/FishingSpot_App/montages") ? "active" : "")">
-                    <div class="bottom-nav-icon">🪝</div>
-                    <div class="bottom-nav-label">Montages</div>
-                </a>
-
-                <a href="/FishingSpot_App/profile" class="bottom-nav-item @(IsActive("/FishingSpot_App/profile") ? "active" : "")">
-                    <div class="bottom-nav-icon">👤</div>
-                    <div class="bottom-nav-label">Profil</div>
-                </a>
+                <button class="bottom-nav-item @(isMenuOpen ? "active" : "")" @onclick="ToggleMenu">
+                    <div class="bottom-nav-icon">☰</div>
+                    <div class="bottom-nav-label">Menu</div>
+                </button>
             </nav>
         }
     </div>
@@ -79,6 +134,7 @@ else
 @code {
     private bool _initialized = false;
     private string currentUrl = "";
+    private bool isMenuOpen = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,6 +148,7 @@ else
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
         currentUrl = e.Location;
+        isMenuOpen = false; // Close menu on navigation
         StateHasChanged();
     }
 
@@ -105,10 +162,26 @@ else
         return currentUrl.Contains(path);
     }
 
+    private void ToggleMenu()
+    {
+        isMenuOpen = !isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        isMenuOpen = false;
+    }
+
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
         Navigation.NavigateTo("/FishingSpot_App/", forceLoad: true);
+    }
+
+    private async Task HandleLogoutFromMenu()
+    {
+        CloseMenu();
+        await HandleLogout();
     }
 
     public void Dispose()
