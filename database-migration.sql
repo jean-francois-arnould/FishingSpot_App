@@ -1,18 +1,47 @@
 -- ===================================================================
--- Script de migration de la base de données FishingSpot
--- Ce script supprime et recrée toutes les tables avec la structure correcte
+-- Script de migration de la base de données FishingSpot v2.0
+-- Ce script supprime TOUTES les tables existantes et recrée une structure simplifiée
 -- ===================================================================
 
--- ATTENTION : Ce script supprime toutes les données existantes !
--- Assurez-vous d'avoir une sauvegarde avant de l'exécuter
+-- ATTENTION : Ce script supprime TOUTES les données existantes !
+-- Aucune sauvegarde ne sera effectuée
 
 -- ===================================================================
--- 1. SUPPRESSION DES TABLES EXISTANTES
+-- 1. SUPPRESSION DE TOUTES LES TABLES EXISTANTES (dans le bon ordre)
 -- ===================================================================
 
+-- Désactiver temporairement les foreign keys pour éviter les erreurs
+SET session_replication_role = 'replica';
+
+-- Supprimer toutes les tables dans le bon ordre (à cause des foreign keys)
 DROP TABLE IF EXISTS public.fish_catches CASCADE;
 DROP TABLE IF EXISTS public.fishing_setups CASCADE;
+DROP TABLE IF EXISTS public.hooks CASCADE;
+DROP TABLE IF EXISTS public.leaders CASCADE;
+DROP TABLE IF EXISTS public.lures CASCADE;
+DROP TABLE IF EXISTS public.lines CASCADE;
+DROP TABLE IF EXISTS public.reels CASCADE;
+DROP TABLE IF EXISTS public.rods CASCADE;
 DROP TABLE IF EXISTS public.user_profiles CASCADE;
+
+-- Supprimer les séquences
+DROP SEQUENCE IF EXISTS public.fish_catches_id_seq CASCADE;
+DROP SEQUENCE IF EXISTS public.fishing_setups_id_seq CASCADE;
+DROP SEQUENCE IF EXISTS public.hooks_id_seq CASCADE;
+DROP SEQUENCE IF EXISTS public.leaders_id_seq CASCADE;
+DROP SEQUENCE IF EXISTS public.lures_id_seq CASCADE;
+DROP SEQUENCE IF EXISTS public.lines_id_seq CASCADE;
+DROP SEQUENCE IF EXISTS public.reels_id_seq CASCADE;
+DROP SEQUENCE IF EXISTS public.rods_id_seq CASCADE;
+
+-- Réactiver les foreign keys
+SET session_replication_role = 'origin';
+
+-- Message de confirmation
+DO $$
+BEGIN
+    RAISE NOTICE '✅ Toutes les anciennes tables ont été supprimées';
+END $$;
 
 -- ===================================================================
 -- 2. CRÉATION DE LA TABLE user_profiles
@@ -180,4 +209,34 @@ COMMENT ON TABLE public.user_profiles IS 'Profils utilisateurs étendus';
 -- MIGRATION TERMINÉE
 -- ===================================================================
 
-SELECT 'Migration terminée avec succès ! 🎣' AS status;
+DO $$
+BEGIN
+    RAISE NOTICE '🎣 ============================================';
+    RAISE NOTICE '✅ Migration terminée avec succès !';
+    RAISE NOTICE '🎣 ============================================';
+    RAISE NOTICE '';
+    RAISE NOTICE '📊 Résumé des tables créées :';
+    RAISE NOTICE '  ✓ user_profiles (Profils utilisateurs)';
+    RAISE NOTICE '  ✓ fishing_setups (Montages de pêche)';
+    RAISE NOTICE '  ✓ fish_catches (Prises de pêche)';
+    RAISE NOTICE '';
+    RAISE NOTICE '🔐 RLS (Row Level Security) activé sur toutes les tables';
+    RAISE NOTICE '📈 Index créés pour optimiser les performances';
+    RAISE NOTICE '🔄 Triggers de mise à jour automatique installés';
+    RAISE NOTICE '';
+    RAISE NOTICE '📏 Unités de mesure :';
+    RAISE NOTICE '  • Longueur : en CENTIMÈTRES (cm)';
+    RAISE NOTICE '  • Poids : en GRAMMES (g)';
+    RAISE NOTICE '';
+    RAISE NOTICE '🚀 Vous pouvez maintenant utiliser l''application !';
+END $$;
+
+-- Afficher un résumé des tables
+SELECT 
+    'Tables créées' as section,
+    table_name,
+    (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = t.table_name) as nb_columns
+FROM information_schema.tables t
+WHERE table_schema = 'public' 
+  AND table_type = 'BASE TABLE'
+ORDER BY table_name;
