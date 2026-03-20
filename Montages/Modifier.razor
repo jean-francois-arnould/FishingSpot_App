@@ -24,8 +24,8 @@
             </div>
             <div class="d-flex">
                 <span class="navbar-text me-3">
-                    👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.FirstName) 
-                        ? $"{userProfile.FirstName} {userProfile.LastName}" 
+                    👋 @(userProfile != null && !string.IsNullOrEmpty(userProfile.DisplayName) 
+                        ? userProfile.DisplayName 
                         : AuthService.CurrentUser?.Email)
                 </span>
                 <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">

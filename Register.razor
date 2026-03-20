@@ -187,15 +187,10 @@
 
                 if (loginSuccess)
                 {
-                    // 3. Créer le profil utilisateur
+                    // 3. Créer le profil utilisateur avec le DisplayName
                     var profile = new UserProfile
                     {
-                        FirstName = registerModel.FirstName,
-                        LastName = registerModel.LastName,
-                        City = registerModel.City,
-                        PostalCode = registerModel.PostalCode,
-                        Country = registerModel.Country,
-                        Phone = registerModel.Phone
+                        DisplayName = $"{registerModel.FirstName} {registerModel.LastName}".Trim()
                     };
 
                     var profileCreated = await ProfileService.CreateOrUpdateProfileAsync(profile);

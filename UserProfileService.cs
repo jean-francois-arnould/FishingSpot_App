@@ -28,8 +28,17 @@ namespace FishingSpot.PWA.Services
         private void SetAuthHeaders()
         {
             _httpClient.DefaultRequestHeaders.Remove("Authorization");
+            _httpClient.DefaultRequestHeaders.Remove("apikey");
+
             var token = _authService.AccessToken ?? _supabaseKey;
+
+            // Ajouter l'apikey (requis par Supabase)
+            _httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
+
+            // Ajouter l'Authorization avec le token d'authentification
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+            Console.WriteLine($"🔑 Headers set - apikey: {_supabaseKey.Substring(0, 10)}..., token: {token?.Substring(0, 10)}...");
         }
 
         public async Task<UserProfile?> GetProfileAsync()
@@ -40,12 +49,35 @@ namespace FishingSpot.PWA.Services
                 if (_authService.CurrentUser == null)
                     return null;
 
-                var response = await _httpClient.GetFromJsonAsync<List<UserProfile>>($"/rest/v1/user_profiles?user_id=eq.{_authService.CurrentUser.Id}&select=*");
+                // Ajouter l'en-tête Content-Type et Prefer
+                _httpClient.DefaultRequestHeaders.Remove("Content-Type");
+                _httpClient.DefaultRequestHeaders.Remove("Prefer");
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+                _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
+
+                // Utiliser 'id' au lieu de 'user_id' car la clé primaire est 'id'
+                var url = $"/rest/v1/user_profiles?id=eq.{_authService.CurrentUser.Id}&select=*";
+                Console.WriteLine($"🔍 Fetching profile from: {url}");
+
+                var httpResponse = await _httpClient.GetAsync(url);
+                var content = await httpResponse.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"📥 Response status: {httpResponse.StatusCode}");
+                Console.WriteLine($"📥 Response content: {content}");
+
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"❌ Error getting profile: {httpResponse.StatusCode} - {content}");
+                    return null;
+                }
+
+                var response = JsonSerializer.Deserialize<List<UserProfile>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 return response?.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting profile: {ex.Message}");
+                Console.WriteLine($"❌ Exception getting profile: {ex.Message}");
+                Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -58,7 +90,8 @@ namespace FishingSpot.PWA.Services
                 if (_authService.CurrentUser == null)
                     return false;
 
-                profile.UserId = _authService.CurrentUser.Id;
+                profile.Id = _authService.CurrentUser.Id;
+                profile.Email = _authService.CurrentUser.Email;
                 profile.UpdatedAt = DateTime.UtcNow;
 
                 var existingProfile = await GetProfileAsync();
@@ -73,17 +106,20 @@ namespace FishingSpot.PWA.Services
                     _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
 
                     var response = await _httpClient.PostAsync("/rest/v1/user_profiles", content);
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"📤 Create profile response: {response.StatusCode} - {responseContent}");
                     return response.IsSuccessStatusCode;
                 }
                 else
                 {
-                    profile.Id = existingProfile.Id;
                     profile.CreatedAt = existingProfile.CreatedAt;
 
                     var json = JsonSerializer.Serialize(profile);
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                    var response = await _httpClient.PatchAsync($"/rest/v1/user_profiles?user_id=eq.{_authService.CurrentUser.Id}", content);
+                    var response = await _httpClient.PatchAsync($"/rest/v1/user_profiles?id=eq.{_authService.CurrentUser.Id}", content);
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"📤 Update profile response: {response.StatusCode} - {responseContent}");
                     return response.IsSuccessStatusCode;
                 }
             }
@@ -102,7 +138,7 @@ namespace FishingSpot.PWA.Services
                 if (_authService.CurrentUser == null)
                     return false;
 
-                var response = await _httpClient.DeleteAsync($"/rest/v1/user_profiles?user_id=eq.{_authService.CurrentUser.Id}");
+                var response = await _httpClient.DeleteAsync($"/rest/v1/user_profiles?id=eq.{_authService.CurrentUser.Id}");
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

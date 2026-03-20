@@ -40,43 +40,24 @@
                 </div>
                 <div class="card-body">
                     <EditForm Model="@profile" OnValidSubmit="HandleSaveProfile">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="firstName" class="form-label">Prénom</label>
-                                <InputText id="firstName" class="form-control" @bind-Value="profile.FirstName" placeholder="Jean" />
-                            </div>
-                            <div class="form-group">
-                                <label for="lastName" class="form-label">Nom</label>
-                                <InputText id="lastName" class="form-control" @bind-Value="profile.LastName" placeholder="Dupont" />
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="phone" class="form-label">📱 Téléphone</label>
-                                <InputText id="phone" class="form-control" @bind-Value="profile.Phone" placeholder="+33 6 12 34 56 78" />
-                            </div>
-                            <div class="form-group">
-                                <label for="country" class="form-label">🌍 Pays</label>
-                                <InputText id="country" class="form-control" @bind-Value="profile.Country" placeholder="France" />
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="city" class="form-label">🏙️ Ville</label>
-                                <InputText id="city" class="form-control" @bind-Value="profile.City" placeholder="Paris" />
-                            </div>
-                            <div class="form-group">
-                                <label for="favoriteSpot" class="form-label">🎣 Spot favori</label>
-                                <InputText id="favoriteSpot" class="form-control" @bind-Value="profile.FavoriteSpot" placeholder="Lac de Sainte-Croix" />
-                            </div>
+                        <div class="form-group">
+                            <label for="displayName" class="form-label">👤 Nom d'affichage</label>
+                            <InputText id="displayName" class="form-control" @bind-Value="profile.DisplayName" placeholder="Jean Dupont" />
+                            <small class="text-muted">Ce nom sera visible par les autres utilisateurs</small>
                         </div>
 
                         <div class="form-group">
-                            <label for="bio" class="form-label">📝 Bio / Notes</label>
-                            <InputTextArea id="bio" class="form-control" rows="3" @bind-Value="profile.Bio" placeholder="Dites-nous en plus sur vous..." />
+                            <label for="avatarUrl" class="form-label">🖼️ URL de l'avatar</label>
+                            <InputText id="avatarUrl" class="form-control" @bind-Value="profile.AvatarUrl" placeholder="https://..." />
+                            <small class="text-muted">URL de votre photo de profil</small>
                         </div>
+
+                        @if (!string.IsNullOrEmpty(profile.AvatarUrl))
+                        {
+                            <div class="mb-3">
+                                <img src="@profile.AvatarUrl" alt="Avatar" style="max-width: 150px; border-radius: 50%;" />
+                            </div>
+                        }
 
                         <button type="submit" class="btn btn-primary btn-block" disabled="@isSaving">
                             @if (isSaving)
