@@ -11,18 +11,16 @@ namespace FishingSpot.PWA.Services
         private readonly HttpClient _httpClient;
         private readonly IAuthService _authService;
         private readonly string _supabaseKey;
+        private readonly string _supabaseUrl;
 
         public UserProfileService(HttpClient httpClient, IConfiguration configuration, IAuthService authService)
         {
             _authService = authService;
-            var supabaseUrl = configuration["Supabase:Url"] ?? "https://placeholder.supabase.co";
+            _supabaseUrl = configuration["Supabase:Url"] ?? "https://placeholder.supabase.co";
             _supabaseKey = configuration["Supabase:Key"] ?? "";
+            _httpClient = httpClient;
 
-            _httpClient = new HttpClient { BaseAddress = new Uri(supabaseUrl) };
-            if (!string.IsNullOrEmpty(_supabaseKey))
-            {
-                _httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
-            }
+            _httpClient.BaseAddress = new Uri(_supabaseUrl);
         }
 
         private void SetAuthHeaders()
@@ -153,6 +151,9 @@ namespace FishingSpot.PWA.Services
             Console.WriteLine($"📤 JSON to send: {json}");
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            _httpClient.DefaultRequestHeaders.Remove("Prefer");
+            _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
 
             var response = await _httpClient.PatchAsync($"/rest/v1/user_profiles?id=eq.{profile.Id}", content);
             var responseContent = await response.Content.ReadAsStringAsync();

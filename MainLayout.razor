@@ -98,7 +98,7 @@ else
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/FishingSpot_App/");
+        Navigation.NavigateTo("/FishingSpot_App/", forceLoad: true);
     }
 
     public void Dispose()

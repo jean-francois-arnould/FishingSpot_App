@@ -203,7 +203,7 @@
     private async Task HandleLogout()
     {
         await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/FishingSpot_App/");
+        Navigation.NavigateTo("/FishingSpot_App/", forceLoad: true);
     }
 
     private void ShowDeleteConfirmation()
