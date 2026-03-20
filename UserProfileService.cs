@@ -49,12 +49,6 @@ namespace FishingSpot.PWA.Services
                 if (_authService.CurrentUser == null)
                     return null;
 
-                // Ajouter l'en-tête Content-Type et Prefer
-                _httpClient.DefaultRequestHeaders.Remove("Content-Type");
-                _httpClient.DefaultRequestHeaders.Remove("Prefer");
-                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
-                _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
-
                 // Utiliser 'id' au lieu de 'user_id' car la clé primaire est 'id'
                 var url = $"/rest/v1/user_profiles?id=eq.{_authService.CurrentUser.Id}&select=*";
                 Console.WriteLine($"🔍 Fetching profile from: {url}");
@@ -93,6 +87,8 @@ namespace FishingSpot.PWA.Services
                 profile.Id = _authService.CurrentUser.Id;
                 profile.Email = _authService.CurrentUser.Email;
 
+                Console.WriteLine($"🔄 Attempting to save profile for user: {profile.Id}");
+
                 var existingProfile = await GetProfileAsync();
 
                 if (existingProfile == null)
@@ -100,7 +96,6 @@ namespace FishingSpot.PWA.Services
                     // Créer un nouveau profil
                     Console.WriteLine("📝 Creating new profile...");
 
-                    // Ne pas envoyer created_at et updated_at, laissez Supabase les gérer
                     var profileData = new
                     {
                         id = profile.Id,
@@ -120,29 +115,20 @@ namespace FishingSpot.PWA.Services
                     var response = await _httpClient.PostAsync("/rest/v1/user_profiles", content);
                     var responseContent = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"📤 Create profile response: {response.StatusCode} - {responseContent}");
+
+                    // Si erreur 409 (Conflict), c'est que le profil existe déjà, on fait un UPDATE
+                    if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                    {
+                        Console.WriteLine("⚠️ Profile already exists, switching to UPDATE...");
+                        return await UpdateProfileAsync(profile);
+                    }
+
                     return response.IsSuccessStatusCode;
                 }
                 else
                 {
                     // Mettre à jour le profil existant
-                    Console.WriteLine("📝 Updating existing profile...");
-
-                    // Ne pas envoyer updated_at, laissez le trigger SQL le gérer
-                    var profileData = new
-                    {
-                        display_name = profile.DisplayName ?? string.Empty,
-                        avatar_url = profile.AvatarUrl ?? string.Empty
-                    };
-
-                    var json = JsonSerializer.Serialize(profileData);
-                    Console.WriteLine($"📤 JSON to send: {json}");
-
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                    var response = await _httpClient.PatchAsync($"/rest/v1/user_profiles?id=eq.{_authService.CurrentUser.Id}", content);
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"📤 Update profile response: {response.StatusCode} - {responseContent}");
-                    return response.IsSuccessStatusCode;
+                    return await UpdateProfileAsync(profile);
                 }
             }
             catch (Exception ex)
@@ -151,6 +137,28 @@ namespace FishingSpot.PWA.Services
                 Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
                 return false;
             }
+        }
+
+        private async Task<bool> UpdateProfileAsync(UserProfile profile)
+        {
+            Console.WriteLine($"📝 Updating existing profile for user: {profile.Id}");
+
+            var profileData = new
+            {
+                display_name = profile.DisplayName ?? string.Empty,
+                avatar_url = profile.AvatarUrl ?? string.Empty
+            };
+
+            var json = JsonSerializer.Serialize(profileData);
+            Console.WriteLine($"📤 JSON to send: {json}");
+
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PatchAsync($"/rest/v1/user_profiles?id=eq.{profile.Id}", content);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"📤 Update profile response: {response.StatusCode} - {responseContent}");
+
+            return response.IsSuccessStatusCode;
         }
 
         public async Task<bool> DeleteProfileAsync()
