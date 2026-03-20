@@ -1398,6 +1398,78 @@ code {
     }
 }
 
+/* ===== SWIPEABLE ITEMS (iOS-style) ===== */
+.swipeable-item {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    border-radius: var(--border-radius);
+    background-color: white;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.swipeable-item.swiped .swipe-content {
+    transform: translateX(-80px);
+}
+
+.swipe-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.swipe-content:active {
+    background-color: var(--grey-light);
+}
+
+.swipe-delete {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff3b3b, #ef476f);
+    z-index: 1;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.swipe-delete:active {
+    background: linear-gradient(135deg, #e63030, #d63f5f);
+}
+
+.delete-icon {
+    font-size: 1.5rem;
+    color: white;
+}
+
+/* Animation pour le swipe */
+@keyframes swipe-hint {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(-10px);
+    }
+}
+
+.swipeable-item:first-child .swipe-content {
+    animation: swipe-hint 0.8s ease-in-out 1s 2;
+}
+
 /* ===== CATCH DETAIL PAGE REDESIGN ===== */
 .catch-detail-page {
     background: var(--light);

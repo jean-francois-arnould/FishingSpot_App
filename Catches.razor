@@ -36,27 +36,37 @@
             <div class="catch-list">
                 @foreach (var fishCatch in catches)
                 {
-                    <div class="list-item" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
-                        @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
-                        {
-                            <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="list-item-img" />
-                        }
-                        else
-                        {
-                            <div class="list-item-icon">🐟</div>
-                        }
-                        <div class="list-item-content">
-                            <div class="list-item-title">@fishCatch.FishName</div>
-                            <div class="list-item-subtitle">
-                                📍 @fishCatch.LocationName
+                    <div class="swipeable-item @(swipedItemId == fishCatch.Id ? "swiped" : "")" 
+                         @ontouchstart="@((args) => HandleTouchStart(args, fishCatch.Id))"
+                         @ontouchmove="@((args) => HandleTouchMove(args))"
+                         @ontouchend="@((args) => HandleTouchEnd(args))">
+
+                        <div class="swipe-content" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
+                            @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
+                            {
+                                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="list-item-img" />
+                            }
+                            else
+                            {
+                                <div class="list-item-icon">🐟</div>
+                            }
+                            <div class="list-item-content">
+                                <div class="list-item-title">@fishCatch.FishName</div>
+                                <div class="list-item-subtitle">
+                                    📍 @fishCatch.LocationName
+                                </div>
+                                <div class="list-item-meta">
+                                    <span class="badge badge-info">@fishCatch.Length cm</span>
+                                    <span class="badge badge-info">@fishCatch.Weight kg</span>
+                                    <span class="badge badge-secondary">@fishCatch.CatchDate.ToShortDateString()</span>
+                                </div>
                             </div>
-                            <div class="list-item-meta">
-                                <span class="badge badge-info">@fishCatch.Length cm</span>
-                                <span class="badge badge-info">@fishCatch.Weight kg</span>
-                                <span class="badge badge-secondary">@fishCatch.CatchDate.ToShortDateString()</span>
-                            </div>
+                            <div class="list-item-action">›</div>
                         </div>
-                        <div class="list-item-action">›</div>
+
+                        <div class="swipe-delete" @onclick="() => ShowDeleteConfirmation(fishCatch)">
+                            <span class="delete-icon">🗑️</span>
+                        </div>
                     </div>
                 }
             </div>
@@ -69,10 +79,48 @@
     </button>
 </AuthorizeView>
 
+<!-- Modale de confirmation de suppression -->
+@if (showDeleteModal && catchToDelete != null)
+{
+    <div class="modal-overlay" @onclick="CancelDelete">
+        <div class="modal-content" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>⚠️ Confirmer la suppression</h3>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette prise ?</p>
+                <p><strong>@catchToDelete.FishName</strong></p>
+                <p class="text-muted">@catchToDelete.LocationName - @catchToDelete.CatchDate.ToShortDateString()</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" @onclick="CancelDelete">
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmDelete" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <div class="spinner"></div>
+                    }
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<FishCatch>? catches;
     private UserProfile? userProfile;
     private bool isLoading = true;
+    private bool showDeleteModal = false;
+    private bool isDeleting = false;
+    private FishCatch? catchToDelete = null;
+
+    // Pour le swipe
+    private int? swipedItemId = null;
+    private double touchStartX = 0;
+    private double touchCurrentX = 0;
+    private int? touchingItemId = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -143,11 +191,96 @@
 
     private void NavigateToCatchDetail(int catchId)
     {
-        Navigation.NavigateTo($"/FishingSpot_App/catches/{catchId}");
+        // Ne pas naviguer si on est en train de swiper
+        if (swipedItemId == null)
+        {
+            Navigation.NavigateTo($"/FishingSpot_App/catches/{catchId}");
+        }
     }
 
     private void NavigateToEditCatch(int catchId)
     {
         Navigation.NavigateTo($"/FishingSpot_App/edit-catch/{catchId}");
+    }
+
+    // Gestion du swipe
+    private void HandleTouchStart(TouchEventArgs e, int catchId)
+    {
+        if (e.Touches.Length > 0)
+        {
+            touchStartX = e.Touches[0].ClientX;
+            touchCurrentX = touchStartX;
+            touchingItemId = catchId;
+        }
+    }
+
+    private void HandleTouchMove(TouchEventArgs e)
+    {
+        if (e.Touches.Length > 0 && touchingItemId.HasValue)
+        {
+            touchCurrentX = e.Touches[0].ClientX;
+            double deltaX = touchStartX - touchCurrentX;
+
+            // Swipe vers la gauche et assez loin (au moins 50px)
+            if (deltaX > 50)
+            {
+                swipedItemId = touchingItemId;
+                StateHasChanged();
+            }
+            // Swipe vers la droite pour fermer
+            else if (deltaX < -20 && swipedItemId == touchingItemId)
+            {
+                swipedItemId = null;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void HandleTouchEnd(TouchEventArgs e)
+    {
+        touchingItemId = null;
+    }
+
+    private void ShowDeleteConfirmation(FishCatch fishCatch)
+    {
+        catchToDelete = fishCatch;
+        showDeleteModal = true;
+        swipedItemId = null; // Fermer le swipe
+    }
+
+    private void CancelDelete()
+    {
+        catchToDelete = null;
+        showDeleteModal = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (catchToDelete == null) return;
+
+        isDeleting = true;
+        try
+        {
+            var success = await SupabaseService.DeleteCatchAsync(catchToDelete.Id);
+            if (success)
+            {
+                Console.WriteLine($"✅ Prise {catchToDelete.Id} supprimée");
+                showDeleteModal = false;
+                catchToDelete = null;
+                await LoadCatches(); // Recharger la liste
+            }
+            else
+            {
+                Console.WriteLine("❌ Erreur lors de la suppression");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Erreur: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
     }
 }
