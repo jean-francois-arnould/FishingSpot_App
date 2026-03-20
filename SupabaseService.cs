@@ -132,6 +132,73 @@ namespace FishingSpot.PWA.Services
             }
         }
 
+        public async Task<List<FishingBrand>> GetBrandsByCategoryAsync(string category)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<FishingBrand>>(
+                    $"/rest/v1/fishing_brands?category=eq.{category}&is_active=eq.true&order=name.asc");
+                Console.WriteLine($"✅ Loaded {response?.Count ?? 0} brands for category {category}");
+                return response ?? new List<FishingBrand>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting brands for category {category}: {ex.Message}");
+                return new List<FishingBrand>();
+            }
+        }
+
+        public async Task<int> AddFishingBrandAsync(FishingBrand brand)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                // Vérifier si la marque existe déjà
+                var existingBrands = await GetBrandsByCategoryAsync(brand.Category);
+                var duplicate = existingBrands.FirstOrDefault(b => 
+                    b.Name.Equals(brand.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (duplicate != null)
+                {
+                    Console.WriteLine($"⚠️ Brand '{brand.Name}' already exists in category {brand.Category} with ID {duplicate.Id}");
+                    return -1; // Code d'erreur pour doublon
+                }
+
+                brand.CreatedAt = DateTime.UtcNow;
+                brand.IsActive = true;
+
+                var json = JsonSerializer.Serialize(brand);
+                Console.WriteLine($"Adding new brand: {json}");
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _httpClient.DefaultRequestHeaders.Remove("Prefer");
+                _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
+
+                var response = await _httpClient.PostAsync("/rest/v1/fishing_brands", content);
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response status: {response.StatusCode}");
+                Console.WriteLine($"Response body: {responseBody}");
+
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<List<FishingBrand>>();
+                var id = result?.FirstOrDefault()?.Id ?? 0;
+                Console.WriteLine($"✅ New brand added with ID: {id}");
+                return id;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding brand: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
+        }
+
         public async Task<FishCatch?> GetCatchByIdAsync(int id)
         {
             await InitializeAsync();

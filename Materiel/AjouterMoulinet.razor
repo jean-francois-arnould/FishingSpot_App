@@ -1,121 +1,356 @@
-
 @page "/materiel/moulinets/ajouter"
 @page "/FishingSpot_App/materiel/moulinets/ajouter"
 @using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Models
 @using FishingSpot.PWA.Services
 @inject IAuthService AuthService
 @inject IEquipmentService EquipmentService
+@inject ISupabaseService SupabaseService
 @inject NavigationManager Navigation
 
 <PageTitle>Ajouter un Moulinet</PageTitle>
 
-<div class="container-fluid">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/FishingSpot_App/">🎣 FishingSpot</a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" href="/FishingSpot_App/catches">Mes Prises</a>
-                <a class="nav-link" href="/FishingSpot_App/montages">Montages</a>
-                <a class="nav-link active" href="/FishingSpot_App/materiel">Matériel</a>
-                <a class="nav-link" href="/FishingSpot_App/profile">Profil</a>
+<div class="page-content">
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            @errorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">
+            @successMessage
+        </div>
+    }
+
+    <EditForm Model="@newReel" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🎡 Informations du moulinet</h3>
             </div>
-            <div class="d-flex">
-                <span class="navbar-text me-3">👋 @AuthService.CurrentUser?.Email</span>
-                <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">Déconnexion</button>
+            <div class="card-body">
+                <!-- Marque -->
+                <div class="form-group">
+                    <label for="brand" class="form-label">Marque *</label>
+                    <div class="fish-species-readonly">
+                        <input type="text" 
+                               id="brand" 
+                               class="form-control" 
+                               value="@GetBrandDisplayValue()" 
+                               placeholder="Sélectionner une marque..." 
+                               readonly 
+                               required />
+                    </div>
+                    <div class="fish-species-buttons">
+                        @if (availableBrands != null && availableBrands.Any())
+                        {
+                            <button type="button" class="btn btn-primary" @onclick="ShowBrandsList">
+                                🔍 Chercher dans la liste
+                            </button>
+                        }
+                        <button type="button" class="btn btn-success" @onclick="ShowAddBrandForm">
+                            ➕ Ajouter une nouvelle marque
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modèle -->
+                <div class="form-group">
+                    <label for="model" class="form-label">Modèle *</label>
+                    <InputText id="model" class="form-control" @bind-Value="newReel.Model" 
+                               placeholder="Ex: Stradic, BG, Stella..." required />
+                </div>
             </div>
         </div>
-    </nav>
 
-    <div class="container" style="max-width: 800px;">
-        <a href="/FishingSpot_App/materiel/moulinets" class="btn btn-outline-secondary btn-sm mb-3">← Retour aux moulinets</a>
-        <h2>🎡 Ajouter un Moulinet</h2>
-        <p class="text-muted">Enregistrez un nouveau moulinet dans votre matériel</p>
-        <hr class="my-4" />
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">⚙️ Caractéristiques</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="type" class="form-label">Type</label>
+                    <InputSelect id="type" class="form-control" @bind-Value="newReel.Type">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="Spinning">🎣 Spinning</option>
+                        <option value="Baitcasting">🎯 Baitcasting</option>
+                        <option value="Casting">🎪 Casting</option>
+                    </InputSelect>
+                </div>
 
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="alert alert-danger" role="alert">@errorMessage</div>
-        }
+                <div class="form-group">
+                    <label for="gearRatio" class="form-label">Ratio</label>
+                    <InputText id="gearRatio" class="form-control" @bind-Value="newReel.GearRatio" 
+                               placeholder="Ex: 5.0:1, 6.2:1, 7.1:1..." />
+                    <small class="text-muted">Rapport de transmission (ex: 5.0:1)</small>
+                </div>
+            </div>
+        </div>
 
-        <EditForm Model="@newReel" OnValidSubmit="HandleSubmit">
-            <div class="card mb-3">
-                <div class="card-header bg-success text-white"><h5 class="mb-0">Informations principales</h5></div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="brand" class="form-label">Marque *</label>
-                        <InputText id="brand" class="form-control" @bind-Value="newReel.Brand" placeholder="Shimano, Daiwa, Penn..." required />
-                    </div>
-                    <div class="mb-3">
-                        <label for="model" class="form-label">Modèle *</label>
-                        <InputText id="model" class="form-control" @bind-Value="newReel.Model" placeholder="Stradic, BG..." required />
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">📝 Notes</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="notes" class="form-label">Notes personnelles</label>
+                    <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="newReel.Notes" 
+                                 placeholder="État, capacité de ligne, utilisation recommandée..." />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">
+                Annuler
+            </button>
+            <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                @if (isSaving)
+                {
+                    <div class="spinner"></div>
+                }
+                ✅ Enregistrer
+            </button>
+        </div>
+    </EditForm>
+
+    @* Modal pour afficher la liste des marques *@
+    @if (showBrandsModal && availableBrands != null)
+    {
+        <div class="modal-backdrop" @onclick="HideBrandsModal"></div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">🔍 Sélectionner une marque</h3>
+                    <button type="button" class="btn-close" @onclick="HideBrandsModal">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="fish-list">
+                        @foreach (var brand in availableBrands)
+                        {
+                            <button type="button" class="fish-item" @onclick="() => SelectBrand(brand)">
+                                <div class="fish-info">
+                                    <div class="fish-name">@brand.Name</div>
+                                </div>
+                            </button>
+                        }
                     </div>
                 </div>
             </div>
+        </div>
+    }
 
-            <div class="card mb-3">
-                <div class="card-header bg-secondary text-white"><h5 class="mb-0">Caractéristiques</h5></div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="type" class="form-label">Type</label>
-                        <InputText id="type" class="form-control" @bind-Value="newReel.Type" placeholder="Spinning, Baitcasting, Casting..." />
-                        <small class="text-muted">Spinning, Baitcasting, Casting</small>
-                    </div>
-                    <div class="mb-3">
-                        <label for="gearRatio" class="form-label">Ratio</label>
-                        <InputText id="gearRatio" class="form-control" @bind-Value="newReel.GearRatio" placeholder="5.0:1, 6.2:1..." />
-                        <small class="text-muted">Exemple : 5.0:1, 6.2:1</small>
-                    </div>
+    @* Modal pour ajouter une nouvelle marque *@
+    @if (showAddBrandModal)
+    {
+        <div class="modal-backdrop" @onclick="HideAddBrandModal"></div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">➕ Ajouter une nouvelle marque</h3>
+                    <button type="button" class="btn-close" @onclick="HideAddBrandModal">✕</button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(addBrandError))
+                    {
+                        <div class="alert alert-danger">@addBrandError</div>
+                    }
+                    @if (!string.IsNullOrEmpty(addBrandSuccess))
+                    {
+                        <div class="alert alert-success">@addBrandSuccess</div>
+                    }
+
+                    <EditForm Model="@newBrand" OnValidSubmit="HandleAddBrand">
+                        <div class="form-group">
+                            <label class="form-label">Nom de la marque *</label>
+                            <InputText class="form-control" @bind-Value="newBrand.Name" 
+                                       placeholder="Ex: Shimano" required />
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="HideAddBrandModal">
+                                Annuler
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@isAddingBrand">
+                                @if (isAddingBrand)
+                                {
+                                    <div class="spinner"></div>
+                                }
+                                ✅ Ajouter
+                            </button>
+                        </div>
+                    </EditForm>
                 </div>
             </div>
-
-            <div class="card mb-3">
-                <div class="card-header bg-info text-white"><h5 class="mb-0">Notes</h5></div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes personnelles</label>
-                        <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="newReel.Notes" placeholder="État, capacité de ligne, utilisation..." />
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between mt-4">
-                <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">Annuler</button>
-                <button type="submit" class="btn btn-success btn-lg" disabled="@isSaving">
-                    @if (isSaving) { <span class="spinner-border spinner-border-sm me-2"></span> }
-                    ✅ Enregistrer
-                </button>
-            </div>
-        </EditForm>
-    </div>
+        </div>
+    }
 </div>
 
 @code {
     private Reel newReel = new Reel();
+    private FishingBrand newBrand = new FishingBrand { Category = BrandCategory.Reel };
+    private List<FishingBrand>? availableBrands;
     private string? errorMessage;
+    private string? successMessage;
+    private string? addBrandError;
+    private string? addBrandSuccess;
     private bool isSaving;
+    private bool isAddingBrand;
+    private bool showBrandsModal = false;
+    private bool showAddBrandModal = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        if (!AuthService.IsAuthenticated) Navigation.NavigateTo("/FishingSpot_App/login");
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
+        try
+        {
+            availableBrands = await SupabaseService.GetBrandsByCategoryAsync(BrandCategory.Reel);
+            Console.WriteLine($"✅ Loaded {availableBrands.Count} reel brands");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading brands: {ex.Message}");
+        }
+    }
+
+    private string GetBrandDisplayValue()
+    {
+        return string.IsNullOrEmpty(newReel.Brand) ? "" : newReel.Brand;
+    }
+
+    private void ShowBrandsList()
+    {
+        showBrandsModal = true;
+    }
+
+    private void HideBrandsModal()
+    {
+        showBrandsModal = false;
+    }
+
+    private void SelectBrand(FishingBrand brand)
+    {
+        newReel.Brand = brand.Name;
+        showBrandsModal = false;
+    }
+
+    private void ShowAddBrandForm()
+    {
+        newBrand = new FishingBrand { Category = BrandCategory.Reel };
+        addBrandError = null;
+        addBrandSuccess = null;
+        showAddBrandModal = true;
+    }
+
+    private void HideAddBrandModal()
+    {
+        showAddBrandModal = false;
+        newBrand = new FishingBrand { Category = BrandCategory.Reel };
+        addBrandError = null;
+        addBrandSuccess = null;
+    }
+
+    private async Task HandleAddBrand()
+    {
+        addBrandError = null;
+        addBrandSuccess = null;
+        isAddingBrand = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(newBrand.Name))
+            {
+                addBrandError = "Le nom de la marque est requis.";
+                isAddingBrand = false;
+                return;
+            }
+
+            Console.WriteLine($"Attempting to add brand: {newBrand.Name}");
+            var brandId = await SupabaseService.AddFishingBrandAsync(newBrand);
+
+            if (brandId == -1)
+            {
+                addBrandError = $"❌ La marque '{newBrand.Name}' existe déjà dans la base de données.";
+                isAddingBrand = false;
+                return;
+            }
+
+            if (brandId > 0)
+            {
+                addBrandSuccess = $"✅ La marque '{newBrand.Name}' a été ajoutée avec succès !";
+                Console.WriteLine($"Brand added with ID: {brandId}");
+
+                // Recharger la liste des marques
+                availableBrands = await SupabaseService.GetBrandsByCategoryAsync(BrandCategory.Reel);
+
+                // Sélectionner automatiquement la nouvelle marque
+                newReel.Brand = newBrand.Name;
+
+                // Attendre 2 secondes puis fermer le modal
+                await Task.Delay(2000);
+                HideAddBrandModal();
+            }
+            else
+            {
+                addBrandError = "❌ Erreur lors de l'ajout de la marque. Veuillez réessayer.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding brand: {ex.Message}");
+            addBrandError = $"❌ Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isAddingBrand = false;
+        }
     }
 
     private async Task HandleSubmit()
     {
         errorMessage = null;
-        if (string.IsNullOrWhiteSpace(newReel.Brand)) { errorMessage = "La marque est obligatoire."; return; }
-        if (string.IsNullOrWhiteSpace(newReel.Model)) { errorMessage = "Le modèle est obligatoire."; return; }
+
+        if (string.IsNullOrWhiteSpace(newReel.Brand))
+        {
+            errorMessage = "La marque est obligatoire.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newReel.Model))
+        {
+            errorMessage = "Le modèle est obligatoire.";
+            return;
+        }
 
         isSaving = true;
+
         try
         {
             var reelId = await EquipmentService.AddReelAsync(newReel);
-            if (reelId > 0) Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets");
-            else errorMessage = "Erreur lors de l'enregistrement.";
+
+            if (reelId > 0)
+            {
+                Console.WriteLine($"✅ Reel added with ID: {reelId}");
+                Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets", forceLoad: true);
+            }
+            else
+            {
+                errorMessage = "❌ Erreur lors de l'enregistrement.";
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur: {ex.Message}");
-            errorMessage = $"Erreur: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+            errorMessage = $"❌ Erreur: {ex.Message}";
         }
         finally
         {
@@ -123,10 +358,9 @@
         }
     }
 
-    private void Cancel() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets");
-    private async Task HandleLogout()
+    private void Cancel()
     {
-        await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/FishingSpot_App/");
+        Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets");
     }
 }
+
