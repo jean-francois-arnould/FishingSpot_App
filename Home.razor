@@ -12,7 +12,16 @@
 {
     <!-- Utilisateur connecté -->
     <div class="empty-state">
-        <div class="empty-state-icon">👋</div>
+        @if (userProfile != null && !string.IsNullOrEmpty(userProfile.AvatarUrl))
+        {
+            <div class="profile-avatar-large">
+                <img src="@userProfile.AvatarUrl" alt="Avatar de @GetDisplayName()" />
+            </div>
+        }
+        else
+        {
+            <div class="empty-state-icon">👋</div>
+        }
         <h1>Bienvenue @GetDisplayName()!</h1>
         <p class="empty-state-text">Prêt pour votre prochaine session de pêche ?</p>
     </div>
