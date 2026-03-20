@@ -14,6 +14,9 @@ namespace FishingSpot.PWA.Services
         private readonly string _supabaseKey;
         private User? _currentUser;
         private string? _accessToken;
+        private string? _refreshToken;
+        private DateTime? _tokenExpiresAt;
+        private System.Timers.Timer? _refreshTimer;
 
         public event Action<User?>? OnAuthStateChanged;
 
@@ -39,12 +42,33 @@ namespace FishingSpot.PWA.Services
             try
             {
                 var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "supabase_token");
+                var refreshToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "supabase_refresh_token");
                 var userJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "supabase_user");
+                var expiresAtStr = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "supabase_token_expires_at");
 
                 if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(userJson))
                 {
                     _accessToken = token;
+                    _refreshToken = refreshToken;
                     _currentUser = JsonSerializer.Deserialize<User>(userJson);
+
+                    if (!string.IsNullOrEmpty(expiresAtStr) && DateTime.TryParse(expiresAtStr, out var expiresAt))
+                    {
+                        _tokenExpiresAt = expiresAt;
+
+                        // Vérifier si le token est expiré ou va expirer bientôt
+                        if (_tokenExpiresAt <= DateTime.UtcNow.AddMinutes(5))
+                        {
+                            Console.WriteLine("🔄 Token expiré ou proche de l'expiration, rafraîchissement...");
+                            await RefreshTokenAsync();
+                        }
+                        else
+                        {
+                            // Planifier le rafraîchissement automatique
+                            ScheduleTokenRefresh();
+                        }
+                    }
+
                     OnAuthStateChanged?.Invoke(_currentUser);
                 }
             }
@@ -138,9 +162,21 @@ namespace FishingSpot.PWA.Services
                     {
                         _currentUser = authResponse.User;
                         _accessToken = authResponse.AccessToken;
+                        _refreshToken = authResponse.RefreshToken;
 
+                        // Le token expire dans 1 heure (3600 secondes)
+                        _tokenExpiresAt = DateTime.UtcNow.AddSeconds(authResponse.ExpiresIn > 0 ? authResponse.ExpiresIn : 3600);
+
+                        // Sauvegarder dans localStorage
                         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "supabase_token", _accessToken);
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "supabase_refresh_token", _refreshToken ?? "");
                         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "supabase_user", JsonSerializer.Serialize(_currentUser));
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "supabase_token_expires_at", _tokenExpiresAt.Value.ToString("O"));
+
+                        Console.WriteLine($"✅ Connexion réussie ! Token expire à {_tokenExpiresAt:HH:mm:ss}");
+
+                        // Planifier le rafraîchissement automatique
+                        ScheduleTokenRefresh();
 
                         OnAuthStateChanged?.Invoke(_currentUser);
                         return (true, "Connexion réussie!");
@@ -163,15 +199,109 @@ namespace FishingSpot.PWA.Services
             {
                 _currentUser = null;
                 _accessToken = null;
+                _refreshToken = null;
+                _tokenExpiresAt = null;
+
+                // Arrêter le timer de rafraîchissement
+                _refreshTimer?.Stop();
+                _refreshTimer?.Dispose();
+                _refreshTimer = null;
 
                 await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_token");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_refresh_token");
                 await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_user");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_token_expires_at");
 
                 OnAuthStateChanged?.Invoke(null);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error signing out: {ex.Message}");
+            }
+        }
+
+        private async Task<bool> RefreshTokenAsync()
+        {
+            if (string.IsNullOrEmpty(_refreshToken))
+            {
+                Console.WriteLine("⚠️ No refresh token available");
+                return false;
+            }
+
+            try
+            {
+                var request = new { refresh_token = _refreshToken };
+                var json = JsonSerializer.Serialize(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _httpClient.DefaultRequestHeaders.Remove("apikey");
+                _httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
+
+                var response = await _httpClient.PostAsync($"{_supabaseUrl}/auth/v1/token?grant_type=refresh_token", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
+
+                    if (authResponse != null && !string.IsNullOrEmpty(authResponse.AccessToken))
+                    {
+                        _accessToken = authResponse.AccessToken;
+                        _refreshToken = authResponse.RefreshToken ?? _refreshToken;
+                        _tokenExpiresAt = DateTime.UtcNow.AddSeconds(authResponse.ExpiresIn > 0 ? authResponse.ExpiresIn : 3600);
+
+                        // Mettre à jour localStorage
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "supabase_token", _accessToken);
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "supabase_refresh_token", _refreshToken);
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "supabase_token_expires_at", _tokenExpiresAt.Value.ToString("O"));
+
+                        Console.WriteLine($"✅ Token rafraîchi avec succès ! Expire à {_tokenExpiresAt:HH:mm:ss}");
+
+                        // Replanifier le prochain rafraîchissement
+                        ScheduleTokenRefresh();
+
+                        return true;
+                    }
+                }
+
+                Console.WriteLine($"❌ Échec du rafraîchissement du token: {response.StatusCode}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error refreshing token: {ex.Message}");
+                return false;
+            }
+        }
+
+        private void ScheduleTokenRefresh()
+        {
+            // Arrêter le timer existant
+            _refreshTimer?.Stop();
+            _refreshTimer?.Dispose();
+
+            if (_tokenExpiresAt.HasValue)
+            {
+                // Rafraîchir 5 minutes avant l'expiration
+                var refreshAt = _tokenExpiresAt.Value.AddMinutes(-5);
+                var delay = refreshAt - DateTime.UtcNow;
+
+                if (delay.TotalSeconds > 0)
+                {
+                    Console.WriteLine($"🔄 Rafraîchissement automatique planifié dans {delay.TotalMinutes:F1} minutes");
+
+                    _refreshTimer = new System.Timers.Timer(delay.TotalMilliseconds);
+                    _refreshTimer.Elapsed += async (sender, e) =>
+                    {
+                        await RefreshTokenAsync();
+                    };
+                    _refreshTimer.AutoReset = false;
+                    _refreshTimer.Start();
+                }
+                else
+                {
+                    // Le token expire bientôt, rafraîchir immédiatement
+                    Task.Run(async () => await RefreshTokenAsync());
+                }
             }
         }
     }
