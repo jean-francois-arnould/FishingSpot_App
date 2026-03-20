@@ -488,7 +488,7 @@ h6 { font-size: 1rem; }
     transition: transform 0.3s;
 }
 
-.accordion-item.open .accordion-icon {
+.accordion-item.expanded .accordion-icon {
     transform: rotate(180deg);
 }
 
@@ -498,7 +498,7 @@ h6 { font-size: 1rem; }
     transition: max-height 0.3s ease;
 }
 
-.accordion-item.open .accordion-content {
+.accordion-item.expanded .accordion-content {
     max-height: 1000px;
 }
 
