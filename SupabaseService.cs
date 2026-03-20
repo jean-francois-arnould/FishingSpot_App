@@ -83,6 +83,55 @@ namespace FishingSpot.PWA.Services
             }
         }
 
+        public async Task<int> AddFishSpeciesAsync(FishSpecies fishSpecies)
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                // Vérifier si le poisson existe déjà (insensible à la casse)
+                var existingSpecies = await GetAllFishSpeciesAsync();
+                var duplicate = existingSpecies.FirstOrDefault(f => 
+                    f.CommonName.Equals(fishSpecies.CommonName, StringComparison.OrdinalIgnoreCase));
+
+                if (duplicate != null)
+                {
+                    Console.WriteLine($"⚠️ Fish species '{fishSpecies.CommonName}' already exists with ID {duplicate.Id}");
+                    return -1; // Code d'erreur pour doublon
+                }
+
+                fishSpecies.CreatedAt = DateTime.UtcNow;
+                fishSpecies.IsActive = true;
+
+                var json = JsonSerializer.Serialize(fishSpecies);
+                Console.WriteLine($"Adding new fish species: {json}");
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _httpClient.DefaultRequestHeaders.Remove("Prefer");
+                _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
+
+                var response = await _httpClient.PostAsync("/rest/v1/fish_species", content);
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response status: {response.StatusCode}");
+                Console.WriteLine($"Response body: {responseBody}");
+
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<List<FishSpecies>>();
+                var id = result?.FirstOrDefault()?.Id ?? 0;
+                Console.WriteLine($"✅ New fish species added with ID: {id}");
+                return id;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding fish species: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
+        }
+
         public async Task<FishCatch?> GetCatchByIdAsync(int id)
         {
             await InitializeAsync();

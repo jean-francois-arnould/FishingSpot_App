@@ -36,34 +36,25 @@
             <div class="card-body">
                 <div class="form-group">
                     <label for="fishName" class="form-label">Espèce *</label>
-                    <div class="input-group">
-                        @if (showFishList && availableFishSpecies != null && availableFishSpecies.Any())
+                    <div class="fish-species-readonly">
+                        <input type="text" 
+                               id="fishName" 
+                               class="form-control" 
+                               value="@GetFishDisplayValue()" 
+                               placeholder="Sélectionner un poisson..." 
+                               readonly 
+                               required />
+                    </div>
+                    <div class="fish-species-buttons">
+                        @if (availableFishSpecies != null && availableFishSpecies.Any())
                         {
-                            <InputSelect id="fishName" class="form-control" @bind-Value="selectedFishSpecies" @bind-Value:after="OnFishSpeciesChanged">
-                                <option value="">-- Sélectionner un poisson --</option>
-                                @foreach (var category in availableFishSpecies.GroupBy(f => f.Category).OrderBy(g => GetCategoryOrder(g.Key)))
-                                {
-                                    <optgroup label="@GetCategoryLabel(category.Key)">
-                                        @foreach (var fish in category.OrderBy(f => f.CommonName))
-                                        {
-                                            <option value="@fish.Id">@fish.DisplayName</option>
-                                        }
-                                    </optgroup>
-                                }
-                                <option value="-1">➕ Autre (saisie manuelle)</option>
-                            </InputSelect>
+                            <button type="button" class="btn btn-primary" @onclick="ShowFishSpeciesList">
+                                🔍 Chercher dans la liste
+                            </button>
                         }
-                        else
-                        {
-                            <InputText id="fishNameCustom" class="form-control" @bind-Value="newCatch.FishName" 
-                                       placeholder="Nom du poisson..." required />
-                            @if (availableFishSpecies != null && availableFishSpecies.Any())
-                            {
-                                <button type="button" class="btn btn-outline-secondary" @onclick="() => { showFishList = true; selectedFishSpecies = string.Empty; }">
-                                    📋 Liste
-                                </button>
-                            }
-                        }
+                        <button type="button" class="btn btn-success" @onclick="ShowAddFishSpeciesForm">
+                            ➕ Ajouter une nouvelle espèce
+                        </button>
                     </div>
                     @if (!string.IsNullOrEmpty(fishSpeciesError))
                     {
@@ -265,6 +256,135 @@
             </button>
         </div>
     </EditForm>
+
+    @* Modal pour afficher la liste des poissons *@
+    @if (showFishSpeciesModal && availableFishSpecies != null)
+    {
+        <div class="modal-backdrop" @onclick="HideFishSpeciesModal"></div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">🔍 Sélectionner un poisson</h3>
+                    <button type="button" class="btn-close" @onclick="HideFishSpeciesModal">✕</button>
+                </div>
+                <div class="modal-body">
+                    @foreach (var category in availableFishSpecies.GroupBy(f => f.Category).OrderBy(g => GetCategoryOrder(g.Key)))
+                    {
+                        <div class="fish-category">
+                            <h4 class="category-label">@GetCategoryLabel(category.Key)</h4>
+                            <div class="fish-list">
+                                @foreach (var fish in category.OrderBy(f => f.CommonName))
+                                {
+                                    <button type="button" class="fish-item" @onclick="() => SelectFishSpecies(fish)">
+                                        <span class="fish-icon">@fish.IconEmoji</span>
+                                        <div class="fish-info">
+                                            <div class="fish-name">@fish.CommonName</div>
+                                            @if (!string.IsNullOrEmpty(fish.ScientificName))
+                                            {
+                                                <div class="fish-scientific">@fish.ScientificName</div>
+                                            }
+                                        </div>
+                                        @if (fish.MinLegalSize.HasValue)
+                                        {
+                                            <span class="fish-size-badge">@fish.MinLegalSize cm</span>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal pour ajouter un nouveau poisson *@
+    @if (showAddFishModal)
+    {
+        <div class="modal-backdrop" @onclick="HideAddFishModal"></div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">➕ Ajouter un nouveau poisson</h3>
+                    <button type="button" class="btn-close" @onclick="HideAddFishModal">✕</button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(addFishError))
+                    {
+                        <div class="alert alert-danger">@addFishError</div>
+                    }
+                    @if (!string.IsNullOrEmpty(addFishSuccess))
+                    {
+                        <div class="alert alert-success">@addFishSuccess</div>
+                    }
+
+                    <EditForm Model="@newFishSpecies" OnValidSubmit="HandleAddFishSpecies">
+                        <div class="form-group">
+                            <label class="form-label">Nom commun *</label>
+                            <InputText class="form-control" @bind-Value="newFishSpecies.CommonName" 
+                                       placeholder="Ex: Brochet" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Nom scientifique</label>
+                            <InputText class="form-control" @bind-Value="newFishSpecies.ScientificName" 
+                                       placeholder="Ex: Esox lucius" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Famille</label>
+                            <InputText class="form-control" @bind-Value="newFishSpecies.Family" 
+                                       placeholder="Ex: Esocidae" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Catégorie *</label>
+                            <InputSelect class="form-control" @bind-Value="newFishSpecies.Category" required>
+                                <option value="">-- Sélectionner --</option>
+                                <option value="carnassier">🦈 Carnassier</option>
+                                <option value="salmonidé">🌊 Salmonidé</option>
+                                <option value="migrateur">➡️ Migrateur</option>
+                                <option value="cyprinidé">🐠 Cyprinidé</option>
+                                <option value="autre">🐟 Autre</option>
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Taille légale minimale (cm)</label>
+                            <InputNumber class="form-control" @bind-Value="newFishSpecies.MinLegalSize" 
+                                         placeholder="Ex: 60" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Emoji / Icône *</label>
+                            <InputText class="form-control" @bind-Value="newFishSpecies.IconEmoji" 
+                                       placeholder="Ex: 🐟" maxlength="5" required />
+                            <small class="text-muted">Un emoji pour représenter le poisson</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="newFishSpecies.Description" 
+                                           placeholder="Description du poisson..." />
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="HideAddFishModal">
+                                Annuler
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@isAddingFish">
+                                @if (isAddingFish)
+                                {
+                                    <div class="spinner"></div>
+                                }
+                                ✅ Ajouter
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -277,16 +397,21 @@
     private List<FishingSetup>? availableSetups;
     private List<FishSpecies>? availableFishSpecies;
     private FishSpecies? selectedFishInfo;
+    private FishSpecies newFishSpecies = new FishSpecies();
     private UserProfile? userProfile;
     private string selectedSetupId = "";
     private string selectedFishSpecies = "";
     private string? errorMessage;
     private string? successMessage;
     private string? fishSpeciesError;
+    private string? addFishError;
+    private string? addFishSuccess;
     private bool isSaving;
     private bool isUploadingPhoto;
     private bool isGettingLocation;
-    private bool showFishList = false; // Commencer en saisie manuelle si pas de liste
+    private bool isAddingFish;
+    private bool showFishSpeciesModal = false;
+    private bool showAddFishModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -313,13 +438,11 @@
             if (availableFishSpecies != null && availableFishSpecies.Any())
             {
                 Console.WriteLine($"✅ Loaded {availableFishSpecies.Count} fish species");
-                showFishList = true; // Afficher la liste si des espèces sont chargées
             }
             else
             {
                 Console.WriteLine("⚠️ No fish species loaded - using manual entry");
                 fishSpeciesError = "Liste des poissons non disponible. Veuillez saisir le nom manuellement.";
-                showFishList = false;
             }
 
             // Pré-sélectionner le montage actuel s'il existe
@@ -334,25 +457,138 @@
         {
             Console.WriteLine($"Error loading data: {ex.Message}");
             fishSpeciesError = "Impossible de charger la liste des poissons. Saisie manuelle disponible.";
-            showFishList = false;
         }
 
         // Lancer la géolocalisation automatiquement au chargement
         await GetCurrentLocation();
     }
 
+    private void ShowFishSpeciesList()
+    {
+        showFishSpeciesModal = true;
+    }
+
+    private void HideFishSpeciesModal()
+    {
+        showFishSpeciesModal = false;
+    }
+
+    private string GetFishDisplayValue()
+    {
+        if (selectedFishInfo != null)
+        {
+            return selectedFishInfo.DisplayName;
+        }
+        else if (!string.IsNullOrEmpty(newCatch.FishName))
+        {
+            return newCatch.FishName;
+        }
+        return "";
+    }
+
+    private void SelectFishSpecies(FishSpecies fish)
+    {
+        newCatch.FishName = fish.CommonName;
+        selectedFishInfo = fish;
+        showFishSpeciesModal = false;
+    }
+
+    private void ShowAddFishSpeciesForm()
+    {
+        newFishSpecies = new FishSpecies
+        {
+            IconEmoji = "🐟"
+        };
+        addFishError = null;
+        addFishSuccess = null;
+        showAddFishModal = true;
+    }
+
+    private void HideAddFishModal()
+    {
+        showAddFishModal = false;
+        newFishSpecies = new FishSpecies();
+        addFishError = null;
+        addFishSuccess = null;
+    }
+
+    private async Task HandleAddFishSpecies()
+    {
+        addFishError = null;
+        addFishSuccess = null;
+        isAddingFish = true;
+
+        try
+        {
+            // Validation
+            if (string.IsNullOrWhiteSpace(newFishSpecies.CommonName))
+            {
+                addFishError = "Le nom commun est requis.";
+                isAddingFish = false;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(newFishSpecies.Category))
+            {
+                addFishError = "La catégorie est requise.";
+                isAddingFish = false;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(newFishSpecies.IconEmoji))
+            {
+                addFishError = "L'emoji / icône est requis.";
+                isAddingFish = false;
+                return;
+            }
+
+            Console.WriteLine($"Attempting to add fish species: {newFishSpecies.CommonName}");
+            var fishId = await SupabaseService.AddFishSpeciesAsync(newFishSpecies);
+
+            if (fishId == -1)
+            {
+                addFishError = $"❌ Le poisson '{newFishSpecies.CommonName}' existe déjà dans la base de données.";
+                isAddingFish = false;
+                return;
+            }
+
+            if (fishId > 0)
+            {
+                addFishSuccess = $"✅ Le poisson '{newFishSpecies.CommonName}' a été ajouté avec succès !";
+                Console.WriteLine($"Fish species added with ID: {fishId}");
+
+                // Recharger la liste des poissons
+                availableFishSpecies = await SupabaseService.GetAllFishSpeciesAsync();
+
+                // Sélectionner automatiquement le nouveau poisson
+                newCatch.FishName = newFishSpecies.CommonName;
+                selectedFishInfo = availableFishSpecies?.FirstOrDefault(f => f.Id == fishId);
+
+                // Attendre 2 secondes puis fermer le modal
+                await Task.Delay(2000);
+                HideAddFishModal();
+            }
+            else
+            {
+                addFishError = "❌ Erreur lors de l'ajout du poisson. Veuillez réessayer.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding fish species: {ex.Message}");
+            addFishError = $"❌ Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isAddingFish = false;
+        }
+    }
+
     private void OnFishSpeciesChanged()
     {
         if (!string.IsNullOrEmpty(selectedFishSpecies))
         {
-            if (selectedFishSpecies == "-1")
-            {
-                // Saisie manuelle
-                newCatch.FishName = "";
-                showFishList = false;
-                selectedFishInfo = null;
-            }
-            else if (int.TryParse(selectedFishSpecies, out int speciesId))
+            if (int.TryParse(selectedFishSpecies, out int speciesId))
             {
                 selectedFishInfo = availableFishSpecies?.FirstOrDefault(f => f.Id == speciesId);
                 if (selectedFishInfo != null)
