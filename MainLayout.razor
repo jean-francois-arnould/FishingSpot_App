@@ -12,18 +12,6 @@
                 <span>🎣</span>
                 <span>FishingSpot</span>
             </div>
-            <div class="top-bar-actions">
-                @if (AuthService.IsAuthenticated)
-                {
-                    <button class="top-bar-btn burger-btn" @onclick="ToggleMenu" title="Menu">
-                        <span class="burger-icon @(isMenuOpen ? "open" : "")">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </span>
-                    </button>
-                }
-            </div>
         </div>
 
         <!-- Main Content -->
