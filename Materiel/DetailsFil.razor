@@ -1,0 +1,200 @@
+@page "/materiel/fils/details/{id:int}"
+@page "/FishingSpot_App/materiel/fils/details/{id:int}"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Détails - Fil</PageTitle>
+
+<div class="page-content">
+    <a href="/FishingSpot_App/materiel" class="btn btn-outline-secondary btn-sm mb-3">
+        ← Retour au matériel
+    </a>
+
+    @if (isLoading)
+    {
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement...</p>
+        </div>
+    }
+    else if (line == null)
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <h3>Fil introuvable</h3>
+            <p class="text-muted">Ce fil n'existe pas ou a été supprimé.</p>
+            <a href="/FishingSpot_App/materiel" class="btn btn-primary">
+                ← Retour au matériel
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🧵 @line.Brand @line.Type</h3>
+            </div>
+            <div class="card-body">
+                <div class="detail-row">
+                    <span class="detail-label">🏷️ Marque</span>
+                    <span class="detail-value">@line.Brand</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">📦 Type</span>
+                    <span class="detail-value">@line.Type</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(line.Strength))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">💪 Résistance</span>
+                        <span class="detail-value">@line.Strength</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(line.Diameter))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">📏 Diamètre</span>
+                        <span class="detail-value">@line.Diameter</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(line.Color))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">🎨 Couleur</span>
+                        <span class="detail-value">@line.Color</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(line.Notes))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">💭 Notes</span>
+                        <span class="detail-value">@line.Notes</span>
+                    </div>
+                }
+
+                <div class="detail-row">
+                    <span class="detail-label">📅 Ajouté le</span>
+                    <span class="detail-value">@line.CreatedAt.ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <a href="/FishingSpot_App/materiel/fils/modifier/@line.Id" class="btn btn-primary">
+                        ✏️ Modifier
+                    </a>
+                    <button class="btn btn-outline-danger" @onclick="ShowDeleteConfirmation">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal de confirmation de suppression -->
+@if (showDeleteModal)
+{
+    <div class="modal-overlay" @onclick="CancelDelete">
+        <div class="modal-content" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>⚠️ Confirmer la suppression</h3>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer ce fil ?</p>
+                <p><strong>@line?.Brand @line?.Type</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" @onclick="CancelDelete">
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="HandleDelete" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <div class="spinner"></div>
+                    }
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Line? line;
+    private bool isLoading = true;
+    private bool showDeleteModal = false;
+    private bool isDeleting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
+        await LoadLine();
+    }
+
+    private async Task LoadLine()
+    {
+        isLoading = true;
+        try
+        {
+            line = await EquipmentService.GetLineByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement du fil: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        showDeleteModal = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteModal = false;
+    }
+
+    private async Task HandleDelete()
+    {
+        if (line == null) return;
+
+        isDeleting = true;
+        try
+        {
+            var success = await EquipmentService.DeleteLineAsync(line.Id);
+            if (success)
+            {
+                Navigation.NavigateTo("/FishingSpot_App/materiel", forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la suppression: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}

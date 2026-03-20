@@ -1,0 +1,192 @@
+@page "/materiel/moulinets/details/{id:int}"
+@page "/FishingSpot_App/materiel/moulinets/details/{id:int}"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Détails - Moulinet</PageTitle>
+
+<div class="page-content">
+    <a href="/FishingSpot_App/materiel" class="btn btn-outline-secondary btn-sm mb-3">
+        ← Retour au matériel
+    </a>
+
+    @if (isLoading)
+    {
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement...</p>
+        </div>
+    }
+    else if (reel == null)
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <h3>Moulinet introuvable</h3>
+            <p class="text-muted">Ce moulinet n'existe pas ou a été supprimé.</p>
+            <a href="/FishingSpot_App/materiel" class="btn btn-primary">
+                ← Retour au matériel
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🎡 @reel.Brand @reel.Model</h3>
+            </div>
+            <div class="card-body">
+                <div class="detail-row">
+                    <span class="detail-label">🏷️ Marque</span>
+                    <span class="detail-value">@reel.Brand</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">📦 Modèle</span>
+                    <span class="detail-value">@reel.Model</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(reel.Type))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">🎯 Type</span>
+                        <span class="detail-value">@reel.Type</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(reel.GearRatio))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">⚙️ Ratio</span>
+                        <span class="detail-value">@reel.GearRatio</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(reel.Notes))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">💭 Notes</span>
+                        <span class="detail-value">@reel.Notes</span>
+                    </div>
+                }
+
+                <div class="detail-row">
+                    <span class="detail-label">📅 Ajouté le</span>
+                    <span class="detail-value">@reel.CreatedAt.ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <a href="/FishingSpot_App/materiel/moulinets/modifier/@reel.Id" class="btn btn-primary">
+                        ✏️ Modifier
+                    </a>
+                    <button class="btn btn-outline-danger" @onclick="ShowDeleteConfirmation">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal de confirmation de suppression -->
+@if (showDeleteModal)
+{
+    <div class="modal-overlay" @onclick="CancelDelete">
+        <div class="modal-content" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>⚠️ Confirmer la suppression</h3>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer ce moulinet ?</p>
+                <p><strong>@reel?.Brand @reel?.Model</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" @onclick="CancelDelete">
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="HandleDelete" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <div class="spinner"></div>
+                    }
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Reel? reel;
+    private bool isLoading = true;
+    private bool showDeleteModal = false;
+    private bool isDeleting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
+        await LoadReel();
+    }
+
+    private async Task LoadReel()
+    {
+        isLoading = true;
+        try
+        {
+            reel = await EquipmentService.GetReelByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement du moulinet: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        showDeleteModal = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteModal = false;
+    }
+
+    private async Task HandleDelete()
+    {
+        if (reel == null) return;
+
+        isDeleting = true;
+        try
+        {
+            var success = await EquipmentService.DeleteReelAsync(reel.Id);
+            if (success)
+            {
+                Navigation.NavigateTo("/FishingSpot_App/materiel", forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la suppression: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}
