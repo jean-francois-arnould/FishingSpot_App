@@ -37,26 +37,43 @@
                 <div class="form-group">
                     <label for="fishName" class="form-label">Espèce *</label>
                     <div class="input-group">
-                        @if (showFishList)
+                        @if (showFishList && availableFishSpecies != null)
                         {
-                            <InputSelect id="fishName" class="form-control" @bind-Value="newCatch.FishName">
+                            <InputSelect id="fishName" class="form-control" @bind-Value="selectedFishSpecies" @bind-Value:after="OnFishSpeciesChanged">
                                 <option value="">-- Sélectionner un poisson --</option>
-                                @foreach (var fish in FishSpecies.RiverFish)
+                                @foreach (var category in availableFishSpecies.GroupBy(f => f.Category).OrderBy(g => GetCategoryOrder(g.Key)))
                                 {
-                                    <option value="@fish">@fish</option>
+                                    <optgroup label="@GetCategoryLabel(category.Key)">
+                                        @foreach (var fish in category.OrderBy(f => f.CommonName))
+                                        {
+                                            <option value="@fish.Id">@fish.DisplayName</option>
+                                        }
+                                    </optgroup>
                                 }
-                                <option value="__custom__">➕ Autre (saisie manuelle)</option>
+                                <option value="-1">➕ Autre (saisie manuelle)</option>
                             </InputSelect>
                         }
                         else
                         {
                             <InputText id="fishNameCustom" class="form-control" @bind-Value="newCatch.FishName" 
                                        placeholder="Nom du poisson..." required />
-                            <button type="button" class="btn btn-outline-secondary" @onclick="() => showFishList = true">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="() => { showFishList = true; selectedFishSpecies = string.Empty; }">
                                 📋 Liste
                             </button>
                         }
                     </div>
+                    @if (selectedFishInfo != null && !string.IsNullOrEmpty(selectedFishInfo.Description))
+                    {
+                        <small class="text-muted">
+                            @selectedFishInfo.IconEmoji @selectedFishInfo.Description
+                            @if (selectedFishInfo.MinLegalSize.HasValue)
+                            {
+                                <span class="badge bg-warning text-dark ms-2">
+                                    Taille légale: @selectedFishInfo.MinLegalSize cm
+                                </span>
+                            }
+                        </small>
+                    }
                 </div>
 
                 <div class="form-row">
@@ -65,7 +82,7 @@
                         <div class="measurement-input">
                             <div class="measurement-unit">
                                 <InputSelect class="form-control" @bind-Value="newCatch.LengthMeters">
-                                    @foreach (var m in FishSpecies.LengthMetersOptions)
+                                    @foreach (var m in FishSpeciesHelper.LengthMetersOptions)
                                     {
                                         <option value="@m">@m m</option>
                                     }
@@ -73,7 +90,7 @@
                             </div>
                             <div class="measurement-unit">
                                 <InputSelect class="form-control" @bind-Value="newCatch.LengthCentimeters">
-                                    @foreach (var cm in FishSpecies.LengthCentimetersOptions)
+                                    @foreach (var cm in FishSpeciesHelper.LengthCentimetersOptions)
                                     {
                                         <option value="@cm">@cm cm</option>
                                     }
@@ -86,7 +103,7 @@
                         <div class="measurement-input">
                             <div class="measurement-unit">
                                 <InputSelect class="form-control" @bind-Value="newCatch.WeightKilograms">
-                                    @foreach (var kg in FishSpecies.WeightKilogramsOptions)
+                                    @foreach (var kg in FishSpeciesHelper.WeightKilogramsOptions)
                                     {
                                         <option value="@kg">@kg kg</option>
                                     }
@@ -94,7 +111,7 @@
                             </div>
                             <div class="measurement-unit">
                                 <InputSelect class="form-control" @bind-Value="newCatch.WeightGrams">
-                                    @foreach (var g in FishSpecies.WeightGramsOptions)
+                                    @foreach (var g in FishSpeciesHelper.WeightGramsOptions)
                                     {
                                         <option value="@g">@g g</option>
                                     }
@@ -249,8 +266,11 @@
     };
 
     private List<FishingSetup>? availableSetups;
+    private List<FishSpecies>? availableFishSpecies;
+    private FishSpecies? selectedFishInfo;
     private UserProfile? userProfile;
     private string selectedSetupId = "";
+    private string selectedFishSpecies = "";
     private string? errorMessage;
     private string? successMessage;
     private bool isSaving;
@@ -266,17 +286,21 @@
             return;
         }
 
-        // Load available setups and user profile
+        // Load available setups, profile and fish species
         try
         {
-            // Charger le profil et les setups en parallèle
+            // Charger le profil, les setups et les espèces en parallèle
             var profileTask = ProfileService.GetProfileAsync();
             var setupsTask = SupabaseService.GetAllSetupsAsync();
+            var speciesTask = SupabaseService.GetAllFishSpeciesAsync();
 
-            await Task.WhenAll(profileTask, setupsTask);
+            await Task.WhenAll(profileTask, setupsTask, speciesTask);
 
             userProfile = await profileTask;
             availableSetups = await setupsTask;
+            availableFishSpecies = await speciesTask;
+
+            Console.WriteLine($"✅ Loaded {availableFishSpecies?.Count ?? 0} fish species");
 
             // Pré-sélectionner le montage actuel s'il existe
             var currentSetup = availableSetups?.FirstOrDefault(s => s.IsCurrent);
@@ -288,11 +312,59 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading setups: {ex.Message}");
+            Console.WriteLine($"Error loading data: {ex.Message}");
         }
 
         // Lancer la géolocalisation automatiquement au chargement
         await GetCurrentLocation();
+    }
+
+    private void OnFishSpeciesChanged()
+    {
+        if (!string.IsNullOrEmpty(selectedFishSpecies))
+        {
+            if (selectedFishSpecies == "-1")
+            {
+                // Saisie manuelle
+                newCatch.FishName = "";
+                showFishList = false;
+                selectedFishInfo = null;
+            }
+            else if (int.TryParse(selectedFishSpecies, out int speciesId))
+            {
+                selectedFishInfo = availableFishSpecies?.FirstOrDefault(f => f.Id == speciesId);
+                if (selectedFishInfo != null)
+                {
+                    newCatch.FishName = selectedFishInfo.CommonName;
+                }
+            }
+        }
+    }
+
+    private string GetCategoryLabel(string? category)
+    {
+        return category switch
+        {
+            "carnassier" => "🦈 Carnassiers",
+            "salmonidé" => "🌊 Salmonidés",
+            "migrateur" => "➡️ Migrateurs",
+            "cyprinidé" => "🐠 Cyprinidés",
+            "autre" => "🐟 Autres espèces",
+            _ => "🐟 Non catégorisé"
+        };
+    }
+
+    private int GetCategoryOrder(string? category)
+    {
+        return category switch
+        {
+            "carnassier" => 1,
+            "salmonidé" => 2,
+            "migrateur" => 3,
+            "cyprinidé" => 4,
+            "autre" => 5,
+            _ => 6
+        };
     }
 
     private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
@@ -523,16 +595,6 @@
                 Console.WriteLine($"Error copying coordinates: {ex.Message}");
                 errorMessage = "Impossible de copier les coordonnées";
             }
-        }
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        // Gérer le changement entre liste et saisie personnalisée
-        if (newCatch.FishName == "__custom__")
-        {
-            newCatch.FishName = "";
-            showFishList = false;
         }
     }
 

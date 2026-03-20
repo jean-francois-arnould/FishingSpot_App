@@ -66,6 +66,23 @@ namespace FishingSpot.PWA.Services
             }
         }
 
+        public async Task<List<FishSpecies>> GetAllFishSpeciesAsync()
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<FishSpecies>>("/rest/v1/fish_species?select=*&is_active=eq.true&order=common_name.asc");
+                Console.WriteLine($"✅ Loaded {response?.Count ?? 0} fish species");
+                return response ?? new List<FishSpecies>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting fish species: {ex.Message}");
+                return new List<FishSpecies>();
+            }
+        }
+
         public async Task<FishCatch?> GetCatchByIdAsync(int id)
         {
             await InitializeAsync();

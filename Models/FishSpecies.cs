@@ -1,49 +1,52 @@
+using System.Text.Json.Serialization;
+
 namespace FishingSpot.PWA.Models
 {
-    public static class FishSpecies
+    public class FishSpecies
     {
-        public static readonly List<string> RiverFish = new()
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [JsonPropertyName("common_name")]
+        public string CommonName { get; set; } = string.Empty;
+
+        [JsonPropertyName("scientific_name")]
+        public string? ScientificName { get; set; }
+
+        [JsonPropertyName("family")]
+        public string? Family { get; set; }
+
+        [JsonPropertyName("category")]
+        public string? Category { get; set; }
+
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
+
+        [JsonPropertyName("min_legal_size")]
+        public int? MinLegalSize { get; set; }
+
+        [JsonPropertyName("icon_emoji")]
+        public string IconEmoji { get; set; } = "🐟";
+
+        [JsonPropertyName("is_active")]
+        public bool IsActive { get; set; } = true;
+
+        [JsonPropertyName("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        // Helper pour l'affichage dans les listes
+        [JsonIgnore]
+        public string DisplayName => $"{IconEmoji} {CommonName}";
+
+        [JsonIgnore]
+        public string CategoryDisplay => Category switch
         {
-            "Brochet",
-            "Sandre",
-            "Perche",
-            "Black-bass",
-            "Truite fario",
-            "Truite arc-en-ciel",
-            "Ombre commun",
-            "Saumon",
-            "Carpe commune",
-            "Carpe miroir",
-            "Carpe cuir",
-            "Carpe koï",
-            "Gardon",
-            "Rotengle",
-            "Brème",
-            "Tanche",
-            "Chevesne",
-            "Barbeau",
-            "Ablette",
-            "Vandoise",
-            "Hotu",
-            "Goujon",
-            "Vairon",
-            "Loche franche",
-            "Silure",
-            "Anguille",
-            "Lamproie",
-            "Breme bordelière",
-            "Carassin",
-            "Ide mélanote",
-            "Aspe",
-            "Toxostome",
-            "Bouvière",
-            "Spirlin"
+            "carnassier" => "🦈 Carnassier",
+            "salmonidé" => "🌊 Salmonidé",
+            "migrateur" => "➡️ Migrateur",
+            "cyprinidé" => "🐠 Cyprinidé",
+            "autre" => "🐟 Autre",
+            _ => "🐟 Non catégorisé"
         };
-
-        public static readonly List<int> LengthMetersOptions = Enumerable.Range(0, 3).ToList(); // 0-2m
-        public static readonly List<int> LengthCentimetersOptions = Enumerable.Range(0, 100).ToList(); // 0-99cm
-
-        public static readonly List<int> WeightKilogramsOptions = Enumerable.Range(0, 51).ToList(); // 0-50kg
-        public static readonly List<int> WeightGramsOptions = Enumerable.Range(0, 1000).Where(x => x % 10 == 0).ToList(); // 0-990g par pas de 10
     }
 }
