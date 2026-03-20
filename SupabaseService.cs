@@ -159,8 +159,15 @@ namespace FishingSpot.PWA.Services
                     fishCatch.UserId = _authService.CurrentUser.Id;
                 }
 
+                // Ne pas envoyer l'ID (auto-généré par la DB)
+                var catchId = fishCatch.Id;
+                fishCatch.Id = 0;
                 fishCatch.CreatedAt = DateTime.UtcNow;
-                var json = JsonSerializer.Serialize(fishCatch);
+
+                var json = JsonSerializer.Serialize(fishCatch, new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                });
                 Console.WriteLine($"Sending catch JSON: {json}");
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -174,16 +181,26 @@ namespace FishingSpot.PWA.Services
                 Console.WriteLine($"Response status: {response.StatusCode}");
                 Console.WriteLine($"Response body: {responseBody}");
 
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"❌ Error {response.StatusCode}: {responseBody}");
+                    throw new HttpRequestException($"HTTP {response.StatusCode}: {responseBody}");
+                }
 
                 var result = await response.Content.ReadFromJsonAsync<List<FishCatch>>();
                 var id = result?.FirstOrDefault()?.Id ?? 0;
-                Console.WriteLine($"Returned catch ID: {id}");
+                Console.WriteLine($"✅ Returned catch ID: {id}");
                 return id;
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"❌ HTTP Error adding catch: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error adding catch: {ex.Message}");
+                Console.WriteLine($"❌ Error adding catch: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 throw;
             }

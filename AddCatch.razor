@@ -793,13 +793,14 @@
             Console.WriteLine($"User authenticated: {AuthService.CurrentUser.Email}");
             Console.WriteLine($"Access token present: {!string.IsNullOrEmpty(AuthService.AccessToken)}");
             Console.WriteLine($"Saving catch: {newCatch.FishName}, Lat: {newCatch.Latitude}, Lon: {newCatch.Longitude}");
+            Console.WriteLine($"Length: {newCatch.Length}cm, Weight: {newCatch.Weight}g");
 
             var catchId = await SupabaseService.AddCatchAsync(newCatch);
-            Console.WriteLine($"Catch saved with ID: {catchId}");
+            Console.WriteLine($"✅ Catch saved with ID: {catchId}");
 
             if (catchId > 0)
             {
-                // Redirection immédiate vers la liste sans attendre
+                // Redirection immédiate vers la liste avec forceLoad pour rafraîchir
                 Navigation.NavigateTo("/FishingSpot_App/catches", forceLoad: true);
             }
             else
@@ -809,9 +810,16 @@
                 StateHasChanged();
             }
         }
+        catch (HttpRequestException ex) when (ex.Message.Contains("409"))
+        {
+            Console.WriteLine($"❌ Conflict error (409): {ex.Message}");
+            errorMessage = "❌ Erreur de conflit (409): Cette prise existe peut-être déjà. Vérifiez dans la liste.";
+            isSaving = false;
+            StateHasChanged();
+        }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error adding catch: {ex.Message}");
+            Console.WriteLine($"❌ Error adding catch: {ex.Message}");
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
 
             if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
@@ -819,6 +827,10 @@
                 errorMessage = "❌ Session expirée. Veuillez vous reconnecter.";
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/FishingSpot_App/login");
+            }
+            else if (ex.Message.Contains("409") || ex.Message.Contains("Conflict"))
+            {
+                errorMessage = "❌ Erreur de conflit (409): Cette prise existe peut-être déjà ou il y a un problème de contrainte unique.";
             }
             else
             {

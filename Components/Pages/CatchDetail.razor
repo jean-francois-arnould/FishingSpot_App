@@ -1,7 +1,9 @@
-@page "/FishingSpot_App/catches/{id}"
+@page "/catches/{id:int}"
+@page "/FishingSpot_App/catches/{id:int}"
 @using FishingSpot.PWA.Models
 @using FishingSpot.PWA.Services
-@inject SupabaseService SupabaseService
+@inject ISupabaseService SupabaseService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -149,12 +151,22 @@
         isLoading = true;
         try
         {
-            var catches = await SupabaseService.GetAllCatchesAsync();
-            fishCatch = catches.FirstOrDefault(c => c.Id == Id);
+            Console.WriteLine($"🔍 Loading catch with ID: {Id}");
+            fishCatch = await SupabaseService.GetCatchByIdAsync(Id);
+
+            if (fishCatch == null)
+            {
+                Console.WriteLine($"❌ Catch {Id} not found");
+            }
+            else
+            {
+                Console.WriteLine($"✅ Catch loaded: {fishCatch.FishName}");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors du chargement de la prise: {ex.Message}");
+            Console.WriteLine($"❌ Erreur lors du chargement de la prise: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
         finally
         {
