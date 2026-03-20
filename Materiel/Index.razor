@@ -392,25 +392,3 @@
         showFabMenu = !showFabMenu;
     }
 }
-
-        if (expandedSection == section)
-        {
-            expandedSection = null;
-        }
-        else
-        {
-            expandedSection = section;
-        }
-    }
-
-    private void ToggleFabMenu()
-    {
-        showFabMenu = !showFabMenu;
-    }
-
-    private async Task HandleLogout()
-    {
-        await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/FishingSpot_App/");
-    }
-}
