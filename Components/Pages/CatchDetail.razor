@@ -9,21 +9,20 @@
 
 <PageTitle>Détail de la prise</PageTitle>
 
-<div class="catch-detail-container">
+<div class="catch-detail-page">
     @if (isLoading)
     {
-        <div class="loading-container">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Chargement...</span>
-            </div>
-            <p class="mt-2">Chargement des détails...</p>
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Chargement des détails...</p>
         </div>
     }
     else if (fishCatch == null)
     {
-        <div class="error-container">
-            <h3>❌ Prise non trouvée</h3>
-            <p>Cette prise n'existe pas ou a été supprimée.</p>
+        <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <h3>Prise non trouvée</h3>
+            <p class="text-muted">Cette prise n'existe pas ou a été supprimée.</p>
             <button class="btn btn-primary" @onclick="GoToCatchesList">
                 ← Retour à la liste
             </button>
@@ -31,77 +30,75 @@
     }
     else
     {
-        <!-- En-tête avec photo -->
+        <!-- Photo en plein écran -->
         @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
         {
-            <div class="detail-photo-container">
-                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="detail-photo" />
+            <div class="detail-photo-hero">
+                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" />
             </div>
         }
 
-        <!-- Informations principales -->
-        <div class="detail-card">
-            <div class="detail-header">
+        <!-- Carte principale avec le nom du poisson -->
+        <div class="detail-content">
+            <div class="card fish-card">
                 <h1 class="fish-name">@fishCatch.FishName</h1>
             </div>
 
-            <!-- Date et heure -->
-            <div class="detail-section">
-                <div class="section-icon">📅</div>
-                <div class="section-content">
-                    <h3>Date et heure</h3>
-                    <p class="detail-value">@fishCatch.CatchDate.ToString("dddd d MMMM yyyy à HH:mm")</p>
+            <!-- Carte Date et Heure -->
+            <div class="card detail-card">
+                <div class="card-icon">📅</div>
+                <div class="card-content">
+                    <h3 class="card-title">DATE ET HEURE</h3>
+                    <p class="card-value">@fishCatch.CatchDate.ToString("dddd d MMMM yyyy à HH:mm")</p>
                 </div>
             </div>
 
-            <!-- Localisation -->
+            <!-- Carte Localisation -->
             @if (!string.IsNullOrEmpty(fishCatch.LocationName) || !string.IsNullOrEmpty(fishCatch.Latitude))
             {
-                <div class="detail-section">
-                    <div class="section-icon">📍</div>
-                    <div class="section-content">
-                        <h3>Localisation</h3>
+                <div class="card detail-card">
+                    <div class="card-icon">📍</div>
+                    <div class="card-content">
+                        <h3 class="card-title">LOCALISATION</h3>
                         @if (!string.IsNullOrEmpty(fishCatch.LocationName))
                         {
-                            <p class="detail-value">@fishCatch.LocationName</p>
+                            <p class="card-value">@fishCatch.LocationName</p>
                         }
                         @if (!string.IsNullOrEmpty(fishCatch.Latitude) && !string.IsNullOrEmpty(fishCatch.Longitude))
                         {
-                            <p class="coordinates">
-                                <small>
-                                    Lat: @fishCatch.Latitude, Lon: @fishCatch.Longitude
-                                    <a href="https://www.google.com/maps?q=@fishCatch.Latitude,@fishCatch.Longitude" 
-                                       target="_blank" 
-                                       class="map-link">
-                                        🗺️ Voir sur la carte
-                                    </a>
-                                </small>
+                            <p class="card-coordinates">
+                                Lat: @fishCatch.Latitude, Lon: @fishCatch.Longitude
                             </p>
+                            <a href="https://www.google.com/maps?q=@fishCatch.Latitude,@fishCatch.Longitude" 
+                               target="_blank" 
+                               class="btn btn-outline-primary btn-sm">
+                                🗺️ Voir sur la carte
+                            </a>
                         }
                     </div>
                 </div>
             }
 
-            <!-- Dimensions -->
+            <!-- Carte Dimensions -->
             @if (fishCatch.Length > 0 || fishCatch.Weight > 0)
             {
-                <div class="detail-section">
-                    <div class="section-icon">📏</div>
-                    <div class="section-content">
-                        <h3>Dimensions</h3>
+                <div class="card detail-card">
+                    <div class="card-icon">📏</div>
+                    <div class="card-content">
+                        <h3 class="card-title">DIMENSIONS</h3>
                         <div class="dimensions-grid">
                             @if (fishCatch.Length > 0)
                             {
-                                <div class="dimension-item">
+                                <div class="dimension-box">
                                     <span class="dimension-label">Longueur</span>
-                                    <span class="dimension-value">@fishCatch.Length cm</span>
+                                    <span class="dimension-value">@GetFormattedLength()</span>
                                 </div>
                             }
                             @if (fishCatch.Weight > 0)
                             {
-                                <div class="dimension-item">
+                                <div class="dimension-box">
                                     <span class="dimension-label">Poids</span>
-                                    <span class="dimension-value">@fishCatch.Weight kg</span>
+                                    <span class="dimension-value">@GetFormattedWeight()</span>
                                 </div>
                             }
                         </div>
@@ -109,25 +106,25 @@
                 </div>
             }
 
-            <!-- Notes -->
+            <!-- Carte Notes -->
             @if (!string.IsNullOrEmpty(fishCatch.Notes))
             {
-                <div class="detail-section">
-                    <div class="section-icon">📝</div>
-                    <div class="section-content">
-                        <h3>Notes</h3>
-                        <p class="detail-value">@fishCatch.Notes</p>
+                <div class="card detail-card">
+                    <div class="card-icon">📝</div>
+                    <div class="card-content">
+                        <h3 class="card-title">NOTES</h3>
+                        <p class="card-value notes-text">@fishCatch.Notes</p>
                     </div>
                 </div>
             }
         </div>
 
-        <!-- Boutons d'action -->
-        <div class="detail-actions">
-            <button class="btn btn-secondary btn-lg" @onclick="GoToCatchesList">
+        <!-- Boutons d'action fixés en bas -->
+        <div class="detail-actions-fixed">
+            <button class="btn btn-secondary" @onclick="GoToCatchesList">
                 ← Fermer
             </button>
-            <button class="btn btn-primary btn-lg" @onclick="EditCatch">
+            <button class="btn btn-primary" @onclick="EditCatch">
                 ✏️ Modifier
             </button>
         </div>
@@ -182,5 +179,33 @@
     private void EditCatch()
     {
         Navigation.NavigateTo($"/FishingSpot_App/edit-catch/{Id}");
+    }
+
+    private string GetFormattedLength()
+    {
+        if (fishCatch == null) return "";
+
+        var meters = (int)(fishCatch.Length / 100);
+        var centimeters = (int)(fishCatch.Length % 100);
+
+        if (meters > 0)
+        {
+            return $"{meters} m {centimeters} cm";
+        }
+        return $"{centimeters} cm";
+    }
+
+    private string GetFormattedWeight()
+    {
+        if (fishCatch == null) return "";
+
+        var kilograms = (int)(fishCatch.Weight / 1000);
+        var grams = (int)(fishCatch.Weight % 1000);
+
+        if (kilograms > 0)
+        {
+            return $"{kilograms} kg {grams} g";
+        }
+        return $"{grams} g";
     }
 }
