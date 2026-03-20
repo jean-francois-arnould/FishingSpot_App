@@ -1729,3 +1729,58 @@ code {
         bottom: 1rem;
     }
 }
+/* ===== DETAIL ROWS ===== */
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--grey-light);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--grey);
+    flex: 0 0 120px;
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    flex: 1;
+    text-align: right;
+    color: var(--dark);
+    font-weight: 500;
+}
+
+/* ===== EMPTY STATE SMALL ===== */
+.empty-state-small {
+    padding: 20px;
+    text-align: center;
+}
+
+.empty-state-small p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* ===== LIST ITEM ADD VARIANT ===== */
+.list-item-add {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white !important;
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+.list-item-add .list-item-icon,
+.list-item-add .list-item-title,
+.list-item-add .list-item-action {
+    color: white;
+}
+
+.list-item-add:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}

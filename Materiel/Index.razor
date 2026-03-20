@@ -1,6 +1,7 @@
 
 @page "/materiel"
 @page "/FishingSpot_App/materiel"
+@using FishingSpot.PWA.Models.Equipment
 @using FishingSpot.PWA.Services
 @inject IAuthService AuthService
 @inject IEquipmentService EquipmentService
@@ -24,22 +25,34 @@
                 <div class="accordion-title">
                     <span class="accordion-icon">🎣</span>
                     <span>Cannes</span>
-                    <span class="badge badge-info">@rodsCount</span>
+                    <span class="badge badge-info">@rods.Count</span>
                 </div>
                 <div class="accordion-arrow">@(expandedSection == "cannes" ? "▼" : "▶")</div>
             </div>
             @if (expandedSection == "cannes")
             {
                 <div class="accordion-content">
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/cannes")'>
-                        <div class="list-item-icon">📋</div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">Voir toutes les cannes</div>
-                            <div class="list-item-subtitle">@rodsCount canne(s) enregistrée(s)</div>
+                    @if (rods.Any())
+                    {
+                        @foreach (var rod in rods)
+                        {
+                            <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/cannes/details/{rod.Id}")'>
+                                <div class="list-item-icon">🎣</div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">@rod.Brand @rod.Model</div>
+                                    <div class="list-item-subtitle">@rod.Length @rod.Power</div>
+                                </div>
+                                <div class="list-item-action">›</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-small">
+                            <p class="text-muted">Aucune canne enregistrée</p>
                         </div>
-                        <div class="list-item-action">›</div>
-                    </div>
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/cannes/ajouter")'>
+                    }
+                    <div class="list-item list-item-add" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/cannes/ajouter")'>
                         <div class="list-item-icon">➕</div>
                         <div class="list-item-content">
                             <div class="list-item-title">Ajouter une canne</div>
@@ -56,22 +69,34 @@
                 <div class="accordion-title">
                     <span class="accordion-icon">🎡</span>
                     <span>Moulinets</span>
-                    <span class="badge badge-info">@reelsCount</span>
+                    <span class="badge badge-info">@reels.Count</span>
                 </div>
                 <div class="accordion-arrow">@(expandedSection == "moulinets" ? "▼" : "▶")</div>
             </div>
             @if (expandedSection == "moulinets")
             {
                 <div class="accordion-content">
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets")'>
-                        <div class="list-item-icon">📋</div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">Voir tous les moulinets</div>
-                            <div class="list-item-subtitle">@reelsCount moulinet(s) enregistré(s)</div>
+                    @if (reels.Any())
+                    {
+                        @foreach (var reel in reels)
+                        {
+                            <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/moulinets/details/{reel.Id}")'>
+                                <div class="list-item-icon">🎡</div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">@reel.Brand @reel.Model</div>
+                                    <div class="list-item-subtitle">@reel.Type</div>
+                                </div>
+                                <div class="list-item-action">›</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-small">
+                            <p class="text-muted">Aucun moulinet enregistré</p>
                         </div>
-                        <div class="list-item-action">›</div>
-                    </div>
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets/ajouter")'>
+                    }
+                    <div class="list-item list-item-add" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets/ajouter")'>
                         <div class="list-item-icon">➕</div>
                         <div class="list-item-content">
                             <div class="list-item-title">Ajouter un moulinet</div>
@@ -88,22 +113,34 @@
                 <div class="accordion-title">
                     <span class="accordion-icon">🧵</span>
                     <span>Fils</span>
-                    <span class="badge badge-info">@linesCount</span>
+                    <span class="badge badge-info">@lines.Count</span>
                 </div>
                 <div class="accordion-arrow">@(expandedSection == "fils" ? "▼" : "▶")</div>
             </div>
             @if (expandedSection == "fils")
             {
                 <div class="accordion-content">
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/fils")'>
-                        <div class="list-item-icon">📋</div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">Voir tous les fils</div>
-                            <div class="list-item-subtitle">@linesCount fil(s) enregistré(s)</div>
+                    @if (lines.Any())
+                    {
+                        @foreach (var line in lines)
+                        {
+                            <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/fils/details/{line.Id}")'>
+                                <div class="list-item-icon">🧵</div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">@line.Brand @line.Type</div>
+                                    <div class="list-item-subtitle">@line.Strength</div>
+                                </div>
+                                <div class="list-item-action">›</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-small">
+                            <p class="text-muted">Aucun fil enregistré</p>
                         </div>
-                        <div class="list-item-action">›</div>
-                    </div>
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/fils/ajouter")'>
+                    }
+                    <div class="list-item list-item-add" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/fils/ajouter")'>
                         <div class="list-item-icon">➕</div>
                         <div class="list-item-content">
                             <div class="list-item-title">Ajouter un fil</div>
@@ -120,22 +157,34 @@
                 <div class="accordion-title">
                     <span class="accordion-icon">🐟</span>
                     <span>Leurres</span>
-                    <span class="badge badge-info">@luresCount</span>
+                    <span class="badge badge-info">@lures.Count</span>
                 </div>
                 <div class="accordion-arrow">@(expandedSection == "leurres" ? "▼" : "▶")</div>
             </div>
             @if (expandedSection == "leurres")
             {
                 <div class="accordion-content">
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/leurres")'>
-                        <div class="list-item-icon">📋</div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">Voir tous les leurres</div>
-                            <div class="list-item-subtitle">@luresCount leurre(s) enregistré(s)</div>
+                    @if (lures.Any())
+                    {
+                        @foreach (var lure in lures)
+                        {
+                            <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/leurres/details/{lure.Id}")'>
+                                <div class="list-item-icon">🐟</div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">@lure.Name</div>
+                                    <div class="list-item-subtitle">@lure.Type - @lure.Color</div>
+                                </div>
+                                <div class="list-item-action">›</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-small">
+                            <p class="text-muted">Aucun leurre enregistré</p>
                         </div>
-                        <div class="list-item-action">›</div>
-                    </div>
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/leurres/ajouter")'>
+                    }
+                    <div class="list-item list-item-add" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/leurres/ajouter")'>
                         <div class="list-item-icon">➕</div>
                         <div class="list-item-content">
                             <div class="list-item-title">Ajouter un leurre</div>
@@ -152,22 +201,34 @@
                 <div class="accordion-title">
                     <span class="accordion-icon">🪝</span>
                     <span>Hameçons</span>
-                    <span class="badge badge-info">@hooksCount</span>
+                    <span class="badge badge-info">@hooks.Count</span>
                 </div>
                 <div class="accordion-arrow">@(expandedSection == "hamecons" ? "▼" : "▶")</div>
             </div>
             @if (expandedSection == "hamecons")
             {
                 <div class="accordion-content">
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons")'>
-                        <div class="list-item-icon">📋</div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">Voir tous les hameçons</div>
-                            <div class="list-item-subtitle">@hooksCount hameçon(s) enregistré(s)</div>
+                    @if (hooks.Any())
+                    {
+                        @foreach (var hook in hooks)
+                        {
+                            <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/hamecons/details/{hook.Id}")'>
+                                <div class="list-item-icon">🪝</div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">Taille @hook.Size @(!string.IsNullOrEmpty(hook.Brand) ? $"- {hook.Brand}" : "")</div>
+                                    <div class="list-item-subtitle">@hook.Type</div>
+                                </div>
+                                <div class="list-item-action">›</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-small">
+                            <p class="text-muted">Aucun hameçon enregistré</p>
                         </div>
-                        <div class="list-item-action">›</div>
-                    </div>
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons/ajouter")'>
+                    }
+                    <div class="list-item list-item-add" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons/ajouter")'>
                         <div class="list-item-icon">➕</div>
                         <div class="list-item-content">
                             <div class="list-item-title">Ajouter un hameçon</div>
@@ -184,22 +245,34 @@
                 <div class="accordion-title">
                     <span class="accordion-icon">⛓️</span>
                     <span>Bas de ligne</span>
-                    <span class="badge badge-info">@leadersCount</span>
+                    <span class="badge badge-info">@leaders.Count</span>
                 </div>
                 <div class="accordion-arrow">@(expandedSection == "bas-de-ligne" ? "▼" : "▶")</div>
             </div>
             @if (expandedSection == "bas-de-ligne")
             {
                 <div class="accordion-content">
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne")'>
-                        <div class="list-item-icon">📋</div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">Voir tous les bas de ligne</div>
-                            <div class="list-item-subtitle">@leadersCount bas de ligne enregistré(s)</div>
+                    @if (leaders.Any())
+                    {
+                        @foreach (var leader in leaders)
+                        {
+                            <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/bas-de-ligne/details/{leader.Id}")'>
+                                <div class="list-item-icon">⛓️</div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">@leader.Material</div>
+                                    <div class="list-item-subtitle">@leader.Length - @leader.Strength</div>
+                                </div>
+                                <div class="list-item-action">›</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-small">
+                            <p class="text-muted">Aucun bas de ligne enregistré</p>
                         </div>
-                        <div class="list-item-action">›</div>
-                    </div>
-                    <div class="list-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne/ajouter")'>
+                    }
+                    <div class="list-item list-item-add" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne/ajouter")'>
                         <div class="list-item-icon">➕</div>
                         <div class="list-item-content">
                             <div class="list-item-title">Ajouter un bas de ligne</div>
@@ -250,12 +323,12 @@
 
 @code {
     private bool isLoading = true;
-    private int rodsCount = 0;
-    private int reelsCount = 0;
-    private int linesCount = 0;
-    private int luresCount = 0;
-    private int leadersCount = 0;
-    private int hooksCount = 0;
+    private List<Rod> rods = new();
+    private List<Reel> reels = new();
+    private List<Line> lines = new();
+    private List<Lure> lures = new();
+    private List<Leader> leaders = new();
+    private List<Hook> hooks = new();
     private string? expandedSection = null;
     private bool showFabMenu = false;
 
@@ -267,9 +340,15 @@
             return;
         }
 
+        await LoadAllEquipment();
+    }
+
+    private async Task LoadAllEquipment()
+    {
+        isLoading = true;
         try
         {
-            // Charger les compteurs en parallèle
+            // Charger tout le matériel en parallèle
             var rodsTask = EquipmentService.GetAllRodsAsync();
             var reelsTask = EquipmentService.GetAllReelsAsync();
             var linesTask = EquipmentService.GetAllLinesAsync();
@@ -279,16 +358,16 @@
 
             await Task.WhenAll(rodsTask, reelsTask, linesTask, luresTask, leadersTask, hooksTask);
 
-            rodsCount = rodsTask.Result.Count;
-            reelsCount = reelsTask.Result.Count;
-            linesCount = linesTask.Result.Count;
-            luresCount = luresTask.Result.Count;
-            leadersCount = leadersTask.Result.Count;
-            hooksCount = hooksTask.Result.Count;
+            rods = rodsTask.Result;
+            reels = reelsTask.Result;
+            lines = linesTask.Result;
+            lures = luresTask.Result;
+            leaders = leadersTask.Result;
+            hooks = hooksTask.Result;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors du chargement des compteurs: {ex.Message}");
+            Console.WriteLine($"Erreur lors du chargement du matériel: {ex.Message}");
         }
         finally
         {
@@ -298,6 +377,22 @@
 
     private void ToggleSection(string section)
     {
+        if (expandedSection == section)
+        {
+            expandedSection = null;
+        }
+        else
+        {
+            expandedSection = section;
+        }
+    }
+
+    private void ToggleFabMenu()
+    {
+        showFabMenu = !showFabMenu;
+    }
+}
+
         if (expandedSection == section)
         {
             expandedSection = null;

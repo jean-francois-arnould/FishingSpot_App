@@ -283,7 +283,7 @@
         try
         {
             await EquipmentService.AddHookAsync(newHook);
-            Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons", forceLoad: true);
+            Navigation.NavigateTo("/FishingSpot_App/materiel", forceLoad: true);
         }
         catch (Exception ex)
         {
@@ -298,6 +298,6 @@
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons");
+        Navigation.NavigateTo("/FishingSpot_App/materiel");
     }
 }

@@ -1,0 +1,200 @@
+@page "/materiel/cannes/details/{id:int}"
+@page "/FishingSpot_App/materiel/cannes/details/{id:int}"
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject IEquipmentService EquipmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Détails - Canne</PageTitle>
+
+<div class="page-content">
+    <a href="/FishingSpot_App/materiel" class="btn btn-outline-secondary btn-sm mb-3">
+        ← Retour au matériel
+    </a>
+
+    @if (isLoading)
+    {
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement...</p>
+        </div>
+    }
+    else if (rod == null)
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <h3>Canne introuvable</h3>
+            <p class="text-muted">Cette canne n'existe pas ou a été supprimée.</p>
+            <a href="/FishingSpot_App/materiel" class="btn btn-primary">
+                ← Retour au matériel
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">🎣 @rod.Brand @rod.Model</h3>
+            </div>
+            <div class="card-body">
+                <div class="detail-row">
+                    <span class="detail-label">🏷️ Marque</span>
+                    <span class="detail-value">@rod.Brand</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">📦 Modèle</span>
+                    <span class="detail-value">@rod.Model</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(rod.Length))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">📏 Longueur</span>
+                        <span class="detail-value">@rod.Length m</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(rod.Power))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">💪 Puissance</span>
+                        <span class="detail-value">@rod.Power</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(rod.Action))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">⚡ Action</span>
+                        <span class="detail-value">@rod.Action</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(rod.Notes))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">💭 Notes</span>
+                        <span class="detail-value">@rod.Notes</span>
+                    </div>
+                }
+
+                <div class="detail-row">
+                    <span class="detail-label">📅 Ajouté le</span>
+                    <span class="detail-value">@rod.CreatedAt.ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <a href="/FishingSpot_App/materiel/cannes/modifier/@rod.Id" class="btn btn-primary">
+                        ✏️ Modifier
+                    </a>
+                    <button class="btn btn-outline-danger" @onclick="ShowDeleteConfirmation">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal de confirmation de suppression -->
+@if (showDeleteModal)
+{
+    <div class="modal-overlay" @onclick="CancelDelete">
+        <div class="modal-content" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>⚠️ Confirmer la suppression</h3>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette canne ?</p>
+                <p><strong>@rod?.Brand @rod?.Model</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" @onclick="CancelDelete">
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="HandleDelete" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <div class="spinner"></div>
+                    }
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Rod? rod;
+    private bool isLoading = true;
+    private bool showDeleteModal = false;
+    private bool isDeleting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
+        await LoadRod();
+    }
+
+    private async Task LoadRod()
+    {
+        isLoading = true;
+        try
+        {
+            rod = await EquipmentService.GetRodByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement de la canne: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        showDeleteModal = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteModal = false;
+    }
+
+    private async Task HandleDelete()
+    {
+        if (rod == null) return;
+
+        isDeleting = true;
+        try
+        {
+            var success = await EquipmentService.DeleteRodAsync(rod.Id);
+            if (success)
+            {
+                Navigation.NavigateTo("/FishingSpot_App/materiel", forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la suppression: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}
