@@ -225,6 +225,7 @@ namespace FishingSpot.PWA.Services
             if (string.IsNullOrEmpty(_refreshToken))
             {
                 Console.WriteLine("⚠️ No refresh token available");
+                await NotifySessionExpired();
                 return false;
             }
 
@@ -264,12 +265,51 @@ namespace FishingSpot.PWA.Services
                 }
 
                 Console.WriteLine($"❌ Échec du rafraîchissement du token: {response.StatusCode}");
+                await NotifySessionExpired();
                 return false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error refreshing token: {ex.Message}");
+                await NotifySessionExpired();
                 return false;
+            }
+        }
+
+        private async Task NotifySessionExpired()
+        {
+            try
+            {
+                // Déconnecter l'utilisateur
+                _currentUser = null;
+                _accessToken = null;
+                _refreshToken = null;
+                _tokenExpiresAt = null;
+
+                // Nettoyer localStorage
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_token");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_refresh_token");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_user");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_token_expires_at");
+
+                // Afficher une notification élégante à l'utilisateur
+                await _jsRuntime.InvokeVoidAsync("showSessionExpiredNotification");
+
+                OnAuthStateChanged?.Invoke(null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error notifying session expired: {ex.Message}");
+                // Fallback : redirection directe
+                try
+                {
+                    await _jsRuntime.InvokeVoidAsync("eval", "window.location.href = '/FishingSpot_App/login';");
+                }
+                catch
+                {
+                    // Si tout échoue, au moins nettoyer l'état
+                    OnAuthStateChanged?.Invoke(null);
+                }
             }
         }
 

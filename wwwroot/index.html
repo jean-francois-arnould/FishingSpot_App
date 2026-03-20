@@ -284,6 +284,70 @@
 
             reader.readAsArrayBuffer(blob);
         };
+
+        // ==========================================
+        // NOTIFICATION SESSION EXPIRÉE
+        // ==========================================
+        window.showSessionExpiredNotification = function() {
+            // Créer une notification élégante
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 30px;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    max-width: 400px;
+                    text-align: center;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                ">
+                    <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+                    <h2 style="margin: 0 0 15px 0; color: #ef476f; font-size: 24px;">Session expirée</h2>
+                    <p style="margin: 0 0 25px 0; color: #666; font-size: 16px; line-height: 1.5;">
+                        Votre session a expiré pour des raisons de sécurité.<br>
+                        Veuillez vous reconnecter pour continuer.
+                    </p>
+                    <button onclick="window.location.href='/FishingSpot_App/login'" style="
+                        background: #0066cc;
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        border-radius: 50px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        box-shadow: 0 4px 15px rgba(0,102,204,0.3);
+                    ">
+                        🔑 Se reconnecter
+                    </button>
+                </div>
+            `;
+
+            // Backdrop semi-transparent
+            const backdrop = document.createElement('div');
+            backdrop.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 9999;
+            `;
+
+            document.body.appendChild(backdrop);
+            document.body.appendChild(notification);
+
+            // Redirection automatique après 10 secondes
+            setTimeout(() => {
+                window.location.href = '/FishingSpot_App/login';
+            }, 10000);
+        };
     </script>
 </body>
 
