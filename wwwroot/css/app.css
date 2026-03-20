@@ -919,6 +919,49 @@ h6 { font-size: 1rem; }
     }
 }
 
+/* ===== MEASUREMENT INPUTS (KG/G, M/CM) ===== */
+.measurement-input {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.measurement-unit {
+    flex: 1;
+}
+
+.measurement-unit select {
+    font-weight: 600;
+}
+
+/* ===== SETUP CARD ===== */
+.setup-card {
+    border: 2px solid var(--primary-color);
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.05) 0%, rgba(0, 180, 216, 0.05) 100%);
+}
+
+.setup-card .card-header {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* ===== GPS COPY BUTTON ===== */
+.gps-fields {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.gps-fields input {
+    flex: 1;
+}
+
+.gps-fields button {
+    flex-shrink: 0;
+    min-width: 50px;
+}
+
+
 /* ===== RESPONSIVE ===== */
 @media (min-width: 768px) {
     .bottom-nav {

@@ -2,10 +2,12 @@
 @page "/FishingSpot_App/catches"
 @using FishingSpot.PWA.Models
 @using FishingSpot.PWA.Services
+@using Microsoft.JSInterop
 @inject ISupabaseService SupabaseService
 @inject IAuthService AuthService
 @inject IUserProfileService ProfileService
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Mes Prises</PageTitle>
 
@@ -80,6 +82,30 @@
             return;
         }
 
+        await LoadCatches();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Rafraîchir lors du retour à la page
+            await JSRuntime.InvokeVoidAsync("window.addEventListener", "focus", 
+                DotNetObjectReference.Create(this), "RefreshCatches");
+        }
+    }
+
+    [JSInvokable]
+    public async Task RefreshCatches()
+    {
+        Console.WriteLine("🔄 Rafraîchissement des prises...");
+        await LoadCatches();
+        StateHasChanged();
+    }
+
+    private async Task LoadCatches()
+    {
+        isLoading = true;
         try
         {
             // Charger le profil et les prises en parallèle
@@ -90,6 +116,8 @@
 
             userProfile = await profileTask;
             catches = await catchesTask;
+
+            Console.WriteLine($"✅ {catches.Count} prises chargées");
         }
         catch (Exception ex)
         {

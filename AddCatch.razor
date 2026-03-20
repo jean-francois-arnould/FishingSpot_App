@@ -36,20 +36,71 @@
             <div class="card-body">
                 <div class="form-group">
                     <label for="fishName" class="form-label">Espèce *</label>
-                    <InputText id="fishName" class="form-control" @bind-Value="newCatch.FishName" 
-                               placeholder="Ex: Brochet, Truite, Carpe..." required />
+                    <div class="input-group">
+                        @if (showFishList)
+                        {
+                            <InputSelect id="fishName" class="form-control" @bind-Value="newCatch.FishName">
+                                <option value="">-- Sélectionner un poisson --</option>
+                                @foreach (var fish in FishSpecies.RiverFish)
+                                {
+                                    <option value="@fish">@fish</option>
+                                }
+                                <option value="__custom__">➕ Autre (saisie manuelle)</option>
+                            </InputSelect>
+                        }
+                        else
+                        {
+                            <InputText id="fishNameCustom" class="form-control" @bind-Value="newCatch.FishName" 
+                                       placeholder="Nom du poisson..." required />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="() => showFishList = true">
+                                📋 Liste
+                            </button>
+                        }
+                    </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="length" class="form-label">📏 Longueur (cm)</label>
-                        <InputNumber id="length" class="form-control" @bind-Value="newCatch.Length" 
-                                   placeholder="30" step="0.1" />
+                        <label class="form-label">📏 Longueur</label>
+                        <div class="measurement-input">
+                            <div class="measurement-unit">
+                                <InputSelect class="form-control" @bind-Value="newCatch.LengthMeters">
+                                    @foreach (var m in FishSpecies.LengthMetersOptions)
+                                    {
+                                        <option value="@m">@m m</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="measurement-unit">
+                                <InputSelect class="form-control" @bind-Value="newCatch.LengthCentimeters">
+                                    @foreach (var cm in FishSpecies.LengthCentimetersOptions)
+                                    {
+                                        <option value="@cm">@cm cm</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="weight" class="form-label">⚖️ Poids (kg)</label>
-                        <InputNumber id="weight" class="form-control" @bind-Value="newCatch.Weight" 
-                                   placeholder="2.5" step="0.1" />
+                        <label class="form-label">⚖️ Poids</label>
+                        <div class="measurement-input">
+                            <div class="measurement-unit">
+                                <InputSelect class="form-control" @bind-Value="newCatch.WeightKilograms">
+                                    @foreach (var kg in FishSpecies.WeightKilogramsOptions)
+                                    {
+                                        <option value="@kg">@kg kg</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="measurement-unit">
+                                <InputSelect class="form-control" @bind-Value="newCatch.WeightGrams">
+                                    @foreach (var g in FishSpecies.WeightGramsOptions)
+                                    {
+                                        <option value="@g">@g g</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -70,10 +121,10 @@
                     <label for="latitude" class="form-label">Coordonnées GPS (optionnel)</label>
                     <div class="gps-fields">
                         <input type="text" id="latitude" class="form-control" @bind="newCatch.Latitude" 
-                               placeholder="Latitude" inputmode="decimal" />
+                               placeholder="Latitude" inputmode="decimal" readonly />
                         <input type="text" id="longitude" class="form-control" @bind="newCatch.Longitude" 
-                               placeholder="Longitude" inputmode="decimal" />
-                        <button type="button" class="btn btn-outline-primary" @onclick="GetCurrentLocation" disabled="@isGettingLocation">
+                               placeholder="Longitude" inputmode="decimal" readonly />
+                        <button type="button" class="btn btn-outline-primary" @onclick="GetCurrentLocation" disabled="@isGettingLocation" title="Obtenir ma position">
                             @if (isGettingLocation)
                             {
                                 <div class="spinner"></div>
@@ -83,8 +134,14 @@
                                 <span>📍</span>
                             }
                         </button>
+                        @if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
+                        {
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CopyGpsCoordinates" title="Copier les coordonnées">
+                                📋
+                            </button>
+                        }
                     </div>
-                    <small class="text-muted">Cliquez sur 📍 pour remplir automatiquement</small>
+                    <small class="text-muted">Position détectée automatiquement • Cliquez sur 📋 pour partager</small>
                 </div>
 
                 <div class="form-row">
@@ -143,9 +200,16 @@
                     <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="newCatch.Notes" 
                                  placeholder="Conditions météo, appât, technique..." />
                 </div>
+            </div>
+        </div>
 
+        <div class="card setup-card">
+            <div class="card-header">
+                <h3 class="mb-0">🎣 Montage utilisé</h3>
+            </div>
+            <div class="card-body">
                 <div class="form-group">
-                    <label for="setupId" class="form-label">Montage utilisé</label>
+                    <label for="setupId" class="form-label">Sélectionner un montage</label>
                     <InputSelect id="setupId" class="form-control" @bind-Value="selectedSetupId">
                         <option value="">-- Aucun montage --</option>
                         @if (availableSetups != null)
@@ -192,6 +256,7 @@
     private bool isSaving;
     private bool isUploadingPhoto;
     private bool isGettingLocation;
+    private bool showFishList = true; // Afficher la liste par défaut
 
     protected override async Task OnInitializedAsync()
     {
@@ -438,6 +503,37 @@
     private void Cancel()
     {
         Navigation.NavigateTo("/FishingSpot_App/catches");
+    }
+
+    private async Task CopyGpsCoordinates()
+    {
+        if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
+        {
+            var coordinates = $"{newCatch.Latitude}, {newCatch.Longitude}";
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", coordinates);
+                successMessage = "📋 Coordonnées GPS copiées dans le presse-papier !";
+                await Task.Delay(2000);
+                successMessage = null;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error copying coordinates: {ex.Message}");
+                errorMessage = "Impossible de copier les coordonnées";
+            }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Gérer le changement entre liste et saisie personnalisée
+        if (newCatch.FishName == "__custom__")
+        {
+            newCatch.FishName = "";
+            showFishList = false;
+        }
     }
 
     private async Task HandleLogout()
