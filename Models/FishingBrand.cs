@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
-namespace FishingSpot.PWA.Models
-{
+namespace FishingSpot.PWA.Models 
+{ 
     public class FishingBrand
     {
         [JsonPropertyName("id")]
