@@ -307,7 +307,7 @@
             var rodId = await EquipmentService.AddRodAsync(newRod);
             if (rodId > 0)
             {
-                Navigation.NavigateTo("/FishingSpot_App/materiel/cannes");
+                Navigation.NavigateTo("/FishingSpot_App/materiel/cannes", forceLoad: true);
             }
             else
             {

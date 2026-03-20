@@ -80,7 +80,7 @@
         try
         {
             await EquipmentService.AddLureAsync(newLure);
-            Navigation.NavigateTo("/FishingSpot_App/materiel/leurres");
+            Navigation.NavigateTo("/FishingSpot_App/materiel/leurres", forceLoad: true);
         }
         catch (Exception ex)
         {

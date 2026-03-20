@@ -86,7 +86,7 @@
             var leaderId = await EquipmentService.AddLeaderAsync(newLeader);
             if (leaderId > 0)
             {
-                Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne");
+                Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne", forceLoad: true);
             }
             else
             {

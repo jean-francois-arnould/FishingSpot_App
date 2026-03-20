@@ -292,7 +292,7 @@
         try
         {
             await EquipmentService.AddLineAsync(newLine);
-            Navigation.NavigateTo("/FishingSpot_App/materiel/fils");
+            Navigation.NavigateTo("/FishingSpot_App/materiel/fils", forceLoad: true);
         }
         catch (Exception ex)
         {

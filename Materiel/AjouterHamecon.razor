@@ -283,7 +283,7 @@
         try
         {
             await EquipmentService.AddHookAsync(newHook);
-            Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons");
+            Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons", forceLoad: true);
         }
         catch (Exception ex)
         {
