@@ -92,14 +92,26 @@ namespace FishingSpot.PWA.Services
 
                 profile.Id = _authService.CurrentUser.Id;
                 profile.Email = _authService.CurrentUser.Email;
-                profile.UpdatedAt = DateTime.UtcNow;
 
                 var existingProfile = await GetProfileAsync();
 
                 if (existingProfile == null)
                 {
-                    profile.CreatedAt = DateTime.UtcNow;
-                    var json = JsonSerializer.Serialize(profile);
+                    // Créer un nouveau profil
+                    Console.WriteLine("📝 Creating new profile...");
+
+                    // Ne pas envoyer created_at et updated_at, laissez Supabase les gérer
+                    var profileData = new
+                    {
+                        id = profile.Id,
+                        email = profile.Email,
+                        display_name = profile.DisplayName ?? string.Empty,
+                        avatar_url = profile.AvatarUrl ?? string.Empty
+                    };
+
+                    var json = JsonSerializer.Serialize(profileData);
+                    Console.WriteLine($"📤 JSON to send: {json}");
+
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     _httpClient.DefaultRequestHeaders.Remove("Prefer");
@@ -112,9 +124,19 @@ namespace FishingSpot.PWA.Services
                 }
                 else
                 {
-                    profile.CreatedAt = existingProfile.CreatedAt;
+                    // Mettre à jour le profil existant
+                    Console.WriteLine("📝 Updating existing profile...");
 
-                    var json = JsonSerializer.Serialize(profile);
+                    // Ne pas envoyer updated_at, laissez le trigger SQL le gérer
+                    var profileData = new
+                    {
+                        display_name = profile.DisplayName ?? string.Empty,
+                        avatar_url = profile.AvatarUrl ?? string.Empty
+                    };
+
+                    var json = JsonSerializer.Serialize(profileData);
+                    Console.WriteLine($"📤 JSON to send: {json}");
+
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                     var response = await _httpClient.PatchAsync($"/rest/v1/user_profiles?id=eq.{_authService.CurrentUser.Id}", content);
@@ -125,7 +147,8 @@ namespace FishingSpot.PWA.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error creating/updating profile: {ex.Message}");
+                Console.WriteLine($"❌ Error creating/updating profile: {ex.Message}");
+                Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
                 return false;
             }
         }

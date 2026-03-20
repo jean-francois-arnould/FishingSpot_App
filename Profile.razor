@@ -167,11 +167,22 @@
 
         try
         {
+            Console.WriteLine($"💾 Saving profile: DisplayName='{profile.DisplayName}', AvatarUrl='{profile.AvatarUrl}'");
+
             var success = await ProfileService.CreateOrUpdateProfileAsync(profile);
 
             if (success)
             {
                 successMessage = "Profil enregistré avec succès!";
+
+                // Recharger le profil pour confirmer la sauvegarde
+                await Task.Delay(500);
+                var updatedProfile = await ProfileService.GetProfileAsync();
+                if (updatedProfile != null)
+                {
+                    profile = updatedProfile;
+                    Console.WriteLine($"✅ Profile reloaded: DisplayName='{profile.DisplayName}'");
+                }
             }
             else
             {
@@ -181,6 +192,7 @@
         catch (Exception ex)
         {
             errorMessage = $"Erreur: {ex.Message}";
+            Console.WriteLine($"❌ Error saving profile: {ex.Message}");
         }
         finally
         {

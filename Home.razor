@@ -1,7 +1,9 @@
 ﻿@page "/"
 @page "/FishingSpot_App/"
 @using FishingSpot.PWA.Services
+@using FishingSpot.PWA.Models
 @inject IAuthService AuthService
+@inject IUserProfileService ProfileService
 @inject NavigationManager Navigation
 
 <PageTitle>FishingSpot - Fishing Tracker</PageTitle>
@@ -11,7 +13,7 @@
     <!-- Utilisateur connecté -->
     <div class="empty-state">
         <div class="empty-state-icon">👋</div>
-        <h1>Bienvenue @AuthService.CurrentUser?.Email!</h1>
+        <h1>Bienvenue @GetDisplayName()!</h1>
         <p class="empty-state-text">Prêt pour votre prochaine session de pêche ?</p>
     </div>
 
@@ -96,4 +98,32 @@ else
             </div>
         </div>
     </div>
+}
+
+@code {
+    private UserProfile? userProfile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated)
+        {
+            try
+            {
+                userProfile = await ProfileService.GetProfileAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading profile: {ex.Message}");
+            }
+        }
+    }
+
+    private string GetDisplayName()
+    {
+        if (userProfile != null && !string.IsNullOrEmpty(userProfile.DisplayName))
+        {
+            return userProfile.DisplayName;
+        }
+        return AuthService.CurrentUser?.Email ?? "Pêcheur";
+    }
 }

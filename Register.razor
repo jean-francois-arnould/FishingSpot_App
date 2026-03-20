@@ -61,36 +61,16 @@
                         <h5 class="mb-0">👤 Informations personnelles</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="firstName" class="form-label">Prénom *</label>
-                                <InputText id="firstName" class="form-control" @bind-Value="registerModel.FirstName" placeholder="Jean" required />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="lastName" class="form-label">Nom *</label>
-                                <InputText id="lastName" class="form-control" @bind-Value="registerModel.LastName" placeholder="Dupont" required />
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label for="city" class="form-label">Ville *</label>
-                                <InputText id="city" class="form-control" @bind-Value="registerModel.City" placeholder="Paris" required />
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="postalCode" class="form-label">Code Postal *</label>
-                                <InputText id="postalCode" class="form-control" @bind-Value="registerModel.PostalCode" placeholder="75001" required />
-                            </div>
+                        <div class="mb-3">
+                            <label for="displayName" class="form-label">Nom d'affichage *</label>
+                            <InputText id="displayName" class="form-control" @bind-Value="registerModel.DisplayName" placeholder="Jean Dupont" required />
+                            <small class="form-text text-muted">Ce nom sera visible par les autres utilisateurs</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="country" class="form-label">Pays</label>
-                            <InputText id="country" class="form-control" @bind-Value="registerModel.Country" placeholder="France" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Téléphone</label>
-                            <InputText id="phone" class="form-control" @bind-Value="registerModel.Phone" placeholder="+33 6 12 34 56 78" />
+                            <label for="avatarUrl" class="form-label">URL de l'avatar</label>
+                            <InputText id="avatarUrl" class="form-control" @bind-Value="registerModel.AvatarUrl" placeholder="https://..." />
+                            <small class="form-text text-muted">Optionnel : lien vers votre photo de profil</small>
                         </div>
                     </div>
                 </div>
@@ -147,27 +127,9 @@
         }
 
         // Validation des champs obligatoires
-        if (string.IsNullOrWhiteSpace(registerModel.FirstName))
+        if (string.IsNullOrWhiteSpace(registerModel.DisplayName))
         {
-            errorMessage = "Le prénom est obligatoire.";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(registerModel.LastName))
-        {
-            errorMessage = "Le nom est obligatoire.";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(registerModel.City))
-        {
-            errorMessage = "La ville est obligatoire.";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(registerModel.PostalCode))
-        {
-            errorMessage = "Le code postal est obligatoire.";
+            errorMessage = "Le nom d'affichage est obligatoire.";
             return;
         }
 
@@ -190,7 +152,8 @@
                     // 3. Créer le profil utilisateur avec le DisplayName
                     var profile = new UserProfile
                     {
-                        DisplayName = $"{registerModel.FirstName} {registerModel.LastName}".Trim()
+                        DisplayName = registerModel.DisplayName.Trim(),
+                        AvatarUrl = registerModel.AvatarUrl?.Trim() ?? string.Empty
                     };
 
                     var profileCreated = await ProfileService.CreateOrUpdateProfileAsync(profile);
@@ -235,11 +198,7 @@
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public string PostalCode { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string AvatarUrl { get; set; } = string.Empty;
     }
 }
