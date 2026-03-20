@@ -31,5 +31,6 @@ namespace FishingSpot.PWA.Models
         public const string Reel = "reel";
         public const string Line = "line";
         public const string Lure = "lure";
+        public const string Hook = "hook";
     }
 }

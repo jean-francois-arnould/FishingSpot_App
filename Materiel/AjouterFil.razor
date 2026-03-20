@@ -2,8 +2,11 @@
 @page "/materiel/fils/ajouter"
 @page "/FishingSpot_App/materiel/fils/ajouter"
 @using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Models
 @using FishingSpot.PWA.Services
+@inject IAuthService AuthService
 @inject IEquipmentService EquipmentService
+@inject ISupabaseService SupabaseService
 @inject NavigationManager Navigation
 
 <h3 class="mb-4">🧵 Ajouter un Fil</h3>
@@ -14,7 +17,26 @@
 
     <div class="mb-3">
         <label for="brand" class="form-label">Marque *</label>
-        <InputText id="brand" class="form-control" @bind-Value="newLine.Brand" required />
+        <div class="fish-species-readonly">
+            <input type="text" 
+                   id="brand" 
+                   class="form-control" 
+                   value="@GetBrandDisplayValue()" 
+                   placeholder="Sélectionner une marque..." 
+                   readonly 
+                   required />
+        </div>
+        <div class="fish-species-buttons">
+            @if (availableBrands != null && availableBrands.Any())
+            {
+                <button type="button" class="btn btn-primary" @onclick="ShowBrandsList">
+                    🔍 Chercher dans la liste
+                </button>
+            }
+            <button type="button" class="btn btn-success" @onclick="ShowAddBrandForm">
+                ➕ Ajouter une nouvelle marque
+            </button>
+        </div>
     </div>
 
     <div class="mb-3">
@@ -47,6 +69,11 @@
         <div class="alert alert-danger">@errorMessage</div>
     }
 
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+
     <div class="mt-3">
         <button type="submit" class="btn btn-success" disabled="@isSubmitting">
             @if (isSubmitting)
@@ -61,10 +88,195 @@
     </div>
 </EditForm>
 
+@* Modal pour afficher la liste des marques *@
+@if (showBrandsModal && availableBrands != null)
+{
+    <div class="modal-backdrop" @onclick="HideBrandsModal"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🔍 Sélectionner une marque</h3>
+                <button type="button" class="btn-close" @onclick="HideBrandsModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="fish-list">
+                    @foreach (var brand in availableBrands)
+                    {
+                        <button type="button" class="fish-item" @onclick="() => SelectBrand(brand)">
+                            <div class="fish-info">
+                                <div class="fish-name">@brand.Name</div>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal pour ajouter une nouvelle marque *@
+@if (showAddBrandModal)
+{
+    <div class="modal-backdrop" @onclick="HideAddBrandModal"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">➕ Ajouter une nouvelle marque</h3>
+                <button type="button" class="btn-close" @onclick="HideAddBrandModal">✕</button>
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(addBrandError))
+                {
+                    <div class="alert alert-danger">@addBrandError</div>
+                }
+                @if (!string.IsNullOrEmpty(addBrandSuccess))
+                {
+                    <div class="alert alert-success">@addBrandSuccess</div>
+                }
+
+                <EditForm Model="@newBrand" OnValidSubmit="HandleAddBrand">
+                    <div class="form-group">
+                        <label class="form-label">Nom de la marque *</label>
+                        <InputText class="form-control" @bind-Value="newBrand.Name" 
+                                   placeholder="Ex: PowerPro" required />
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="HideAddBrandModal">
+                            Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary" disabled="@isAddingBrand">
+                            @if (isAddingBrand)
+                            {
+                                <div class="spinner"></div>
+                            }
+                            ✅ Ajouter
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private Line newLine = new();
+    private FishingBrand newBrand = new FishingBrand { Category = BrandCategory.Line };
+    private List<FishingBrand>? availableBrands;
     private bool isSubmitting = false;
+    private bool isAddingBrand = false;
+    private bool showBrandsModal = false;
+    private bool showAddBrandModal = false;
     private string? errorMessage;
+    private string? successMessage;
+    private string? addBrandError;
+    private string? addBrandSuccess;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            availableBrands = await SupabaseService.GetBrandsByCategoryAsync(BrandCategory.Line);
+            Console.WriteLine($"✅ Loaded {availableBrands.Count} line brands");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading brands: {ex.Message}");
+        }
+    }
+
+    private string GetBrandDisplayValue()
+    {
+        return string.IsNullOrEmpty(newLine.Brand) ? "" : newLine.Brand;
+    }
+
+    private void ShowBrandsList()
+    {
+        showBrandsModal = true;
+    }
+
+    private void HideBrandsModal()
+    {
+        showBrandsModal = false;
+    }
+
+    private void SelectBrand(FishingBrand brand)
+    {
+        newLine.Brand = brand.Name;
+        showBrandsModal = false;
+    }
+
+    private void ShowAddBrandForm()
+    {
+        newBrand = new FishingBrand { Category = BrandCategory.Line };
+        addBrandError = null;
+        addBrandSuccess = null;
+        showAddBrandModal = true;
+    }
+
+    private void HideAddBrandModal()
+    {
+        showAddBrandModal = false;
+        newBrand = new FishingBrand { Category = BrandCategory.Line };
+        addBrandError = null;
+        addBrandSuccess = null;
+    }
+
+    private async Task HandleAddBrand()
+    {
+        addBrandError = null;
+        addBrandSuccess = null;
+        isAddingBrand = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(newBrand.Name))
+            {
+                addBrandError = "Le nom de la marque est requis.";
+                isAddingBrand = false;
+                return;
+            }
+
+            Console.WriteLine($"Attempting to add brand: {newBrand.Name}");
+            var brandId = await SupabaseService.AddFishingBrandAsync(newBrand);
+
+            if (brandId == -1)
+            {
+                addBrandError = $"❌ La marque '{newBrand.Name}' existe déjà dans la base de données.";
+                isAddingBrand = false;
+                return;
+            }
+
+            if (brandId > 0)
+            {
+                addBrandSuccess = $"✅ La marque '{newBrand.Name}' a été ajoutée avec succès !";
+                Console.WriteLine($"Brand added with ID: {brandId}");
+
+                // Recharger la liste des marques
+                availableBrands = await SupabaseService.GetBrandsByCategoryAsync(BrandCategory.Line);
+
+                // Sélectionner automatiquement la nouvelle marque
+                newLine.Brand = newBrand.Name;
+
+                // Attendre 2 secondes puis fermer le modal
+                await Task.Delay(2000);
+                HideAddBrandModal();
+            }
+            else
+            {
+                addBrandError = "Erreur lors de l'ajout de la marque.";
+            }
+        }
+        catch (Exception ex)
+        {
+            addBrandError = $"Erreur: {ex.Message}";
+            Console.WriteLine($"Error adding brand: {ex.Message}");
+        }
+        finally
+        {
+            isAddingBrand = false;
+        }
+    }
 
     private async Task HandleSubmit()
     {

@@ -21,7 +21,17 @@ namespace FishingSpot.PWA.Services
         private void SetAuthHeaders()
         {
             _httpClient.DefaultRequestHeaders.Remove("Authorization");
-            var token = _authService.AccessToken ?? _supabaseKey;
+            _httpClient.DefaultRequestHeaders.Remove("apikey");
+
+            var token = _authService.AccessToken;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.WriteLine("⚠️ WARNING: No access token found, using API key only");
+                token = _supabaseKey;
+            }
+
+            _httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
