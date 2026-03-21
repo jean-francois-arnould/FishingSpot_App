@@ -1,119 +1,129 @@
-# ✅ MONTAGES - FONCTIONNALITÉ RECRÉÉE DE ZÉRO
+# ✅ MONTAGES - FONCTIONNALITÉ RECRÉÉE AVEC LE BON SCHÉMA
 
 ## 🎯 Modifications effectuées
 
+### PROBLÈME IDENTIFIÉ :
+Le code précédent utilisait un schéma avec des **références d'équipement** (`rod_id`, `reel_id`, etc.) alors que la **base de données réelle** utilise des **champs texte directs** (`rod_brand`, `rod_model`, etc.).
+
+**Erreur reçue :** 
+```
+"Could not find the 'hook_id' column of 'fishing_setups' in the schema cache"
+```
+
 ### 1. **Modèle FishingSetup.cs** ✅
-- Créé dans `Models\FishingSetup.cs`
-- Mapping JSON exact avec la base de données Supabase
-- Tous les champs requis :
-  - `id`, `user_id`, `name` (requis), `description` (optionnel)
-  - Références d'équipement : `rod_id`, `reel_id`, `line_id`, `lure_id`, `leader_id`, `hook_id`
-  - Flags : `is_favorite`, `is_current`
-  - `notes`, `created_at`
+Recréé dans `Models\FishingSetup.cs` avec le **VRAI schéma Supabase** :
+
+**Champs Rod (Canne) :**
+- `rod_brand` (text)
+- `rod_model` (text)
+- `rod_length` (double)
+- `rod_power` (text)
+
+**Champs Reel (Moulinet) :**
+- `reel_brand` (text)
+- `reel_model` (text)
+- `reel_type` (text)
+
+**Champs Line (Ligne) :**
+- `line_type` (text)
+- `line_diameter` (double)
+- `line_breaking_strength` (double)
+
+**Autres :**
+- `hook_size` (text)
+- `bait_type` (text)
+- `description` (text)
+- `is_favorite` (bool)
+- `is_current` (bool)
+- `created_at`, `updated_at` (datetime)
 
 ### 2. **Service SupabaseService.cs** ✅
-Méthodes complètement réécrites :
-- `GetAllSetupsAsync()` - Récupérer tous les montages
-- `GetSetupByIdAsync(int id)` - Récupérer un montage par ID
-- `GetCurrentSetupAsync()` - Récupérer le montage actuel
-- `AddSetupAsync(FishingSetup setup)` - **CRÉER un montage (FIX PRINCIPAL)**
-  - Utilise un objet anonyme pour éviter les problèmes de sérialisation
-  - Logs détaillés pour debug
-  - Gestion d'erreur complète
-- `UpdateSetupAsync(FishingSetup setup)` - Mettre à jour un montage
-- `DeleteSetupAsync(int id)` - Supprimer un montage
-- `SetCurrentSetupAsync(int setupId)` - Définir comme montage actuel
+Méthodes complètement réécrites pour correspondre au schéma :
+- `AddSetupAsync()` - Envoie les bons champs (rod_brand, reel_brand, etc.)
+- `UpdateSetupAsync()` - Mise à jour avec les bons champs
+- Autres méthodes (Get, Delete, SetCurrent) - Inchangées
 
 ### 3. **Pages Razor** ✅
 
 #### `Pages\Montages\Index.razor`
-- Liste de tous les montages
-- Indicateur visuel du montage actuel
-- Marque favorite (⭐)
-- Actions : Modifier, Définir comme actuel, Supprimer
-- Design responsive avec cartes
+- Affichage des montages avec les vrais champs
+- Titre généré depuis `RodBrand` ou `Description`
+- Détails : Canne, Moulinet, Ligne, Hameçon, Appât
 
 #### `Pages\Montages\Ajouter.razor`
-- Formulaire de création complet
-- Validation du nom (requis)
-- Sélection d'équipement (au moins un requis)
-- Option "Marquer comme favori"
-- Option "Définir comme montage actuel"
-- Champs description et notes (optionnels)
+- Formulaire organisé en sections (Canne, Moulinet, Ligne, Hameçon)
+- Tous les champs optionnels
+- Validation : au moins un champ doit être renseigné
 
 #### `Pages\Montages\Modifier.razor`
-- Formulaire de modification
+- Même structure que Ajouter
 - Pré-remplissage des valeurs existantes
-- Même validation que la création
 
-### 4. **Navigation** ✅
-- Lien "Mes Montages" ajouté dans `NavMenu.razor`
-- Icône gear-fill (⚙️)
-- Placé entre "Mes Prises" et "Mon Matériel"
+## 🔑 Schéma de la base de données
 
-## 🔑 Points clés du fix
-
-### Problème principal résolu :
-**L'erreur 400 (Bad Request)** était causée par :
-1. Envoi de propriétés non désirées (ID, CreatedAt) à Supabase
-2. Manque du champ `name` qui est **NOT NULL** dans la base de données
-
-### Solution implémentée :
-```csharp
-// Création d'un objet anonyme avec uniquement les champs nécessaires
-var setupToSend = new
-{
-    user_id = setup.UserId,
-    name = setup.Name,              // ⚠️ REQUIS
-    description = setup.Description,
-    rod_id = setup.RodId,
-    // ... autres champs
-};
+```sql
+create table public.fishing_setups (
+  id serial not null,
+  user_id uuid not null,
+  rod_brand text null,
+  rod_model text null,
+  rod_length double precision null,
+  rod_power text null,
+  reel_brand text null,
+  reel_model text null,
+  reel_type text null,
+  line_type text null,
+  line_diameter double precision null,
+  line_breaking_strength double precision null,
+  hook_size text null,
+  bait_type text null,
+  description text null,
+  is_current boolean null default false,
+  is_favorite boolean null default false,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint fishing_setups_pkey primary key (id),
+  constraint fishing_setups_user_id_fkey foreign key (user_id) 
+    references auth.users (id) on delete cascade
+);
 ```
 
 ## 🧪 Tests suggérés
 
 1. **Créer un montage simple** :
-   - Nom : "Mon premier montage"
-   - Sélectionner au moins une pièce d'équipement
-   - Vérifier la création sans erreur
+   - Marque canne : "Shimano"
+   - Modèle canne : "Zodias"
+   - Type ligne : "Tresse"
+   - ✅ Devrait se créer sans erreur
 
 2. **Créer un montage complet** :
-   - Tous les équipements sélectionnés
+   - Tous les champs renseignés
    - Marquer comme favori
    - Définir comme actuel
-   - Ajouter des notes
 
-3. **Modifier un montage existant**
+3. **Modifier un montage**
 4. **Supprimer un montage**
 5. **Changer le montage actuel**
 
-## 📊 Structure de la base de données
+## 📊 Différences avec l'ancienne version
 
-```sql
-CREATE TABLE fishing_setups (
-  id SERIAL PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  name TEXT NOT NULL,              -- ⚠️ REQUIS
-  description TEXT,
-  rod_id INTEGER REFERENCES rods(id),
-  reel_id INTEGER REFERENCES reels(id),
-  line_id INTEGER REFERENCES lines(id),
-  lure_id INTEGER REFERENCES lures(id),
-  leader_id INTEGER REFERENCES leaders(id),
-  hook_id INTEGER REFERENCES hooks(id),
-  is_favorite BOOLEAN DEFAULT FALSE,
-  is_current BOOLEAN DEFAULT FALSE,
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-```
+| Ancienne structure (❌) | Nouvelle structure (✅) |
+|------------------------|------------------------|
+| `name` (text, requis)  | ❌ Supprimé           |
+| `rod_id` (int FK)      | `rod_brand`, `rod_model`, etc. |
+| `reel_id` (int FK)     | `reel_brand`, `reel_model`, etc. |
+| `line_id` (int FK)     | `line_type`, `line_diameter`, etc. |
+| `lure_id` (int FK)     | ❌ Pas dans le schéma |
+| `leader_id` (int FK)   | ❌ Pas dans le schéma |
+| `hook_id` (int FK)     | `hook_size` (text)    |
+| `notes` (text)         | ❌ Supprimé           |
 
 ## ✅ Build Status
 **Build successful** - Aucune erreur de compilation
 
 ---
 
-**Date de recréation** : Aujourd'hui  
-**Raison** : Fix de l'erreur 400 (Bad Request) lors de l'ajout de montages  
-**Status** : ✅ PRÊT À TESTER
+**Date de correction** : Maintenant  
+**Raison** : Fix erreur "Could not find 'hook_id' column" - Schéma incorrect  
+**Status** : ✅ PRÊT À TESTER (avec le BON schéma cette fois !)
+

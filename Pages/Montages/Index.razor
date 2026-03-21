@@ -30,7 +30,7 @@
         <div class="empty-state">
             <div class="empty-icon">🎣</div>
             <h4>Aucun montage</h4>
-            <p>Créez votre premier montage pour commencer à organiser votre matériel.</p>
+            <p>Créez votre premier montage pour sauvegarder vos configurations.</p>
             <a href="/FishingSpot_App/montages/ajouter" class="btn btn-primary mt-3">
                 Créer un montage
             </a>
@@ -41,7 +41,7 @@
         @if (currentSetup != null)
         {
             <div class="alert alert-info mb-4">
-                <strong>🎯 Montage actuel :</strong> @currentSetup.Name
+                <strong>🎯 Montage actuel :</strong> @GetSetupSummary(currentSetup)
             </div>
         }
 
@@ -61,7 +61,7 @@
                                     {
                                         <span>🎯</span>
                                     }
-                                    @setup.Name
+                                    @GetSetupTitle(setup)
                                 </h5>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown">
@@ -97,38 +97,42 @@
                             }
 
                             <div class="setup-details">
-                                @if (setup.RodId.HasValue)
+                                @if (!string.IsNullOrEmpty(setup.RodBrand))
                                 {
-                                    <div class="setup-item">🎣 Canne</div>
+                                    <div class="setup-item">
+                                        🎣 @setup.RodBrand @setup.RodModel
+                                        @if (setup.RodLength.HasValue)
+                                        {
+                                            <text>(@setup.RodLength m)</text>
+                                        }
+                                    </div>
                                 }
-                                @if (setup.ReelId.HasValue)
+                                @if (!string.IsNullOrEmpty(setup.ReelBrand))
                                 {
-                                    <div class="setup-item">🎡 Moulinet</div>
+                                    <div class="setup-item">🎡 @setup.ReelBrand @setup.ReelModel</div>
                                 }
-                                @if (setup.LineId.HasValue)
+                                @if (!string.IsNullOrEmpty(setup.LineType))
                                 {
-                                    <div class="setup-item">🧵 Fil</div>
+                                    <div class="setup-item">
+                                        🧵 @setup.LineType
+                                        @if (setup.LineDiameter.HasValue)
+                                        {
+                                            <text>(@setup.LineDiameter mm)</text>
+                                        }
+                                    </div>
                                 }
-                                @if (setup.LureId.HasValue)
+                                @if (!string.IsNullOrEmpty(setup.HookSize))
                                 {
-                                    <div class="setup-item">🪝 Leurre</div>
+                                    <div class="setup-item">🪝 Hameçon @setup.HookSize</div>
                                 }
-                                @if (setup.LeaderId.HasValue)
+                                @if (!string.IsNullOrEmpty(setup.BaitType))
                                 {
-                                    <div class="setup-item">⛓️ Bas de ligne</div>
-                                }
-                                @if (setup.HookId.HasValue)
-                                {
-                                    <div class="setup-item">🎣 Hameçon</div>
+                                    <div class="setup-item">🐛 @setup.BaitType</div>
                                 }
                             </div>
-
-                            @if (!string.IsNullOrEmpty(setup.Notes))
-                            {
-                                <div class="mt-2">
-                                    <small class="text-muted">📝 @setup.Notes</small>
-                                </div>
-                            }
+                        </div>
+                        <div class="card-footer text-muted small">
+                            Créé le @setup.CreatedAt?.ToString("dd/MM/yyyy")
                         </div>
                     </div>
                 </div>
@@ -164,17 +168,15 @@
     }
 
     .setup-details {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
         margin-top: 0.75rem;
     }
 
     .setup-item {
         background-color: #f0f0f0;
-        padding: 0.25rem 0.5rem;
+        padding: 0.4rem 0.6rem;
         border-radius: 4px;
         font-size: 0.85rem;
+        margin-bottom: 0.5rem;
     }
 </style>
 
@@ -218,6 +220,30 @@
         }
     }
 
+    private string GetSetupTitle(FishingSetup setup)
+    {
+        if (!string.IsNullOrEmpty(setup.Description))
+            return setup.Description;
+
+        if (!string.IsNullOrEmpty(setup.RodBrand))
+            return $"{setup.RodBrand} {setup.RodModel}";
+
+        return $"Montage #{setup.Id}";
+    }
+
+    private string GetSetupSummary(FishingSetup setup)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrEmpty(setup.RodBrand))
+            parts.Add($"{setup.RodBrand} {setup.RodModel}");
+
+        if (!string.IsNullOrEmpty(setup.LineType))
+            parts.Add(setup.LineType);
+
+        return parts.Any() ? string.Join(" + ", parts) : "Montage actuel";
+    }
+
     private async Task SetAsCurrentAsync(int setupId)
     {
         try
@@ -229,7 +255,6 @@
                 await LoadSetupsAsync();
                 StateHasChanged();
 
-                // Effacer le message après 3 secondes
                 await Task.Delay(3000);
                 successMessage = null;
                 StateHasChanged();
