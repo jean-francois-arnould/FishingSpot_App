@@ -352,23 +352,50 @@ namespace FishingSpot.PWA.Services
                     setup.UserId = _authService.CurrentUser.Id;
                 }
 
+                // Ne pas envoyer l'ID (auto-généré par la DB)
+                var setupId = setup.Id;
+                setup.Id = 0;
                 // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
-                var json = JsonSerializer.Serialize(setup);
+
+                var json = JsonSerializer.Serialize(setup, new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                });
+                Console.WriteLine($"Sending setup JSON: {json}");
+
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
                 _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
 
                 var response = await _httpClient.PostAsync("/rest/v1/fishing_setups", content);
-                response.EnsureSuccessStatusCode();
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response status: {response.StatusCode}");
+                Console.WriteLine($"Response body: {responseBody}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"❌ Error {response.StatusCode}: {responseBody}");
+                    throw new HttpRequestException($"HTTP {response.StatusCode}: {responseBody}");
+                }
 
                 var result = await response.Content.ReadFromJsonAsync<List<FishingSetup>>();
-                return result?.FirstOrDefault()?.Id ?? 0;
+                var id = result?.FirstOrDefault()?.Id ?? 0;
+                Console.WriteLine($"✅ Returned setup ID: {id}");
+                return id;
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"❌ HTTP Error adding setup: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error adding setup: {ex.Message}");
-                return 0;
+                Console.WriteLine($"❌ Error adding setup: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
             }
         }
 

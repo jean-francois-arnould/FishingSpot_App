@@ -246,6 +246,15 @@
                 return;
             }
 
+            // S'assurer que Name est renseigné (requis par la base de données)
+            if (string.IsNullOrWhiteSpace(newSetup.Description))
+            {
+                errorMessage = "Veuillez entrer un nom pour le montage.";
+                return;
+            }
+
+            newSetup.Name = newSetup.Description;
+
             // Créer le montage
             var createdSetupId = await SupabaseService.AddSetupAsync(newSetup);
 

@@ -262,6 +262,15 @@
                 return;
             }
 
+            // S'assurer que Name est renseigné (requis par la base de données)
+            if (string.IsNullOrWhiteSpace(setup.Description))
+            {
+                errorMessage = "Veuillez entrer un nom pour le montage.";
+                return;
+            }
+
+            setup.Name = setup.Description;
+
             await SupabaseService.UpdateSetupAsync(setup);
             Navigation.NavigateTo("/FishingSpot_App/montages");
         }
