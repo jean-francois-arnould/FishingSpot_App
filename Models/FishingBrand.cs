@@ -5,6 +5,7 @@ namespace FishingSpot.PWA.Models
     public class FishingBrand
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("category")]
@@ -17,6 +18,7 @@ namespace FishingSpot.PWA.Models
         public bool IsActive { get; set; } = true;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
 
         // Helper pour l'affichage
