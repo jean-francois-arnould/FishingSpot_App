@@ -10,54 +10,65 @@
 
 @if (AuthService.IsAuthenticated)
 {
-    <!-- Utilisateur connecté -->
-    <div class="empty-state">
-        @if (userProfile != null && !string.IsNullOrEmpty(userProfile.AvatarUrl))
-        {
-            <div class="profile-avatar-large">
-                <img src="@userProfile.AvatarUrl" alt="Avatar de @GetDisplayName()" />
-            </div>
-        }
-        else
-        {
-            <div class="empty-state-icon">👋</div>
-        }
-        <h1>Bienvenue @GetDisplayName()!</h1>
-        <p class="empty-state-text">Prêt pour votre prochaine session de pêche ?</p>
-    </div>
-
-    <div class="card">
-        <div class="card-header">🎣 Actions Rapides</div>
-        <div class="d-flex flex-column gap-2">
-            <a href="/FishingSpot_App/catches/add" class="btn btn-primary btn-lg">
-                ➕ Enregistrer une prise
-            </a>
-            <a href="/FishingSpot_App/catches" class="btn btn-outline-primary">
-                📋 Voir mes prises
-            </a>
+    @if (isLoadingProfile)
+    {
+        <!-- Loading state -->
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement...</p>
         </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">⚡ Raccourcis</div>
-        <div class="list-item" @onclick="@(() => Navigation.NavigateTo("/FishingSpot_App/materiel"))">
-            <div class="list-item-icon">🎣</div>
-            <div class="list-item-content">
-                <div class="list-item-title">Matériel</div>
-                <div class="list-item-subtitle">Gérer votre équipement</div>
-            </div>
-            <div class="list-item-action">→</div>
+    }
+    else
+    {
+        <!-- Utilisateur connecté -->
+        <div class="empty-state">
+            @if (userProfile != null && !string.IsNullOrEmpty(userProfile.AvatarUrl))
+            {
+                <div class="profile-avatar-large">
+                    <img src="@userProfile.AvatarUrl" alt="Avatar de @GetDisplayName()" />
+                </div>
+            }
+            else
+            {
+                <div class="empty-state-icon">👋</div>
+            }
+            <h1>Bienvenue @GetDisplayName()!</h1>
+            <p class="empty-state-text">Prêt pour votre prochaine session de pêche ?</p>
         </div>
 
-        <div class="list-item" @onclick="@(() => Navigation.NavigateTo("/FishingSpot_App/montages"))">
-            <div class="list-item-icon">🪝</div>
-            <div class="list-item-content">
-                <div class="list-item-title">Montages</div>
-                <div class="list-item-subtitle">Vos configurations favorites</div>
+        <div class="card">
+            <div class="card-header">🎣 Actions Rapides</div>
+            <div class="d-flex flex-column gap-2">
+                <a href="/FishingSpot_App/catches/add" class="btn btn-primary btn-lg">
+                    ➕ Enregistrer une prise
+                </a>
+                <a href="/FishingSpot_App/catches" class="btn btn-outline-primary">
+                    📋 Voir mes prises
+                </a>
             </div>
-            <div class="list-item-action">→</div>
         </div>
-    </div>
+
+        <div class="card">
+            <div class="card-header">⚡ Raccourcis</div>
+            <div class="list-item" @onclick="@(() => Navigation.NavigateTo("/FishingSpot_App/materiel"))">
+                <div class="list-item-icon">🎣</div>
+                <div class="list-item-content">
+                    <div class="list-item-title">Matériel</div>
+                    <div class="list-item-subtitle">Gérer votre équipement</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+
+            <div class="list-item" @onclick="@(() => Navigation.NavigateTo("/FishingSpot_App/montages"))">
+                <div class="list-item-icon">🪝</div>
+                <div class="list-item-content">
+                    <div class="list-item-title">Montages</div>
+                    <div class="list-item-subtitle">Vos configurations favorites</div>
+                </div>
+                <div class="list-item-action">→</div>
+            </div>
+        </div>
+    }
 }
 else
 {
@@ -111,6 +122,7 @@ else
 
 @code {
     private UserProfile? userProfile;
+    private bool isLoadingProfile = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -124,6 +136,14 @@ else
             {
                 Console.WriteLine($"Error loading profile: {ex.Message}");
             }
+            finally
+            {
+                isLoadingProfile = false;
+            }
+        }
+        else
+        {
+            isLoadingProfile = false;
         }
     }
 
