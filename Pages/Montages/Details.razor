@@ -1,0 +1,567 @@
+@page "/montages/details/{SetupId:int}"
+@page "/FishingSpot_App/montages/details/{SetupId:int}"
+@using FishingSpot.PWA.Models
+@using FishingSpot.PWA.Models.Equipment
+@using FishingSpot.PWA.Services
+@using Microsoft.JSInterop
+@inject ISupabaseService SupabaseService
+@inject IEquipmentService EquipmentService
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Détails du Montage</PageTitle>
+
+<div class="page-content">
+    <a href="/FishingSpot_App/montages" class="btn btn-outline-secondary btn-sm mb-3">
+        ← Retour aux montages
+    </a>
+
+    @if (isLoading)
+    {
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement...</p>
+        </div>
+    }
+    else if (setup == null)
+    {
+        <div class="alert alert-danger">
+            Montage non trouvé.
+        </div>
+    }
+    else
+    {
+        <div class="setup-detail-header">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h3>
+                    @if (setup.IsFavorite) { <span>⭐</span> }
+                    @if (setup.IsCurrent) { <span>🎯</span> }
+                    @GetSetupTitle()
+                </h3>
+                <button class="btn btn-outline-primary btn-sm" @onclick="NavigateToEdit">
+                    ✏️ Modifier
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(setup.Description))
+            {
+                <p class="text-muted">@setup.Description</p>
+            }
+
+            <div class="setup-badges mb-3">
+                @if (setup.IsCurrent)
+                {
+                    <span class="badge bg-primary">🎯 Montage actuel</span>
+                }
+                @if (setup.IsFavorite)
+                {
+                    <span class="badge bg-warning">⭐ Favori</span>
+                }
+                <span class="badge bg-secondary">Créé le @setup.CreatedAt?.ToString("dd/MM/yyyy")</span>
+            </div>
+        </div>
+
+        <!-- Matériel -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <strong>🎣 Matériel</strong>
+            </div>
+            <div class="card-body">
+                @if (setup.RodId.HasValue)
+                {
+                    var rod = rods.FirstOrDefault(r => r.Id == setup.RodId);
+                    if (rod != null)
+                    {
+                        <div class="equipment-item">
+                            <div class="equipment-icon">🎣</div>
+                            <div class="equipment-details">
+                                <strong>Canne</strong>
+                                <div>@rod.Brand @rod.Model</div>
+                                @if (!string.IsNullOrEmpty(rod.Length))
+                                {
+                                    <small class="text-muted">Longueur: @rod.Length</small>
+                                }
+                                @if (!string.IsNullOrEmpty(rod.Power))
+                                {
+                                    <small class="text-muted">Puissance: @rod.Power</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (setup.ReelId.HasValue)
+                {
+                    var reel = reels.FirstOrDefault(r => r.Id == setup.ReelId);
+                    if (reel != null)
+                    {
+                        <div class="equipment-item">
+                            <div class="equipment-icon">🎡</div>
+                            <div class="equipment-details">
+                                <strong>Moulinet</strong>
+                                <div>@reel.Brand @reel.Model</div>
+                                @if (!string.IsNullOrEmpty(reel.Type))
+                                {
+                                    <small class="text-muted">Type: @reel.Type</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (setup.LineId.HasValue)
+                {
+                    var line = lines.FirstOrDefault(l => l.Id == setup.LineId);
+                    if (line != null)
+                    {
+                        <div class="equipment-item">
+                            <div class="equipment-icon">🧵</div>
+                            <div class="equipment-details">
+                                <strong>Fil</strong>
+                                <div>@line.Brand @line.Type</div>
+                                @if (!string.IsNullOrEmpty(line.Strength))
+                                {
+                                    <small class="text-muted">Résistance: @line.Strength</small>
+                                }
+                                @if (!string.IsNullOrEmpty(line.Diameter))
+                                {
+                                    <small class="text-muted">Diamètre: @line.Diameter mm</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (setup.LureId.HasValue)
+                {
+                    var lure = lures.FirstOrDefault(l => l.Id == setup.LureId);
+                    if (lure != null)
+                    {
+                        <div class="equipment-item">
+                            <div class="equipment-icon">🪝</div>
+                            <div class="equipment-details">
+                                <strong>Leurre</strong>
+                                <div>@lure.Name</div>
+                                @if (!string.IsNullOrEmpty(lure.Type))
+                                {
+                                    <small class="text-muted">Type: @lure.Type</small>
+                                }
+                                @if (!string.IsNullOrEmpty(lure.Color))
+                                {
+                                    <small class="text-muted">Couleur: @lure.Color</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (setup.LeaderId.HasValue)
+                {
+                    var leader = leaders.FirstOrDefault(l => l.Id == setup.LeaderId);
+                    if (leader != null)
+                    {
+                        <div class="equipment-item">
+                            <div class="equipment-icon">⛓️</div>
+                            <div class="equipment-details">
+                                <strong>Bas de ligne</strong>
+                                <div>@leader.Material</div>
+                                @if (!string.IsNullOrEmpty(leader.Strength))
+                                {
+                                    <small class="text-muted">Résistance: @leader.Strength</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (setup.HookId.HasValue)
+                {
+                    var hook = hooks.FirstOrDefault(h => h.Id == setup.HookId);
+                    if (hook != null)
+                    {
+                        <div class="equipment-item">
+                            <div class="equipment-icon">🎣</div>
+                            <div class="equipment-details">
+                                <strong>Hameçon</strong>
+                                <div>Taille @hook.Size</div>
+                                @if (!string.IsNullOrEmpty(hook.Type))
+                                {
+                                    <small class="text-muted">Type: @hook.Type</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (!setup.RodId.HasValue && !setup.ReelId.HasValue && !setup.LineId.HasValue && 
+                     !setup.LureId.HasValue && !setup.LeaderId.HasValue && !setup.HookId.HasValue)
+                {
+                    <p class="text-muted">Aucun matériel associé à ce montage.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <strong>⚙️ Actions</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @if (!setup.IsCurrent)
+                    {
+                        <button class="btn btn-primary" @onclick="SetAsCurrentAsync">
+                            🎯 Définir comme montage actuel
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-primary" disabled>
+                            ✅ C'est votre montage actuel
+                        </button>
+                    }
+
+                    <button class="btn @(setup.IsFavorite ? "btn-warning" : "btn-outline-warning")" @onclick="ToggleFavoriteAsync">
+                        @(setup.IsFavorite ? "⭐ Retirer des favoris" : "☆ Ajouter aux favoris")
+                    </button>
+
+                    <button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
+                        🗑️ Supprimer ce montage
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success">@successMessage</div>
+        }
+    }
+</div>
+
+<!-- Modal de confirmation de suppression -->
+@if (showDeleteModal)
+{
+    <div class="modal-overlay" @onclick="CancelDelete">
+        <div class="modal-content" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>⚠️ Confirmer la suppression</h3>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer ce montage ?</p>
+                <p><strong>@GetSetupTitle()</strong></p>
+                <p class="text-danger">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" @onclick="CancelDelete">
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmDeleteAsync" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .setup-detail-header {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .setup-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .equipment-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .equipment-item:last-child {
+        border-bottom: none;
+    }
+
+    .equipment-icon {
+        font-size: 2rem;
+        min-width: 50px;
+        text-align: center;
+    }
+
+    .equipment-details {
+        flex: 1;
+    }
+
+    .equipment-details strong {
+        display: block;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .equipment-details small {
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 0;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 1rem;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int SetupId { get; set; }
+
+    private FishingSetup? setup;
+
+    // Listes d'équipement
+    private List<Rod> rods = new();
+    private List<Reel> reels = new();
+    private List<Line> lines = new();
+    private List<Lure> lures = new();
+    private List<Leader> leaders = new();
+    private List<Hook> hooks = new();
+
+    private bool isLoading = true;
+    private bool isDeleting = false;
+    private bool showDeleteModal = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            // Charger le montage et le matériel en parallèle
+            var setupTask = SupabaseService.GetSetupByIdAsync(SetupId);
+            var rodsTask = EquipmentService.GetAllRodsAsync();
+            var reelsTask = EquipmentService.GetAllReelsAsync();
+            var linesTask = EquipmentService.GetAllLinesAsync();
+            var luresTask = EquipmentService.GetAllLuresAsync();
+            var leadersTask = EquipmentService.GetAllLeadersAsync();
+            var hooksTask = EquipmentService.GetAllHooksAsync();
+
+            await Task.WhenAll(setupTask, rodsTask, reelsTask, linesTask, luresTask, leadersTask, hooksTask);
+
+            setup = await setupTask;
+            rods = await rodsTask;
+            reels = await reelsTask;
+            lines = await linesTask;
+            lures = await luresTask;
+            leaders = await leadersTask;
+            hooks = await hooksTask;
+
+            Console.WriteLine($"✅ Loaded setup: {setup?.Id}");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Console.WriteLine($"⚠️ Token expiré - Redirection vers login");
+            await AuthService.SignOutAsync();
+            Navigation.NavigateTo("/FishingSpot_App/login");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement: {ex.Message}";
+            Console.WriteLine($"❌ Error: {ex.Message}");
+
+            if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized") || ex.Message.Contains("auth"))
+            {
+                await AuthService.SignOutAsync();
+                Navigation.NavigateTo("/FishingSpot_App/login");
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetSetupTitle()
+    {
+        if (setup == null) return "";
+
+        if (!string.IsNullOrEmpty(setup.Description))
+            return setup.Description;
+
+        if (setup.RodId.HasValue)
+        {
+            var rod = rods.FirstOrDefault(r => r.Id == setup.RodId);
+            if (rod != null)
+                return $"{rod.Brand} {rod.Model}";
+        }
+
+        return $"Montage #{setup.Id}";
+    }
+
+    private async Task SetAsCurrentAsync()
+    {
+        if (setup == null) return;
+
+        try
+        {
+            var success = await SupabaseService.SetCurrentSetupAsync(setup.Id);
+            if (success)
+            {
+                setup.IsCurrent = true;
+                successMessage = "✅ Défini comme montage actuel !";
+                StateHasChanged();
+
+                await Task.Delay(2000);
+                successMessage = null;
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = "Erreur lors de la mise à jour.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private async Task ToggleFavoriteAsync()
+    {
+        if (setup == null) return;
+
+        try
+        {
+            setup.IsFavorite = !setup.IsFavorite;
+            var success = await SupabaseService.UpdateSetupAsync(setup);
+
+            if (success)
+            {
+                successMessage = setup.IsFavorite ? "⭐ Ajouté aux favoris !" : "Retiré des favoris";
+                StateHasChanged();
+
+                await Task.Delay(2000);
+                successMessage = null;
+                StateHasChanged();
+            }
+            else
+            {
+                setup.IsFavorite = !setup.IsFavorite; // Rollback
+                errorMessage = "Erreur lors de la mise à jour.";
+            }
+        }
+        catch (Exception ex)
+        {
+            setup.IsFavorite = !setup.IsFavorite; // Rollback
+            errorMessage = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        showDeleteModal = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteModal = false;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (setup == null) return;
+
+        isDeleting = true;
+        try
+        {
+            var success = await SupabaseService.DeleteSetupAsync(setup.Id);
+            if (success)
+            {
+                Console.WriteLine($"✅ Setup {setup.Id} deleted");
+                Navigation.NavigateTo("/FishingSpot_App/montages");
+            }
+            else
+            {
+                errorMessage = "Erreur lors de la suppression.";
+                showDeleteModal = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur : {ex.Message}";
+            showDeleteModal = false;
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void NavigateToEdit()
+    {
+        if (setup != null)
+        {
+            Navigation.NavigateTo($"/FishingSpot_App/montages/modifier/{setup.Id}");
+        }
+    }
+}

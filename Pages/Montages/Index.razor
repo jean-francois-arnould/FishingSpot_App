@@ -48,7 +48,7 @@
             @foreach (var setup in setups)
             {
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card setup-card @(setup.IsCurrent ? "current-setup" : "")">
+                    <div class="card setup-card @(setup.IsCurrent ? "current-setup" : "")" @onclick="() => NavigateToDetails(setup.Id)" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h5 class="card-title mb-0">
@@ -62,11 +62,16 @@
                                     }
                                     @GetSetupTitle(setup)
                                 </h5>
-                                <div class="dropdown">
+                                <div class="dropdown" @onclick:stopPropagation>
                                     <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown">
                                         ⋮
                                     </button>
                                     <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="/FishingSpot_App/montages/details/@setup.Id">
+                                                👁️ Détails
+                                            </a>
+                                        </li>
                                         <li>
                                             <a class="dropdown-item" href="/FishingSpot_App/montages/modifier/@setup.Id">
                                                 ✏️ Modifier
@@ -80,6 +85,11 @@
                                                 </button>
                                             </li>
                                         }
+                                        <li>
+                                            <button class="dropdown-item" @onclick="() => ToggleFavoriteAsync(setup.Id, setup.IsFavorite)">
+                                                @(setup.IsFavorite ? "☆ Retirer des favoris" : "⭐ Ajouter aux favoris")
+                                            </button>
+                                        </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <button class="dropdown-item text-danger" @onclick="() => DeleteSetupAsync(setup.Id)">
@@ -294,6 +304,45 @@
         }
 
         return $"Montage #{setup.Id}";
+    }
+
+    private void NavigateToDetails(int setupId)
+    {
+        Navigation.NavigateTo($"/FishingSpot_App/montages/details/{setupId}");
+    }
+
+    private async Task ToggleFavoriteAsync(int setupId, bool currentlyFavorite)
+    {
+        try
+        {
+            var setup = setups.FirstOrDefault(s => s.Id == setupId);
+            if (setup != null)
+            {
+                setup.IsFavorite = !currentlyFavorite;
+                var success = await SupabaseService.UpdateSetupAsync(setup);
+
+                if (success)
+                {
+                    successMessage = setup.IsFavorite ? "⭐ Ajouté aux favoris !" : "Retiré des favoris";
+                    await LoadSetupsAsync();
+                    StateHasChanged();
+
+                    await Task.Delay(2000);
+                    successMessage = null;
+                    StateHasChanged();
+                }
+                else
+                {
+                    setup.IsFavorite = currentlyFavorite; // Rollback
+                    errorMessage = "Erreur lors de la mise à jour.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur : {ex.Message}";
+            Console.WriteLine($"❌ Error: {ex.Message}");
+        }
     }
 
     private async Task SetAsCurrentAsync(int setupId)
