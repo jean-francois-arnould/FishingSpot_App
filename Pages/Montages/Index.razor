@@ -31,11 +31,8 @@
     {
         <div class="empty-state">
             <div class="empty-icon">🎣</div>
-            <h4>Aucun montage</h4>
-            <p>Créez votre premier montage pour sauvegarder vos configurations.</p>
-            <a href="/FishingSpot_App/montages/ajouter" class="btn btn-primary mt-3">
-                Créer un montage
-            </a>
+            <h4>Aucun montage enregistré</h4>
+            <p class="text-muted">Utilisez le bouton + ci-dessus pour créer votre premier montage</p>
         </div>
     }
     else
@@ -258,10 +255,25 @@
             currentSetup = setups.FirstOrDefault(s => s.IsCurrent);
             Console.WriteLine($"✅ Loaded {setups.Count} setups and equipment");
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Token expiré ou non valide
+            Console.WriteLine($"⚠️ Token expiré - Redirection vers login");
+            await AuthService.SignOutAsync();
+            Navigation.NavigateTo("/FishingSpot_App/login");
+        }
         catch (Exception ex)
         {
             errorMessage = $"Erreur lors du chargement des montages : {ex.Message}";
             Console.WriteLine($"❌ Error: {ex.Message}");
+
+            // Vérifier si c'est une erreur d'authentification
+            if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized") || ex.Message.Contains("auth"))
+            {
+                Console.WriteLine($"⚠️ Erreur d'authentification détectée - Redirection vers login");
+                await AuthService.SignOutAsync();
+                Navigation.NavigateTo("/FishingSpot_App/login");
+            }
         }
         finally
         {

@@ -323,9 +323,22 @@
             leaders = leadersTask.Result;
             hooks = hooksTask.Result;
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Console.WriteLine($"⚠️ Token expiré - Redirection vers login");
+            await AuthService.SignOutAsync();
+            Navigation.NavigateTo("/FishingSpot_App/login");
+        }
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors du chargement du matériel: {ex.Message}");
+
+            if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized") || ex.Message.Contains("auth"))
+            {
+                Console.WriteLine($"⚠️ Erreur d'authentification détectée - Redirection vers login");
+                await AuthService.SignOutAsync();
+                Navigation.NavigateTo("/FishingSpot_App/login");
+            }
         }
         finally
         {
