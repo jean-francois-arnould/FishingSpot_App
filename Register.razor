@@ -104,7 +104,7 @@
     {
         if (AuthService.IsAuthenticated)
         {
-            Navigation.NavigateTo("/FishingSpot_App/catches");
+            Navigation.NavigateTo("/FishingSpot_App/");
         }
     }
 
@@ -162,13 +162,13 @@
                     {
                         successMessage = "✅ Compte et profil créés avec succès ! Redirection...";
                         await Task.Delay(1500);
-                        Navigation.NavigateTo("/FishingSpot_App/catches");
+                        Navigation.NavigateTo("/FishingSpot_App/");
                     }
                     else
                     {
                         errorMessage = "Compte créé mais erreur lors de la création du profil. Vous pouvez le compléter dans 'Mon Compte'.";
                         await Task.Delay(3000);
-                        Navigation.NavigateTo("/FishingSpot_App/catches");
+                        Navigation.NavigateTo("/FishingSpot_App/");
                     }
                 }
                 else
