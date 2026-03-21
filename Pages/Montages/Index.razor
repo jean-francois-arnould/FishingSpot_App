@@ -37,135 +37,71 @@
     }
     else
     {
-        @if (currentSetup != null)
-        {
-            <div class="alert alert-info mb-4">
-                <strong>🎯 Montage actuel :</strong> @GetSetupTitle(currentSetup)
+        <!-- Sélecteur de montage actuel -->
+        <div class="current-setup-selector mb-4">
+            <label class="form-label fw-bold">🎯 Montage actuel</label>
+            <div class="d-flex align-items-center gap-3">
+                <select class="form-select" @onchange="OnCurrentSetupChangedAsync" value="@(currentSetup?.Id ?? 0)">
+                    <option value="0" disabled>-- Sélectionner un montage --</option>
+                    @foreach (var setup in setups)
+                    {
+                        <option value="@setup.Id">
+                            @(setup.IsFavorite ? "⭐ " : "")@GetSetupTitle(setup)
+                        </option>
+                    }
+                </select>
+                @if (currentSetup != null)
+                {
+                    <button class="btn btn-outline-primary" @onclick="() => NavigateToDetails(currentSetup.Id)">
+                        👁️ Voir détails
+                    </button>
+                }
             </div>
-        }
+        </div>
 
-        <div class="row">
-            @foreach (var setup in setups)
-            {
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card setup-card @(setup.IsCurrent ? "current-setup" : "")" @onclick="() => NavigateToDetails(setup.Id)" style="cursor: pointer;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0">
-                                    @if (setup.IsFavorite)
-                                    {
-                                        <span>⭐</span>
-                                    }
-                                    @if (setup.IsCurrent)
-                                    {
-                                        <span>🎯</span>
-                                    }
-                                    @GetSetupTitle(setup)
-                                </h5>
-                                <div class="dropdown" @onclick:stopPropagation>
-                                    <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown">
-                                        ⋮
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li>
-                                            <a class="dropdown-item" href="/FishingSpot_App/montages/details/@setup.Id">
-                                                👁️ Détails
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="/FishingSpot_App/montages/modifier/@setup.Id">
-                                                ✏️ Modifier
-                                            </a>
-                                        </li>
-                                        @if (!setup.IsCurrent)
-                                        {
-                                            <li>
-                                                <button class="dropdown-item" @onclick="() => SetAsCurrentAsync(setup.Id)">
-                                                    🎯 Définir comme actuel
-                                                </button>
-                                            </li>
-                                        }
-                                        <li>
-                                            <button class="dropdown-item" @onclick="() => ToggleFavoriteAsync(setup.Id, setup.IsFavorite)">
-                                                @(setup.IsFavorite ? "☆ Retirer des favoris" : "⭐ Ajouter aux favoris")
-                                            </button>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <button class="dropdown-item text-danger" @onclick="() => DeleteSetupAsync(setup.Id)">
-                                                🗑️ Supprimer
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            @if (!string.IsNullOrEmpty(setup.Description))
-                            {
-                                <p class="text-muted small mb-2">@setup.Description</p>
-                            }
-
-                            <div class="setup-details">
-                                @if (setup.RodId.HasValue)
+        <!-- Accordéon Mes Favoris -->
+        @if (favoriteSetups.Any())
+        {
+            <div class="accordion mb-3" id="accordionFavorites">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFavorites" aria-expanded="true">
+                            ⭐ Mes Favoris (@favoriteSetups.Count)
+                        </button>
+                    </h2>
+                    <div id="collapseFavorites" class="accordion-collapse collapse show" data-bs-parent="#accordionFavorites">
+                        <div class="accordion-body">
+                            <div class="row">
+                                @foreach (var setup in favoriteSetups)
                                 {
-                                    var rod = rods.FirstOrDefault(r => r.Id == setup.RodId);
-                                    if (rod != null)
-                                    {
-                                        <div class="setup-item">
-                                            🎣 @rod.Brand @rod.Model @(!string.IsNullOrEmpty(rod.Length) ? $"({rod.Length})" : "")
-                                        </div>
-                                    }
-                                }
-                                @if (setup.ReelId.HasValue)
-                                {
-                                    var reel = reels.FirstOrDefault(r => r.Id == setup.ReelId);
-                                    if (reel != null)
-                                    {
-                                        <div class="setup-item">🎡 @reel.Brand @reel.Model</div>
-                                    }
-                                }
-                                @if (setup.LineId.HasValue)
-                                {
-                                    var line = lines.FirstOrDefault(l => l.Id == setup.LineId);
-                                    if (line != null)
-                                    {
-                                        <div class="setup-item">
-                                            🧵 @line.Brand @line.Type @(!string.IsNullOrEmpty(line.Strength) ? $"({line.Strength})" : "")
-                                        </div>
-                                    }
-                                }
-                                @if (setup.LureId.HasValue)
-                                {
-                                    var lure = lures.FirstOrDefault(l => l.Id == setup.LureId);
-                                    if (lure != null)
-                                    {
-                                        <div class="setup-item">🪝 @lure.Name</div>
-                                    }
-                                }
-                                @if (setup.LeaderId.HasValue)
-                                {
-                                    var leader = leaders.FirstOrDefault(l => l.Id == setup.LeaderId);
-                                    if (leader != null)
-                                    {
-                                        <div class="setup-item">⛓️ @leader.Material</div>
-                                    }
-                                }
-                                @if (setup.HookId.HasValue)
-                                {
-                                    var hook = hooks.FirstOrDefault(h => h.Id == setup.HookId);
-                                    if (hook != null)
-                                    {
-                                        <div class="setup-item">🎣 Hameçon @hook.Size</div>
-                                    }
+                                    @RenderSetupCard(setup)
                                 }
                             </div>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Créé le @setup.CreatedAt?.ToString("dd/MM/yyyy")
                         </div>
                     </div>
                 </div>
-            }
+            </div>
+        }
+
+        <!-- Accordéon Mes Montages -->
+        <div class="accordion" id="accordionSetups">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button @(favoriteSetups.Any() ? "collapsed" : "")" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSetups" aria-expanded="@(favoriteSetups.Any() ? "false" : "true")">
+                        🎣 Mes Montages (@setups.Count)
+                    </button>
+                </h2>
+                <div id="collapseSetups" class="accordion-collapse collapse @(favoriteSetups.Any() ? "" : "show")" data-bs-parent="#accordionSetups">
+                    <div class="accordion-body">
+                        <div class="row">
+                            @foreach (var setup in setups)
+                            {
+                                @RenderSetupCard(setup)
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 
@@ -181,9 +117,22 @@
 </div>
 
 <style>
+    .current-setup-selector {
+        background-color: #f8f9ff;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 2px solid #0d6efd;
+    }
+
+    .accordion-button {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
     .setup-card {
         border: 2px solid #e0e0e0;
         transition: all 0.3s;
+        height: 100%;
     }
 
     .setup-card:hover {
@@ -207,10 +156,22 @@
         font-size: 0.85rem;
         margin-bottom: 0.5rem;
     }
+
+    .favorite-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background-color: #ffc107;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
 </style>
 
 @code {
     private List<FishingSetup> setups = new();
+    private List<FishingSetup> favoriteSetups => setups.Where(s => s.IsFavorite).ToList();
     private FishingSetup? currentSetup;
 
     // Listes d'équipement pour résolution
@@ -235,6 +196,136 @@
 
         await LoadSetupsAsync();
     }
+
+    private async Task OnCurrentSetupChangedAsync(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int setupId) && setupId > 0)
+        {
+            await SetAsCurrentAsync(setupId);
+        }
+    }
+
+    private RenderFragment RenderSetupCard(FishingSetup setup) => __builder =>
+    {
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card setup-card @(setup.IsCurrent ? "current-setup" : "")" @onclick="() => NavigateToDetails(setup.Id)" style="cursor: pointer;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">
+                            @if (setup.IsFavorite)
+                            {
+                                <span>⭐</span>
+                            }
+                            @if (setup.IsCurrent)
+                            {
+                                <span>🎯</span>
+                            }
+                            @GetSetupTitle(setup)
+                        </h5>
+                        <div class="dropdown" @onclick:stopPropagation>
+                            <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown">
+                                ⋮
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="/FishingSpot_App/montages/details/@setup.Id">
+                                        👁️ Détails
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/FishingSpot_App/montages/modifier/@setup.Id">
+                                        ✏️ Modifier
+                                    </a>
+                                </li>
+                                @if (!setup.IsCurrent)
+                                {
+                                    <li>
+                                        <button class="dropdown-item" @onclick="() => SetAsCurrentAsync(setup.Id)">
+                                            🎯 Définir comme actuel
+                                        </button>
+                                    </li>
+                                }
+                                <li>
+                                    <button class="dropdown-item" @onclick="() => ToggleFavoriteAsync(setup.Id, setup.IsFavorite)">
+                                        @(setup.IsFavorite ? "☆ Retirer des favoris" : "⭐ Ajouter aux favoris")
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item text-danger" @onclick="() => DeleteSetupAsync(setup.Id)">
+                                        🗑️ Supprimer
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(setup.Description))
+                    {
+                        <p class="text-muted small mb-2">@setup.Description</p>
+                    }
+
+                    <div class="setup-details">
+                        @if (setup.RodId.HasValue)
+                        {
+                            var rod = rods.FirstOrDefault(r => r.Id == setup.RodId);
+                            if (rod != null)
+                            {
+                                <div class="setup-item">
+                                    🎣 @rod.Brand @rod.Model @(!string.IsNullOrEmpty(rod.Length) ? $"({rod.Length})" : "")
+                                </div>
+                            }
+                        }
+                        @if (setup.ReelId.HasValue)
+                        {
+                            var reel = reels.FirstOrDefault(r => r.Id == setup.ReelId);
+                            if (reel != null)
+                            {
+                                <div class="setup-item">🎡 @reel.Brand @reel.Model</div>
+                            }
+                        }
+                        @if (setup.LineId.HasValue)
+                        {
+                            var line = lines.FirstOrDefault(l => l.Id == setup.LineId);
+                            if (line != null)
+                            {
+                                <div class="setup-item">
+                                    🧵 @line.Brand @line.Type @(!string.IsNullOrEmpty(line.Strength) ? $"({line.Strength})" : "")
+                                </div>
+                            }
+                        }
+                        @if (setup.LureId.HasValue)
+                        {
+                            var lure = lures.FirstOrDefault(l => l.Id == setup.LureId);
+                            if (lure != null)
+                            {
+                                <div class="setup-item">🪝 @lure.Name</div>
+                            }
+                        }
+                        @if (setup.LeaderId.HasValue)
+                        {
+                            var leader = leaders.FirstOrDefault(l => l.Id == setup.LeaderId);
+                            if (leader != null)
+                            {
+                                <div class="setup-item">⛓️ @leader.Material</div>
+                            }
+                        }
+                        @if (setup.HookId.HasValue)
+                        {
+                            var hook = hooks.FirstOrDefault(h => h.Id == setup.HookId);
+                            if (hook != null)
+                            {
+                                <div class="setup-item">🎣 Hameçon @hook.Size</div>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    Créé le @setup.CreatedAt?.ToString("dd/MM/yyyy")
+                </div>
+            </div>
+        </div>
+    };
 
     private async Task LoadSetupsAsync()
     {
