@@ -380,6 +380,7 @@ namespace FishingSpot.PWA.Services
                 var setupToSend = new
                 {
                     user_id = setup.UserId,
+                    name = setup.Name,
                     rod_id = setup.RodId,
                     reel_id = setup.ReelId,
                     line_id = setup.LineId,
@@ -436,6 +437,7 @@ namespace FishingSpot.PWA.Services
             {
                 var setupToUpdate = new
                 {
+                    name = setup.Name,
                     rod_id = setup.RodId,
                     reel_id = setup.ReelId,
                     line_id = setup.LineId,

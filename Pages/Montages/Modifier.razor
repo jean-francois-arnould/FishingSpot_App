@@ -35,6 +35,12 @@
         <EditForm Model="@setup" OnValidSubmit="HandleSubmit">
             <DataAnnotationsValidator />
 
+            <div class="mb-3">
+                <label for="name" class="form-label fw-bold">📝 Nom du montage *</label>
+                <InputText id="name" class="form-control" @bind-Value="setup.Name" 
+                           placeholder="Ex: Montage Brochet, Setup Carnassier..." required />
+            </div>
+
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="rod" class="form-label">🎣 Canne</label>

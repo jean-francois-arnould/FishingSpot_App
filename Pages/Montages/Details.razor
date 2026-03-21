@@ -443,19 +443,7 @@
 
     private string GetSetupTitle()
     {
-        if (setup == null) return "";
-
-        if (!string.IsNullOrEmpty(setup.Description))
-            return setup.Description;
-
-        if (setup.RodId.HasValue)
-        {
-            var rod = rods.FirstOrDefault(r => r.Id == setup.RodId);
-            if (rod != null)
-                return $"{rod.Brand} {rod.Model}";
-        }
-
-        return $"Montage #{setup.Id}";
+        return setup?.Name ?? "Montage sans nom";
     }
 
     private async Task SetAsCurrentAsync()

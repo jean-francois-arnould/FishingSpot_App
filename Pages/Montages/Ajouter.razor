@@ -29,6 +29,13 @@
         <EditForm Model="@newSetup" OnValidSubmit="HandleSubmit">
             <DataAnnotationsValidator />
 
+            <div class="mb-3">
+                <label for="name" class="form-label fw-bold">📝 Nom du montage *</label>
+                <InputText id="name" class="form-control" @bind-Value="newSetup.Name" 
+                           placeholder="Ex: Montage Brochet, Setup Carnassier..." required />
+                <small class="text-muted">Donnez un nom à votre montage pour le retrouver facilement</small>
+            </div>
+
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="rod" class="form-label">🎣 Canne</label>
@@ -242,6 +249,13 @@
 
         try
         {
+            // Valider le nom
+            if (string.IsNullOrWhiteSpace(newSetup.Name))
+            {
+                errorMessage = "Le nom du montage est obligatoire.";
+                return;
+            }
+
             // Convertir les IDs sélectionnés
             newSetup.RodId = !string.IsNullOrEmpty(selectedRodId) ? long.Parse(selectedRodId) : null;
             newSetup.ReelId = !string.IsNullOrEmpty(selectedReelId) ? long.Parse(selectedReelId) : null;
@@ -258,7 +272,7 @@
                 return;
             }
 
-            Console.WriteLine($"📤 Creating setup with rod_id={newSetup.RodId}, reel_id={newSetup.ReelId}");
+            Console.WriteLine($"📤 Creating setup '{newSetup.Name}' with rod_id={newSetup.RodId}, reel_id={newSetup.ReelId}");
 
             // Créer le montage
             var createdSetupId = await SupabaseService.AddSetupAsync(newSetup);

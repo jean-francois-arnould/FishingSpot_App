@@ -30,6 +30,9 @@ namespace FishingSpot.PWA.Models
         public long? HookId { get; set; }
 
         // Setup Properties
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+
         [JsonPropertyName("description")]
         public string? Description { get; set; }
 

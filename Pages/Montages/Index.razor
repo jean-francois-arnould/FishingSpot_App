@@ -46,7 +46,7 @@
                     @foreach (var setup in setups)
                     {
                         <option value="@setup.Id">
-                            @(setup.IsFavorite ? "⭐ " : "")@GetSetupTitle(setup)
+                            @(setup.IsFavorite ? "⭐ " : "")@setup.Name
                         </option>
                     }
                 </select>
@@ -64,12 +64,12 @@
         {
             <div class="accordion mb-3" id="accordionFavorites">
                 <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFavorites" aria-expanded="true">
+                    <h2 class="accordion-header" id="headingFavorites">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFavorites" aria-expanded="true" aria-controls="collapseFavorites">
                             ⭐ Mes Favoris (@favoriteSetups.Count)
                         </button>
                     </h2>
-                    <div id="collapseFavorites" class="accordion-collapse collapse show" data-bs-parent="#accordionFavorites">
+                    <div id="collapseFavorites" class="accordion-collapse collapse show" aria-labelledby="headingFavorites" data-bs-parent="#accordionFavorites">
                         <div class="accordion-body">
                             <div class="row">
                                 @foreach (var setup in favoriteSetups)
@@ -86,12 +86,12 @@
         <!-- Accordéon Mes Montages -->
         <div class="accordion" id="accordionSetups">
             <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button @(favoriteSetups.Any() ? "collapsed" : "")" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSetups" aria-expanded="@(favoriteSetups.Any() ? "false" : "true")">
+                <h2 class="accordion-header" id="headingSetups">
+                    <button class="accordion-button @(favoriteSetups.Any() ? "collapsed" : "")" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSetups" aria-expanded="@(favoriteSetups.Any() ? "false" : "true")" aria-controls="collapseSetups">
                         🎣 Mes Montages (@setups.Count)
                     </button>
                 </h2>
-                <div id="collapseSetups" class="accordion-collapse collapse @(favoriteSetups.Any() ? "" : "show")" data-bs-parent="#accordionSetups">
+                <div id="collapseSetups" class="accordion-collapse collapse @(favoriteSetups.Any() ? "" : "show")" aria-labelledby="headingSetups" data-bs-parent="#accordionSetups">
                     <div class="accordion-body">
                         <div class="row">
                             @foreach (var setup in setups)
@@ -220,7 +220,7 @@
                             {
                                 <span>🎯</span>
                             }
-                            @GetSetupTitle(setup)
+                            @setup.Name
                         </h5>
                         <div class="dropdown" @onclick:stopPropagation>
                             <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown">
