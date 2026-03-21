@@ -1,0 +1,280 @@
+@page "/montages"
+@page "/FishingSpot_App/montages"
+@using FishingSpot.PWA.Models
+@using FishingSpot.PWA.Services
+@using Microsoft.JSInterop
+@inject ISupabaseService SupabaseService
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Mes Montages</PageTitle>
+
+<div class="page-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>🎣 Mes Montages</h3>
+        <a href="/FishingSpot_App/montages/ajouter" class="btn btn-primary">
+            ➕ Nouveau montage
+        </a>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement des montages...</p>
+        </div>
+    }
+    else if (!setups.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🎣</div>
+            <h4>Aucun montage</h4>
+            <p>Créez votre premier montage pour commencer à organiser votre matériel.</p>
+            <a href="/FishingSpot_App/montages/ajouter" class="btn btn-primary mt-3">
+                Créer un montage
+            </a>
+        </div>
+    }
+    else
+    {
+        @if (currentSetup != null)
+        {
+            <div class="alert alert-info mb-4">
+                <strong>🎯 Montage actuel :</strong> @currentSetup.Name
+            </div>
+        }
+
+        <div class="row">
+            @foreach (var setup in setups)
+            {
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card setup-card @(setup.IsCurrent ? "current-setup" : "")">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">
+                                    @if (setup.IsFavorite)
+                                    {
+                                        <span>⭐</span>
+                                    }
+                                    @if (setup.IsCurrent)
+                                    {
+                                        <span>🎯</span>
+                                    }
+                                    @setup.Name
+                                </h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown">
+                                        ⋮
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="/FishingSpot_App/montages/modifier/@setup.Id">
+                                                ✏️ Modifier
+                                            </a>
+                                        </li>
+                                        @if (!setup.IsCurrent)
+                                        {
+                                            <li>
+                                                <button class="dropdown-item" @onclick="() => SetAsCurrentAsync(setup.Id)">
+                                                    🎯 Définir comme actuel
+                                                </button>
+                                            </li>
+                                        }
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button class="dropdown-item text-danger" @onclick="() => DeleteSetupAsync(setup.Id)">
+                                                🗑️ Supprimer
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(setup.Description))
+                            {
+                                <p class="text-muted small mb-2">@setup.Description</p>
+                            }
+
+                            <div class="setup-details">
+                                @if (setup.RodId.HasValue)
+                                {
+                                    <div class="setup-item">🎣 Canne</div>
+                                }
+                                @if (setup.ReelId.HasValue)
+                                {
+                                    <div class="setup-item">🎡 Moulinet</div>
+                                }
+                                @if (setup.LineId.HasValue)
+                                {
+                                    <div class="setup-item">🧵 Fil</div>
+                                }
+                                @if (setup.LureId.HasValue)
+                                {
+                                    <div class="setup-item">🪝 Leurre</div>
+                                }
+                                @if (setup.LeaderId.HasValue)
+                                {
+                                    <div class="setup-item">⛓️ Bas de ligne</div>
+                                }
+                                @if (setup.HookId.HasValue)
+                                {
+                                    <div class="setup-item">🎣 Hameçon</div>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(setup.Notes))
+                            {
+                                <div class="mt-2">
+                                    <small class="text-muted">📝 @setup.Notes</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">@errorMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success mt-3">@successMessage</div>
+    }
+</div>
+
+<style>
+    .setup-card {
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s;
+    }
+
+    .setup-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .current-setup {
+        border-color: #0d6efd;
+        background-color: #f8f9ff;
+    }
+
+    .setup-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .setup-item {
+        background-color: #f0f0f0;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+</style>
+
+@code {
+    private List<FishingSetup> setups = new();
+    private FishingSetup? currentSetup;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
+        await LoadSetupsAsync();
+    }
+
+    private async Task LoadSetupsAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            setups = await SupabaseService.GetAllSetupsAsync();
+            currentSetup = setups.FirstOrDefault(s => s.IsCurrent);
+            Console.WriteLine($"✅ Loaded {setups.Count} setups");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des montages : {ex.Message}";
+            Console.WriteLine($"❌ Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SetAsCurrentAsync(int setupId)
+    {
+        try
+        {
+            var success = await SupabaseService.SetCurrentSetupAsync(setupId);
+            if (success)
+            {
+                successMessage = "Montage actuel mis à jour !";
+                await LoadSetupsAsync();
+                StateHasChanged();
+
+                // Effacer le message après 3 secondes
+                await Task.Delay(3000);
+                successMessage = null;
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = "Erreur lors de la mise à jour du montage actuel.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur : {ex.Message}";
+            Console.WriteLine($"❌ Error: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteSetupAsync(int setupId)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", "Êtes-vous sûr de vouloir supprimer ce montage ?"))
+        {
+            return;
+        }
+
+        try
+        {
+            var success = await SupabaseService.DeleteSetupAsync(setupId);
+            if (success)
+            {
+                successMessage = "Montage supprimé avec succès !";
+                await LoadSetupsAsync();
+                StateHasChanged();
+
+                await Task.Delay(3000);
+                successMessage = null;
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = "Erreur lors de la suppression du montage.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur : {ex.Message}";
+            Console.WriteLine($"❌ Error: {ex.Message}");
+        }
+    }
+}

@@ -308,19 +308,24 @@ namespace FishingSpot.PWA.Services
             }
         }
 
-        // Fishing Setups Methods
+        // ============================================
+        // FISHING SETUPS - Gestion des montages
+        // ============================================
+
         public async Task<List<FishingSetup>> GetAllSetupsAsync()
         {
             await InitializeAsync();
             SetAuthHeaders();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>("/rest/v1/fishing_setups?select=*&order=is_favorite.desc,created_at.desc");
+                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>(
+                    "/rest/v1/fishing_setups?select=*&order=is_favorite.desc,created_at.desc");
+                Console.WriteLine($"✅ Loaded {response?.Count ?? 0} fishing setups");
                 return response ?? new List<FishingSetup>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting setups: {ex.Message}");
+                Console.WriteLine($"❌ Error getting setups: {ex.Message}");
                 return new List<FishingSetup>();
             }
         }
@@ -331,12 +336,30 @@ namespace FishingSpot.PWA.Services
             SetAuthHeaders();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>($"/rest/v1/fishing_setups?id=eq.{id}&select=*");
+                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>(
+                    $"/rest/v1/fishing_setups?id=eq.{id}&select=*");
                 return response?.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting setup: {ex.Message}");
+                Console.WriteLine($"❌ Error getting setup {id}: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<FishingSetup?> GetCurrentSetupAsync()
+        {
+            await InitializeAsync();
+            SetAuthHeaders();
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>(
+                    "/rest/v1/fishing_setups?is_current=eq.true&select=*");
+                return response?.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error getting current setup: {ex.Message}");
                 return null;
             }
         }
@@ -347,21 +370,31 @@ namespace FishingSpot.PWA.Services
             SetAuthHeaders();
             try
             {
+                // Assigner l'utilisateur actuel
                 if (_authService.CurrentUser != null)
                 {
                     setup.UserId = _authService.CurrentUser.Id;
                 }
 
-                // Ne pas envoyer l'ID (auto-généré par la DB)
-                var setupId = setup.Id;
-                setup.Id = 0;
-                // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
-
-                var json = JsonSerializer.Serialize(setup, new JsonSerializerOptions
+                // Créer un objet avec uniquement les champs nécessaires
+                var setupToSend = new
                 {
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
-                });
-                Console.WriteLine($"Sending setup JSON: {json}");
+                    user_id = setup.UserId,
+                    name = setup.Name,
+                    description = setup.Description,
+                    rod_id = setup.RodId,
+                    reel_id = setup.ReelId,
+                    line_id = setup.LineId,
+                    lure_id = setup.LureId,
+                    leader_id = setup.LeaderId,
+                    hook_id = setup.HookId,
+                    is_favorite = setup.IsFavorite,
+                    is_current = setup.IsCurrent,
+                    notes = setup.Notes
+                };
+
+                var json = JsonSerializer.Serialize(setupToSend);
+                Console.WriteLine($"📤 Sending setup: {json}");
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -371,30 +404,28 @@ namespace FishingSpot.PWA.Services
                 var response = await _httpClient.PostAsync("/rest/v1/fishing_setups", content);
 
                 var responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Response status: {response.StatusCode}");
-                Console.WriteLine($"Response body: {responseBody}");
+                Console.WriteLine($"📥 Response ({response.StatusCode}): {responseBody}");
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"❌ Error {response.StatusCode}: {responseBody}");
-                    throw new HttpRequestException($"HTTP {response.StatusCode}: {responseBody}");
+                    Console.WriteLine($"❌ HTTP Error {response.StatusCode}: {responseBody}");
+                    throw new HttpRequestException($"Erreur {response.StatusCode}: {responseBody}");
                 }
 
                 var result = await response.Content.ReadFromJsonAsync<List<FishingSetup>>();
-                var id = result?.FirstOrDefault()?.Id ?? 0;
-                Console.WriteLine($"✅ Returned setup ID: {id}");
-                return id;
+                var newId = result?.FirstOrDefault()?.Id ?? 0;
+                Console.WriteLine($"✅ Setup created with ID: {newId}");
+                return newId;
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"❌ HTTP Error adding setup: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"❌ HTTP Error: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error adding setup: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"Stack: {ex.StackTrace}");
                 throw;
             }
         }
@@ -405,15 +436,39 @@ namespace FishingSpot.PWA.Services
             SetAuthHeaders();
             try
             {
-                var json = JsonSerializer.Serialize(setup);
+                var setupToUpdate = new
+                {
+                    name = setup.Name,
+                    description = setup.Description,
+                    rod_id = setup.RodId,
+                    reel_id = setup.ReelId,
+                    line_id = setup.LineId,
+                    lure_id = setup.LureId,
+                    leader_id = setup.LeaderId,
+                    hook_id = setup.HookId,
+                    is_favorite = setup.IsFavorite,
+                    is_current = setup.IsCurrent,
+                    notes = setup.Notes
+                };
+
+                var json = JsonSerializer.Serialize(setupToUpdate);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PatchAsync($"/rest/v1/fishing_setups?id=eq.{setup.Id}", content);
-                return response.IsSuccessStatusCode;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"✅ Setup {setup.Id} updated successfully");
+                    return true;
+                }
+
+                var errorBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"❌ Error updating setup: {errorBody}");
+                return false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating setup: {ex.Message}");
+                Console.WriteLine($"❌ Error updating setup: {ex.Message}");
                 return false;
             }
         }
@@ -425,31 +480,21 @@ namespace FishingSpot.PWA.Services
             try
             {
                 var response = await _httpClient.DeleteAsync($"/rest/v1/fishing_setups?id=eq.{id}");
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deleting setup: {ex.Message}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"✅ Setup {id} deleted successfully");
+                    return true;
+                }
+
+                var errorBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"❌ Error deleting setup: {errorBody}");
                 return false;
             }
-        }
-
-        // ============================================
-        // NOUVEAU : Gestion du setup actuel
-        // ============================================
-        public async Task<FishingSetup?> GetCurrentSetupAsync()
-        {
-            await InitializeAsync();
-            SetAuthHeaders();
-            try
-            {
-                var response = await _httpClient.GetFromJsonAsync<List<FishingSetup>>("/rest/v1/fishing_setups?is_current=eq.true&select=*");
-                return response?.FirstOrDefault();
-            }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la récupération du setup actuel: {ex.Message}");
-                return null;
+                Console.WriteLine($"❌ Error deleting setup: {ex.Message}");
+                return false;
             }
         }
 
@@ -459,7 +504,7 @@ namespace FishingSpot.PWA.Services
             SetAuthHeaders();
             try
             {
-                // D'abord, désactiver tous les setups actuels
+                // Désactiver tous les setups actuels
                 var allSetups = await GetAllSetupsAsync();
                 foreach (var setup in allSetups.Where(s => s.IsCurrent))
                 {
@@ -467,7 +512,7 @@ namespace FishingSpot.PWA.Services
                     await UpdateSetupAsync(setup);
                 }
 
-                // Ensuite, activer le setup sélectionné
+                // Activer le setup sélectionné
                 var selectedSetup = await GetSetupByIdAsync(setupId);
                 if (selectedSetup != null)
                 {
@@ -479,7 +524,7 @@ namespace FishingSpot.PWA.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la définition du setup actuel: {ex.Message}");
+                Console.WriteLine($"❌ Error setting current setup: {ex.Message}");
                 return false;
             }
         }

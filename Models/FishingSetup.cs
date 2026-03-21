@@ -5,7 +5,6 @@ namespace FishingSpot.PWA.Models
     public class FishingSetup
     {
         [JsonPropertyName("id")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -15,9 +14,8 @@ namespace FishingSpot.PWA.Models
         public string Name { get; set; } = string.Empty;
 
         [JsonPropertyName("description")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
-        // Références aux équipements
         [JsonPropertyName("rod_id")]
         public int? RodId { get; set; }
 
@@ -43,10 +41,9 @@ namespace FishingSpot.PWA.Models
         public bool IsCurrent { get; set; }
 
         [JsonPropertyName("notes")]
-        public string Notes { get; set; } = string.Empty;
+        public string? Notes { get; set; }
 
         [JsonPropertyName("created_at")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public DateTime CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
     }
 }
