@@ -5,6 +5,7 @@ namespace FishingSpot.PWA.Models
     public class FishingSetup
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -45,6 +46,7 @@ namespace FishingSpot.PWA.Models
         public string Notes { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
     }
 }
