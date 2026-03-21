@@ -1,9 +1,11 @@
 @page "/montages"
 @page "/FishingSpot_App/montages"
 @using FishingSpot.PWA.Models
+@using FishingSpot.PWA.Models.Equipment
 @using FishingSpot.PWA.Services
 @using Microsoft.JSInterop
 @inject ISupabaseService SupabaseService
+@inject IEquipmentService EquipmentService
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -41,7 +43,7 @@
         @if (currentSetup != null)
         {
             <div class="alert alert-info mb-4">
-                <strong>🎯 Montage actuel :</strong> @GetSetupSummary(currentSetup)
+                <strong>🎯 Montage actuel :</strong> @GetSetupTitle(currentSetup)
             </div>
         }
 
@@ -97,37 +99,57 @@
                             }
 
                             <div class="setup-details">
-                                @if (!string.IsNullOrEmpty(setup.RodBrand))
+                                @if (setup.RodId.HasValue)
                                 {
-                                    <div class="setup-item">
-                                        🎣 @setup.RodBrand @setup.RodModel
-                                        @if (setup.RodLength.HasValue)
-                                        {
-                                            <text>(@setup.RodLength m)</text>
-                                        }
-                                    </div>
+                                    var rod = rods.FirstOrDefault(r => r.Id == setup.RodId);
+                                    if (rod != null)
+                                    {
+                                        <div class="setup-item">
+                                            🎣 @rod.Brand @rod.Model @(!string.IsNullOrEmpty(rod.Length) ? $"({rod.Length})" : "")
+                                        </div>
+                                    }
                                 }
-                                @if (!string.IsNullOrEmpty(setup.ReelBrand))
+                                @if (setup.ReelId.HasValue)
                                 {
-                                    <div class="setup-item">🎡 @setup.ReelBrand @setup.ReelModel</div>
+                                    var reel = reels.FirstOrDefault(r => r.Id == setup.ReelId);
+                                    if (reel != null)
+                                    {
+                                        <div class="setup-item">🎡 @reel.Brand @reel.Model</div>
+                                    }
                                 }
-                                @if (!string.IsNullOrEmpty(setup.LineType))
+                                @if (setup.LineId.HasValue)
                                 {
-                                    <div class="setup-item">
-                                        🧵 @setup.LineType
-                                        @if (setup.LineDiameter.HasValue)
-                                        {
-                                            <text>(@setup.LineDiameter mm)</text>
-                                        }
-                                    </div>
+                                    var line = lines.FirstOrDefault(l => l.Id == setup.LineId);
+                                    if (line != null)
+                                    {
+                                        <div class="setup-item">
+                                            🧵 @line.Brand @line.Type @(!string.IsNullOrEmpty(line.Strength) ? $"({line.Strength})" : "")
+                                        </div>
+                                    }
                                 }
-                                @if (!string.IsNullOrEmpty(setup.HookSize))
+                                @if (setup.LureId.HasValue)
                                 {
-                                    <div class="setup-item">🪝 Hameçon @setup.HookSize</div>
+                                    var lure = lures.FirstOrDefault(l => l.Id == setup.LureId);
+                                    if (lure != null)
+                                    {
+                                        <div class="setup-item">🪝 @lure.Name</div>
+                                    }
                                 }
-                                @if (!string.IsNullOrEmpty(setup.BaitType))
+                                @if (setup.LeaderId.HasValue)
                                 {
-                                    <div class="setup-item">🐛 @setup.BaitType</div>
+                                    var leader = leaders.FirstOrDefault(l => l.Id == setup.LeaderId);
+                                    if (leader != null)
+                                    {
+                                        <div class="setup-item">⛓️ @leader.Material</div>
+                                    }
+                                }
+                                @if (setup.HookId.HasValue)
+                                {
+                                    var hook = hooks.FirstOrDefault(h => h.Id == setup.HookId);
+                                    if (hook != null)
+                                    {
+                                        <div class="setup-item">🎣 Hameçon @hook.Size</div>
+                                    }
                                 }
                             </div>
                         </div>
@@ -183,6 +205,15 @@
 @code {
     private List<FishingSetup> setups = new();
     private FishingSetup? currentSetup;
+
+    // Listes d'équipement pour résolution
+    private List<Rod> rods = new();
+    private List<Reel> reels = new();
+    private List<Line> lines = new();
+    private List<Lure> lures = new();
+    private List<Leader> leaders = new();
+    private List<Hook> hooks = new();
+
     private bool isLoading = true;
     private string? errorMessage;
     private string? successMessage;
@@ -205,9 +236,27 @@
 
         try
         {
-            setups = await SupabaseService.GetAllSetupsAsync();
+            // Charger les montages et le matériel en parallèle
+            var setupsTask = SupabaseService.GetAllSetupsAsync();
+            var rodsTask = EquipmentService.GetAllRodsAsync();
+            var reelsTask = EquipmentService.GetAllReelsAsync();
+            var linesTask = EquipmentService.GetAllLinesAsync();
+            var luresTask = EquipmentService.GetAllLuresAsync();
+            var leadersTask = EquipmentService.GetAllLeadersAsync();
+            var hooksTask = EquipmentService.GetAllHooksAsync();
+
+            await Task.WhenAll(setupsTask, rodsTask, reelsTask, linesTask, luresTask, leadersTask, hooksTask);
+
+            setups = await setupsTask;
+            rods = await rodsTask;
+            reels = await reelsTask;
+            lines = await linesTask;
+            lures = await luresTask;
+            leaders = await leadersTask;
+            hooks = await hooksTask;
+
             currentSetup = setups.FirstOrDefault(s => s.IsCurrent);
-            Console.WriteLine($"✅ Loaded {setups.Count} setups");
+            Console.WriteLine($"✅ Loaded {setups.Count} setups and equipment");
         }
         catch (Exception ex)
         {
@@ -225,23 +274,14 @@
         if (!string.IsNullOrEmpty(setup.Description))
             return setup.Description;
 
-        if (!string.IsNullOrEmpty(setup.RodBrand))
-            return $"{setup.RodBrand} {setup.RodModel}";
+        if (setup.RodId.HasValue)
+        {
+            var rod = rods.FirstOrDefault(r => r.Id == setup.RodId);
+            if (rod != null)
+                return $"{rod.Brand} {rod.Model}";
+        }
 
         return $"Montage #{setup.Id}";
-    }
-
-    private string GetSetupSummary(FishingSetup setup)
-    {
-        var parts = new List<string>();
-
-        if (!string.IsNullOrEmpty(setup.RodBrand))
-            parts.Add($"{setup.RodBrand} {setup.RodModel}");
-
-        if (!string.IsNullOrEmpty(setup.LineType))
-            parts.Add(setup.LineType);
-
-        return parts.Any() ? string.Join(" + ", parts) : "Montage actuel";
     }
 
     private async Task SetAsCurrentAsync(int setupId)

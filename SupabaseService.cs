@@ -376,22 +376,16 @@ namespace FishingSpot.PWA.Services
                     setup.UserId = _authService.CurrentUser.Id;
                 }
 
-                // Créer un objet avec uniquement les champs nécessaires (selon le VRAI schéma)
+                // Créer un objet avec uniquement les champs nécessaires
                 var setupToSend = new
                 {
                     user_id = setup.UserId,
-                    rod_brand = setup.RodBrand,
-                    rod_model = setup.RodModel,
-                    rod_length = setup.RodLength,
-                    rod_power = setup.RodPower,
-                    reel_brand = setup.ReelBrand,
-                    reel_model = setup.ReelModel,
-                    reel_type = setup.ReelType,
-                    line_type = setup.LineType,
-                    line_diameter = setup.LineDiameter,
-                    line_breaking_strength = setup.LineBreakingStrength,
-                    hook_size = setup.HookSize,
-                    bait_type = setup.BaitType,
+                    rod_id = setup.RodId,
+                    reel_id = setup.ReelId,
+                    line_id = setup.LineId,
+                    lure_id = setup.LureId,
+                    leader_id = setup.LeaderId,
+                    hook_id = setup.HookId,
                     description = setup.Description,
                     is_favorite = setup.IsFavorite,
                     is_current = setup.IsCurrent
@@ -442,18 +436,12 @@ namespace FishingSpot.PWA.Services
             {
                 var setupToUpdate = new
                 {
-                    rod_brand = setup.RodBrand,
-                    rod_model = setup.RodModel,
-                    rod_length = setup.RodLength,
-                    rod_power = setup.RodPower,
-                    reel_brand = setup.ReelBrand,
-                    reel_model = setup.ReelModel,
-                    reel_type = setup.ReelType,
-                    line_type = setup.LineType,
-                    line_diameter = setup.LineDiameter,
-                    line_breaking_strength = setup.LineBreakingStrength,
-                    hook_size = setup.HookSize,
-                    bait_type = setup.BaitType,
+                    rod_id = setup.RodId,
+                    reel_id = setup.ReelId,
+                    line_id = setup.LineId,
+                    lure_id = setup.LureId,
+                    leader_id = setup.LeaderId,
+                    hook_id = setup.HookId,
                     description = setup.Description,
                     is_favorite = setup.IsFavorite,
                     is_current = setup.IsCurrent

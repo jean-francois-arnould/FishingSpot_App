@@ -10,47 +10,26 @@ namespace FishingSpot.PWA.Models
         [JsonPropertyName("user_id")]
         public string UserId { get; set; } = string.Empty;
 
-        // Rod (Canne)
-        [JsonPropertyName("rod_brand")]
-        public string? RodBrand { get; set; }
+        // Equipment References (Foreign Keys)
+        [JsonPropertyName("rod_id")]
+        public long? RodId { get; set; }
 
-        [JsonPropertyName("rod_model")]
-        public string? RodModel { get; set; }
+        [JsonPropertyName("reel_id")]
+        public long? ReelId { get; set; }
 
-        [JsonPropertyName("rod_length")]
-        public double? RodLength { get; set; }
+        [JsonPropertyName("line_id")]
+        public long? LineId { get; set; }
 
-        [JsonPropertyName("rod_power")]
-        public string? RodPower { get; set; }
+        [JsonPropertyName("lure_id")]
+        public long? LureId { get; set; }
 
-        // Reel (Moulinet)
-        [JsonPropertyName("reel_brand")]
-        public string? ReelBrand { get; set; }
+        [JsonPropertyName("leader_id")]
+        public long? LeaderId { get; set; }
 
-        [JsonPropertyName("reel_model")]
-        public string? ReelModel { get; set; }
+        [JsonPropertyName("hook_id")]
+        public long? HookId { get; set; }
 
-        [JsonPropertyName("reel_type")]
-        public string? ReelType { get; set; }
-
-        // Line (Ligne/Fil)
-        [JsonPropertyName("line_type")]
-        public string? LineType { get; set; }
-
-        [JsonPropertyName("line_diameter")]
-        public double? LineDiameter { get; set; }
-
-        [JsonPropertyName("line_breaking_strength")]
-        public double? LineBreakingStrength { get; set; }
-
-        // Hook & Bait
-        [JsonPropertyName("hook_size")]
-        public string? HookSize { get; set; }
-
-        [JsonPropertyName("bait_type")]
-        public string? BaitType { get; set; }
-
-        // General
+        // Setup Properties
         [JsonPropertyName("description")]
         public string? Description { get; set; }
 
