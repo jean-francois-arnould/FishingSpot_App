@@ -62,15 +62,19 @@
         <!-- Accordéon Mes Favoris -->
         @if (favoriteSetups.Any())
         {
-            <div class="accordion mb-3" id="accordionFavorites">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingFavorites">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFavorites" aria-expanded="true" aria-controls="collapseFavorites">
+            <div class="accordion-custom mb-3">
+                <div class="accordion-item-custom">
+                    <h2 class="accordion-header-custom">
+                        <button class="accordion-button-custom @(isFavoritesExpanded ? "" : "collapsed")" 
+                                type="button" 
+                                @onclick="() => ToggleFavoritesAccordion()">
                             ⭐ Mes Favoris (@favoriteSetups.Count)
+                            <span class="accordion-icon">@(isFavoritesExpanded ? "▲" : "▼")</span>
                         </button>
                     </h2>
-                    <div id="collapseFavorites" class="accordion-collapse collapse show" aria-labelledby="headingFavorites" data-bs-parent="#accordionFavorites">
-                        <div class="accordion-body">
+                    @if (isFavoritesExpanded)
+                    {
+                        <div class="accordion-body-custom">
                             <div class="row">
                                 @foreach (var setup in favoriteSetups)
                                 {
@@ -78,21 +82,25 @@
                                 }
                             </div>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
         }
 
         <!-- Accordéon Mes Montages -->
-        <div class="accordion" id="accordionSetups">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingSetups">
-                    <button class="accordion-button @(favoriteSetups.Any() ? "collapsed" : "")" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSetups" aria-expanded="@(favoriteSetups.Any() ? "false" : "true")" aria-controls="collapseSetups">
+        <div class="accordion-custom">
+            <div class="accordion-item-custom">
+                <h2 class="accordion-header-custom">
+                    <button class="accordion-button-custom @(isSetupsExpanded ? "" : "collapsed")" 
+                            type="button" 
+                            @onclick="() => ToggleSetupsAccordion()">
                         🎣 Mes Montages (@setups.Count)
+                        <span class="accordion-icon">@(isSetupsExpanded ? "▲" : "▼")</span>
                     </button>
                 </h2>
-                <div id="collapseSetups" class="accordion-collapse collapse @(favoriteSetups.Any() ? "" : "show")" aria-labelledby="headingSetups" data-bs-parent="#accordionSetups">
-                    <div class="accordion-body">
+                @if (isSetupsExpanded)
+                {
+                    <div class="accordion-body-custom">
                         <div class="row">
                             @foreach (var setup in setups)
                             {
@@ -100,7 +108,7 @@
                             }
                         </div>
                     </div>
-                </div>
+                }
             </div>
         </div>
     }
@@ -124,9 +132,54 @@
         border: 2px solid #0d6efd;
     }
 
-    .accordion-button {
-        font-weight: 600;
+    /* Accordéons personnalisés */
+    .accordion-custom {
+        border: 1px solid rgba(0,0,0,.125);
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+    .accordion-item-custom {
+        border: none;
+    }
+
+    .accordion-header-custom {
+        margin: 0;
+    }
+
+    .accordion-button-custom {
+        width: 100%;
+        padding: 1rem 1.25rem;
         font-size: 1.1rem;
+        font-weight: 600;
+        text-align: left;
+        background-color: #f8f9fa;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .accordion-button-custom:hover {
+        background-color: #e9ecef;
+    }
+
+    .accordion-button-custom.collapsed {
+        background-color: white;
+    }
+
+    .accordion-icon {
+        font-size: 0.8rem;
+        margin-left: auto;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .accordion-body-custom {
+        padding: 1.25rem;
+        background-color: white;
+        border-top: 1px solid rgba(0,0,0,.125);
     }
 
     .setup-card {
@@ -182,6 +235,10 @@
     private List<Leader> leaders = new();
     private List<Hook> hooks = new();
 
+    // État des accordéons
+    private bool isFavoritesExpanded = true;
+    private bool isSetupsExpanded = true;
+
     private bool isLoading = true;
     private string? errorMessage;
     private string? successMessage;
@@ -195,6 +252,16 @@
         }
 
         await LoadSetupsAsync();
+    }
+
+    private void ToggleFavoritesAccordion()
+    {
+        isFavoritesExpanded = !isFavoritesExpanded;
+    }
+
+    private void ToggleSetupsAccordion()
+    {
+        isSetupsExpanded = !isSetupsExpanded;
     }
 
     private async Task OnCurrentSetupChangedAsync(ChangeEventArgs e)

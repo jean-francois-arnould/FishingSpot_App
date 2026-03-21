@@ -238,16 +238,20 @@
                     <label for="setupId" class="form-label">Sélectionner un montage</label>
                     <InputSelect id="setupId" class="form-control" @bind-Value="selectedSetupId">
                         <option value="">-- Aucun montage --</option>
-                        @if (availableSetups != null)
+                        @if (availableSetups != null && availableSetups.Any())
                         {
                             @foreach (var setup in availableSetups)
                             {
                                 <option value="@setup.Id">
-                                    @(setup.IsCurrent ? "✅ " : "")@(setup.IsFavorite ? "⭐ " : "")@(string.IsNullOrEmpty(setup.Description) ? "Montage sans nom" : setup.Description)
+                                    @(setup.IsCurrent ? "🎯 " : "")@(setup.IsFavorite ? "⭐ " : "")@setup.Name
                                 </option>
                             }
                         }
                     </InputSelect>
+                    @if (availableSetups == null || !availableSetups.Any())
+                    {
+                        <small class="text-muted">Aucun montage disponible. Créez-en un dans la section Montages.</small>
+                    }
                 </div>
             </div>
         </div>
