@@ -265,6 +265,23 @@
                 return;
             }
 
+            // Vérifier si la marque existe déjà côté client
+            var existingBrand = availableBrands?.FirstOrDefault(b => 
+                b.Name.Equals(newBrand.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (existingBrand != null)
+            {
+                // La marque existe déjà, proposer de la sélectionner
+                addBrandSuccess = $"✅ La marque '{existingBrand.Name}' existe déjà et a été sélectionnée automatiquement !";
+                newRod.Brand = existingBrand.Name;
+
+                // Attendre 1.5 secondes puis fermer le modal
+                await Task.Delay(1500);
+                HideAddBrandModal();
+                isAddingBrand = false;
+                return;
+            }
+
             Console.WriteLine($"Attempting to add brand: {newBrand.Name}");
             var brandId = await SupabaseService.AddFishingBrandAsync(newBrand);
 
