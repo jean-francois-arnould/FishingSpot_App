@@ -2280,3 +2280,17 @@ code {
         gap: 0.75rem;
     }
 }
+
+/* Supprimer bordure bleue autour du titre d'accueil */
+.empty-state h1 {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Supprimer bordure focus sur tous les titres */
+h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
