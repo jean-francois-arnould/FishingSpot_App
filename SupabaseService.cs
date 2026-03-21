@@ -100,7 +100,7 @@ namespace FishingSpot.PWA.Services
                     return -1; // Code d'erreur pour doublon
                 }
 
-                fishSpecies.CreatedAt = DateTime.UtcNow;
+                // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
                 fishSpecies.IsActive = true;
 
                 var json = JsonSerializer.Serialize(fishSpecies);
@@ -167,7 +167,7 @@ namespace FishingSpot.PWA.Services
                     return -1; // Code d'erreur pour doublon
                 }
 
-                brand.CreatedAt = DateTime.UtcNow;
+                // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
                 brand.IsActive = true;
 
                 var json = JsonSerializer.Serialize(brand);
@@ -229,7 +229,7 @@ namespace FishingSpot.PWA.Services
                 // Ne pas envoyer l'ID (auto-généré par la DB)
                 var catchId = fishCatch.Id;
                 fishCatch.Id = 0;
-                fishCatch.CreatedAt = DateTime.UtcNow;
+                // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
 
                 var json = JsonSerializer.Serialize(fishCatch, new JsonSerializerOptions
                 {
@@ -352,7 +352,7 @@ namespace FishingSpot.PWA.Services
                     setup.UserId = _authService.CurrentUser.Id;
                 }
 
-                setup.CreatedAt = DateTime.UtcNow;
+                // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
                 var json = JsonSerializer.Serialize(setup);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
