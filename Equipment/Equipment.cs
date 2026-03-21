@@ -5,6 +5,7 @@ namespace FishingSpot.PWA.Models.Equipment
     public class Rod
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -29,6 +30,7 @@ namespace FishingSpot.PWA.Models.Equipment
         public string Notes { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
 
         // Propriété d'affichage
@@ -39,6 +41,7 @@ namespace FishingSpot.PWA.Models.Equipment
     public class Reel
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -60,6 +63,7 @@ namespace FishingSpot.PWA.Models.Equipment
         public string Notes { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
 
         [JsonIgnore]
@@ -69,6 +73,7 @@ namespace FishingSpot.PWA.Models.Equipment
     public class Line
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -93,6 +98,7 @@ namespace FishingSpot.PWA.Models.Equipment
         public string Notes { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
 
         [JsonIgnore]
@@ -102,6 +108,7 @@ namespace FishingSpot.PWA.Models.Equipment
     public class Lure
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -126,6 +133,7 @@ namespace FishingSpot.PWA.Models.Equipment
         public string Notes { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
 
         [JsonIgnore]
@@ -135,6 +143,7 @@ namespace FishingSpot.PWA.Models.Equipment
     public class Leader
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -153,6 +162,7 @@ namespace FishingSpot.PWA.Models.Equipment
         public string Notes { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
 
         [JsonIgnore]
@@ -162,6 +172,7 @@ namespace FishingSpot.PWA.Models.Equipment
     public class Hook
     {
         [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Id { get; set; }
 
         [JsonPropertyName("user_id")]
@@ -180,6 +191,7 @@ namespace FishingSpot.PWA.Models.Equipment
         public string Notes { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime CreatedAt { get; set; }
 
         [JsonIgnore]
