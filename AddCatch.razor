@@ -12,19 +12,28 @@
 <PageTitle>Ajouter une prise</PageTitle>
 
 <div class="page-content">
-    @if (!string.IsNullOrEmpty(errorMessage))
+    @if (isLoadingData)
     {
-        <div class="alert alert-danger">
-            @errorMessage
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement...</p>
         </div>
     }
+    else
+    {
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">
+                @errorMessage
+            </div>
+        }
 
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="alert alert-success">
-            @successMessage
-        </div>
-    }
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success">
+                @successMessage
+            </div>
+        }
 
     <EditForm Model="@newCatch" OnValidSubmit="HandleAddCatch">
         <DataAnnotationsValidator />
@@ -256,6 +265,7 @@
             </button>
         </div>
     </EditForm>
+    }
 
     @* Modal pour afficher la liste des poissons *@
     @if (showFishSpeciesModal && availableFishSpecies != null)
@@ -412,6 +422,7 @@
     private bool isAddingFish;
     private bool showFishSpeciesModal = false;
     private bool showAddFishModal = false;
+    private bool isLoadingData = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -457,6 +468,10 @@
         {
             Console.WriteLine($"Error loading data: {ex.Message}");
             fishSpeciesError = "Impossible de charger la liste des poissons. Saisie manuelle disponible.";
+        }
+        finally
+        {
+            isLoadingData = false;
         }
 
         // Lancer la géolocalisation automatiquement au chargement

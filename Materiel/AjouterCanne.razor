@@ -14,15 +14,24 @@
 <div class="page-content">
     <a href="/FishingSpot_App/materiel/cannes" class="btn btn-outline-secondary btn-sm mb-3">← Retour aux cannes</a>
 
-    @if (!string.IsNullOrEmpty(errorMessage))
+    @if (isLoadingData)
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Chargement...</p>
+        </div>
     }
+    else
+    {
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
 
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="alert alert-success">@successMessage</div>
-    }
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success">@successMessage</div>
+        }
 
     <EditForm Model="@newRod" OnValidSubmit="HandleSubmit">
         <div class="card">
@@ -93,6 +102,7 @@
             </button>
         </div>
     </EditForm>
+    }
 
     @* Modal pour afficher la liste des marques *@
     @if (showBrandsModal && availableBrands != null)
@@ -178,6 +188,7 @@
     private bool isAddingBrand;
     private bool showBrandsModal = false;
     private bool showAddBrandModal = false;
+    private bool isLoadingData = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -195,6 +206,10 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading brands: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingData = false;
         }
     }
 
