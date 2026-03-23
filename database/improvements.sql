@@ -250,6 +250,14 @@ DROP POLICY IF EXISTS "Users see own statistics" ON user_statistics;
 CREATE POLICY "Users see own statistics" ON user_statistics 
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users insert own statistics" ON user_statistics;
+CREATE POLICY "Users insert own statistics" ON user_statistics 
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update own statistics" ON user_statistics;
+CREATE POLICY "Users update own statistics" ON user_statistics 
+    FOR UPDATE USING (auth.uid() = user_id);
+
 -- Policies publiques pour fish_species et fishing_brands (lecture seule)
 ALTER TABLE fish_species ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fishing_brands ENABLE ROW LEVEL SECURITY;

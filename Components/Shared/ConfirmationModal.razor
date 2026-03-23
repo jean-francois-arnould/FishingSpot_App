@@ -1,0 +1,244 @@
+@* Composant de popup de confirmation réutilisable avec style moderne *@
+@if (IsVisible)
+{
+    <div class="confirmation-modal-overlay" @onclick="OnCancel">
+        <div class="confirmation-modal-card" @onclick:stopPropagation>
+            <div class="confirmation-modal-icon">
+                @Icon
+            </div>
+            <h3 class="confirmation-modal-title">@Title</h3>
+            <p class="confirmation-modal-message">@Message</p>
+
+            @if (!string.IsNullOrEmpty(DetailLine1))
+            {
+                <div class="confirmation-modal-details">
+                    <p><strong>@DetailLine1</strong></p>
+                    @if (!string.IsNullOrEmpty(DetailLine2))
+                    {
+                        <p class="text-muted">@DetailLine2</p>
+                    }
+                </div>
+            }
+
+            <div class="confirmation-modal-actions">
+                <button type="button" 
+                        class="btn-confirmation-cancel" 
+                        @onclick="OnCancel"
+                        disabled="@IsProcessing">
+                    @CancelText
+                </button>
+                <button type="button" 
+                        class="btn-confirmation-confirm @ConfirmButtonClass" 
+                        @onclick="OnConfirm"
+                        disabled="@IsProcessing">
+                    @if (IsProcessing)
+                    {
+                        <div class="spinner-small"></div>
+                    }
+                    else
+                    {
+                        @ConfirmText
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .confirmation-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    .confirmation-modal-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 32px 24px;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease-out;
+        text-align: center;
+        color: white;
+    }
+
+    .confirmation-modal-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        animation: bounce 0.6s ease-out;
+    }
+
+    .confirmation-modal-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 12px 0;
+        color: white;
+    }
+
+    .confirmation-modal-message {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0 0 20px 0;
+        line-height: 1.5;
+    }
+
+    .confirmation-modal-details {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(10px);
+    }
+
+        .confirmation-modal-details p {
+            margin: 4px 0;
+            color: white;
+        }
+
+        .confirmation-modal-details .text-muted {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+    .confirmation-modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn-confirmation-cancel,
+    .btn-confirmation-confirm {
+        flex: 1;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-confirmation-cancel {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+
+        .btn-confirmation-cancel:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-confirmation-cancel:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .btn-confirmation-confirm {
+        background: white;
+        color: #667eea;
+    }
+
+        .btn-confirmation-confirm:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-confirmation-confirm:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+    .btn-confirmation-confirm.danger {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .btn-confirmation-confirm.success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .btn-confirmation-confirm.warning {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+    }
+
+    .spinner-small {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @@keyframes bounce {
+        0%, 100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string Icon { get; set; } = "⚠️";
+    [Parameter] public string Title { get; set; } = "Confirmation";
+    [Parameter] public string Message { get; set; } = "Êtes-vous sûr ?";
+    [Parameter] public string? DetailLine1 { get; set; }
+    [Parameter] public string? DetailLine2 { get; set; }
+    [Parameter] public string CancelText { get; set; } = "Annuler";
+    [Parameter] public string ConfirmText { get; set; } = "Confirmer";
+    [Parameter] public string ConfirmButtonClass { get; set; } = ""; // "danger", "success", "warning"
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+}

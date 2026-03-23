@@ -2,6 +2,7 @@
 @page "/FishingSpot_App/catches"
 @using FishingSpot.PWA.Models
 @using FishingSpot.PWA.Services
+@using FishingSpot.PWA.Components.Shared
 @using Microsoft.JSInterop
 @inject ISupabaseService SupabaseService
 @inject IAuthService AuthService
@@ -79,34 +80,19 @@
     </button>
 </AuthorizeView>
 
-<!-- Modale de confirmation de suppression -->
-@if (showDeleteModal && catchToDelete != null)
-{
-    <div class="modal-overlay" @onclick="CancelDelete">
-        <div class="modal-content" @onclick:stopPropagation>
-            <div class="modal-header">
-                <h3>⚠️ Confirmer la suppression</h3>
-            </div>
-            <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir supprimer cette prise ?</p>
-                <p><strong>@catchToDelete.FishName</strong></p>
-                <p class="text-muted">@catchToDelete.LocationName - @catchToDelete.CatchDate.ToShortDateString()</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" @onclick="CancelDelete">
-                    Annuler
-                </button>
-                <button type="button" class="btn btn-danger" @onclick="ConfirmDelete" disabled="@isDeleting">
-                    @if (isDeleting)
-                    {
-                        <div class="spinner"></div>
-                    }
-                    Supprimer
-                </button>
-            </div>
-        </div>
-    </div>
-}
+<!-- Popup de confirmation de suppression stylée -->
+<ConfirmationModal IsVisible="@showDeleteModal"
+                   Icon="🗑️"
+                   Title="Supprimer cette prise ?"
+                   Message="Cette action est irréversible. La prise sera définitivement supprimée."
+                   DetailLine1="@(catchToDelete?.FishName)"
+                   DetailLine2="@(catchToDelete != null ? $"{catchToDelete.LocationName} - {catchToDelete.CatchDate.ToShortDateString()}" : "")"
+                   CancelText="Annuler"
+                   ConfirmText="🗑️ Supprimer"
+                   ConfirmButtonClass="danger"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="ConfirmDelete"
+                   OnCancel="CancelDelete" />
 
 @code {
     private List<FishCatch>? catches;

@@ -919,48 +919,47 @@
 
     private async Task HandleAddCatch()
     {
-        // Empêcher les soumissions multiples
+        // Empêcher les soumissions multiples (protection critique)
         if (isSaving)
         {
-            Console.WriteLine("⚠️ Save already in progress, ignoring duplicate submission");
+            Console.WriteLine("⚠️ ⚠️ ⚠️ DOUBLE SUBMISSION BLOCKED! Save already in progress.");
             return;
         }
 
         errorMessage = null;
         successMessage = null;
-
-        // Vérifier l'authentification
-        if (!AuthService.IsAuthenticated || AuthService.CurrentUser == null)
-        {
-            errorMessage = "❌ Vous devez être connecté pour enregistrer une prise. Veuillez vous reconnecter.";
-            Console.WriteLine("User not authenticated - redirecting to login");
-            await Task.Delay(2000);
-            Navigation.NavigateTo("/FishingSpot_App/login");
-            return;
-        }
-
-        // Validation basique
-        if (string.IsNullOrWhiteSpace(newCatch.FishName))
-        {
-            errorMessage = "Le nom de l'espèce est requis.";
-            return;
-        }
-
-        // Convertir le SetupId sélectionné
-        if (!string.IsNullOrEmpty(selectedSetupId) && int.TryParse(selectedSetupId, out int setupId))
-        {
-            newCatch.SetupId = setupId;
-        }
-        else
-        {
-            newCatch.SetupId = null;
-        }
-
-        isSaving = true;
-        StateHasChanged();
+        isSaving = true; // ✅ Bloquer IMMÉDIATEMENT avant toute opération async
+        StateHasChanged(); // Forcer le re-render pour désactiver le bouton
 
         try
         {
+            // Vérifier l'authentification
+            if (!AuthService.IsAuthenticated || AuthService.CurrentUser == null)
+            {
+                errorMessage = "❌ Vous devez être connecté pour enregistrer une prise. Veuillez vous reconnecter.";
+                Console.WriteLine("User not authenticated - redirecting to login");
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/FishingSpot_App/login");
+                return;
+            }
+
+            // Validation basique
+            if (string.IsNullOrWhiteSpace(newCatch.FishName))
+            {
+                errorMessage = "Le nom de l'espèce est requis.";
+                return;
+            }
+
+            // Convertir le SetupId sélectionné
+            if (!string.IsNullOrEmpty(selectedSetupId) && int.TryParse(selectedSetupId, out int setupId))
+            {
+                newCatch.SetupId = setupId;
+            }
+            else
+            {
+                newCatch.SetupId = null;
+            }
+
             Logger.LogInformation("Saving catch", new Dictionary<string, object>
             {
                 { "FishName", newCatch.FishName },
