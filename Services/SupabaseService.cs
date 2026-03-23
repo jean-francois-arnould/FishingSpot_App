@@ -6,39 +6,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace FishingSpot.PWA.Services
 {
-    public class SupabaseService : ISupabaseService
+    public class SupabaseService : BaseSupabaseService, ISupabaseService
     {
-        private readonly HttpClient _httpClient;
-        private readonly IAuthService _authService;
-        private readonly string _supabaseKey;
         private bool _isInitialized = false;
 
         public SupabaseService(HttpClient httpClient, IConfiguration configuration, IAuthService authService)
+            : base(httpClient, configuration, authService)
         {
-            _httpClient = httpClient;
-            _authService = authService;
-            _supabaseKey = configuration["Supabase:Key"] ?? "";
-        }
-
-        private void SetAuthHeaders()
-        {
-            _httpClient.DefaultRequestHeaders.Remove("Authorization");
-            _httpClient.DefaultRequestHeaders.Remove("apikey");
-
-            var token = _authService.AccessToken;
-
-            if (string.IsNullOrEmpty(token))
-            {
-                Console.WriteLine("⚠️ WARNING: No access token found, using API key only");
-                token = _supabaseKey;
-            }
-            else
-            {
-                Console.WriteLine($"✅ Using user access token: {token.Substring(0, 20)}...");
-            }
-
-            _httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         public async Task InitializeAsync()

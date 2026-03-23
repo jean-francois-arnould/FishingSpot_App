@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace FishingSpot.PWA.Models
+namespace FishingSpot.PWA.Models.Auth
 {
     public class User
     {
@@ -51,8 +51,5 @@ namespace FishingSpot.PWA.Models
 
         [JsonPropertyName("message")]
         public string? Message { get; set; }
-
-        [JsonPropertyName("msg")]
-        public string? Msg { get; set; }
     }
 }

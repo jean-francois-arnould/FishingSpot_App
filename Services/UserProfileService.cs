@@ -6,37 +6,15 @@ using Microsoft.Extensions.Configuration;
 
 namespace FishingSpot.PWA.Services
 {
-    public class UserProfileService : IUserProfileService
+    public class UserProfileService : BaseSupabaseService, IUserProfileService
     {
-        private readonly HttpClient _httpClient;
-        private readonly IAuthService _authService;
-        private readonly string _supabaseKey;
         private readonly string _supabaseUrl;
 
         public UserProfileService(HttpClient httpClient, IConfiguration configuration, IAuthService authService)
+            : base(httpClient, configuration, authService)
         {
-            _authService = authService;
             _supabaseUrl = configuration["Supabase:Url"] ?? "https://placeholder.supabase.co";
-            _supabaseKey = configuration["Supabase:Key"] ?? "";
-            _httpClient = httpClient;
-
             _httpClient.BaseAddress = new Uri(_supabaseUrl);
-        }
-
-        private void SetAuthHeaders()
-        {
-            _httpClient.DefaultRequestHeaders.Remove("Authorization");
-            _httpClient.DefaultRequestHeaders.Remove("apikey");
-
-            var token = _authService.AccessToken ?? _supabaseKey;
-
-            // Ajouter l'apikey (requis par Supabase)
-            _httpClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
-
-            // Ajouter l'Authorization avec le token d'authentification
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-            Console.WriteLine($"🔑 Headers set - apikey: {_supabaseKey.Substring(0, 10)}..., token: {token?.Substring(0, 10)}...");
         }
 
         public async Task<UserProfile?> GetProfileAsync()

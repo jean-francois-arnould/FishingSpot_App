@@ -1,4 +1,4 @@
-using FishingSpot.PWA.Models;
+using FishingSpot.PWA.Models.Auth;
 
 namespace FishingSpot.PWA.Services
 {
