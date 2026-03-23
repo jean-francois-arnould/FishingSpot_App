@@ -917,6 +917,13 @@
 
     private async Task HandleAddCatch()
     {
+        // Empêcher les soumissions multiples
+        if (isSaving)
+        {
+            Console.WriteLine("⚠️ Save already in progress, ignoring duplicate submission");
+            return;
+        }
+
         errorMessage = null;
         successMessage = null;
 
