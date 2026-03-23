@@ -1854,8 +1854,25 @@ code {
     align-items: center;
     gap: 0.875rem;
     transition: var(--transition);
-    cursor: default;
+    cursor: pointer;
     min-height: 90px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '??';
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.6;
+    transition: var(--transition);
+}
+
+.stat-card:hover::after {
+    opacity: 1;
+    transform: scale(1.2);
 }
 
 .stat-card:hover {
@@ -2545,4 +2562,138 @@ h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
     outline: none !important;
     border: none !important;
     box-shadow: none !important;
+}
+
+/* ===== STAT INFO MODAL ===== */
+.stat-info-modal {
+    max-width: 400px;
+}
+
+.stat-info-content {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.stat-info-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.stat-info-content p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--dark);
+    margin: 0;
+}
+
+/* ===== WEATHER STATS IMPROVEMENTS (Mobile First) ===== */
+.weather-stats-container {
+    /* Spécifique pour les stats météo */
+    margin-bottom: 1rem;
+}
+
+.stat-card-weather {
+    cursor: pointer;
+}
+
+.stat-card-weather-condition {
+    /* Card spécifique pour la condition la plus fréquente */
+    grid-column: span 2;
+}
+
+.weather-icon-large {
+    font-size: 2.75rem !important;
+}
+
+/* Mobile First : amélioration de l'affichage des icônes météo */
+@media (max-width: 768px) {
+    .stat-card-weather-condition {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .stat-card-weather-condition .stat-icon {
+        margin-right: 0.5rem;
+    }
+
+    .weather-icon-large {
+        font-size: 2.5rem !important;
+    }
+
+    .stats-section {
+        padding: 0 0.75rem;
+    }
+
+    .stats-section-title {
+        font-size: 1.1rem;
+        padding-left: 0.25rem;
+    }
+
+    .species-weather-cards {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 0;
+    }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .stats-cards-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat-card-weather-condition {
+        grid-column: span 3;
+    }
+
+    .species-weather-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+    .stats-cards-container {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stat-card-weather-condition {
+        grid-column: span 2;
+    }
+
+    .species-weather-cards {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .calendar-section {
+        max-width: 800px;
+        margin: 0 auto 1rem;
+    }
+
+    .stats-section {
+        max-width: 1200px;
+        margin: 0 auto 2rem;
+    }
 }

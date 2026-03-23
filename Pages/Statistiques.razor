@@ -30,7 +30,7 @@
             <!-- Cards de statistiques -->
             <div class="stats-cards-container">
                 <!-- Total de prises -->
-                <div class="stat-card stat-card-primary">
+                <div class="stat-card stat-card-primary" @onclick="ShowTotalInfo">
                     <div class="stat-icon">🎣</div>
                     <div class="stat-content">
                         <div class="stat-value">@totalCatches</div>
@@ -39,10 +39,10 @@
                 </div>
 
                 <!-- Plus gros poisson (longueur) -->
-                <div class="stat-card stat-card-success">
+                <div class="stat-card stat-card-success" @onclick="ShowBiggestInfo">
                     <div class="stat-icon">📏</div>
                     <div class="stat-content">
-                        <div class="stat-value">@biggestFish?.Length.ToString("0") cm</div>
+                        <div class="stat-value">@(biggestFish?.Length.ToString("0")) cm</div>
                         <div class="stat-label">Plus gros poisson</div>
                         @if (biggestFish != null)
                         {
@@ -52,10 +52,10 @@
                 </div>
 
                 <!-- Plus lourd poisson -->
-                <div class="stat-card stat-card-warning">
+                <div class="stat-card stat-card-warning" @onclick="ShowHeaviestInfo">
                     <div class="stat-icon">⚖️</div>
                     <div class="stat-content">
-                        <div class="stat-value">@((heaviestFish?.Weight ?? 0) / 1000.0).ToString("0.00") kg</div>
+                        <div class="stat-value">@(((heaviestFish?.Weight ?? 0) / 1000.0).ToString("0.00")) kg</div>
                         <div class="stat-label">Plus lourd</div>
                         @if (heaviestFish != null)
                         {
@@ -65,10 +65,10 @@
                 </div>
 
                 <!-- Poids total -->
-                <div class="stat-card stat-card-info">
+                <div class="stat-card stat-card-info" @onclick="ShowTotalWeightInfo">
                     <div class="stat-icon">🏆</div>
                     <div class="stat-content">
-                        <div class="stat-value">@(totalWeight / 1000.0).ToString("0.00") kg</div>
+                        <div class="stat-value">@((totalWeight / 1000.0).ToString("0.00")) kg</div>
                         <div class="stat-label">Poids total capturé</div>
                     </div>
                 </div>
@@ -80,9 +80,9 @@
                 <div class="stats-section">
                     <h2 class="stats-section-title">🌤️ Statistiques météo</h2>
 
-                    <div class="stats-cards-container">
+                    <div class="stats-cards-container weather-stats-container">
                         <!-- Température moyenne -->
-                        <div class="stat-card stat-card-weather">
+                        <div class="stat-card stat-card-weather" @onclick="ShowTemperatureInfo">
                             <div class="stat-icon">🌡️</div>
                             <div class="stat-content">
                                 <div class="stat-value">@averageTemperature.ToString("F1")°C</div>
@@ -91,8 +91,8 @@
                         </div>
 
                         <!-- Condition la plus fréquente -->
-                        <div class="stat-card stat-card-weather">
-                            <div class="stat-icon">@mostFrequentWeatherEmoji</div>
+                        <div class="stat-card stat-card-weather stat-card-weather-condition" @onclick="ShowWeatherInfo">
+                            <div class="stat-icon weather-icon-large">@mostFrequentWeatherEmoji</div>
                             <div class="stat-content">
                                 <div class="stat-value">@mostFrequentWeatherCount</div>
                                 <div class="stat-label">@mostFrequentWeatherCondition</div>
@@ -101,7 +101,7 @@
                         </div>
 
                         <!-- Vent moyen -->
-                        <div class="stat-card stat-card-weather">
+                        <div class="stat-card stat-card-weather" @onclick="ShowWindInfo">
                             <div class="stat-icon">💨</div>
                             <div class="stat-content">
                                 <div class="stat-value">@averageWindSpeed.ToString("F1") km/h</div>
@@ -110,7 +110,7 @@
                         </div>
 
                         <!-- Humidité moyenne -->
-                        <div class="stat-card stat-card-weather">
+                        <div class="stat-card stat-card-weather" @onclick="ShowHumidityInfo">
                             <div class="stat-icon">💧</div>
                             <div class="stat-content">
                                 <div class="stat-value">@averageHumidity.ToString("F0")%</div>
@@ -202,6 +202,25 @@
     </div>
 </AuthorizeView>
 
+<!-- Modal pour afficher l'explication d'une statistique -->
+@if (showStatInfoModal)
+{
+    <div class="modal-overlay" @onclick="CloseStatInfoModal">
+        <div class="modal-content stat-info-modal" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>@statInfoTitle</h3>
+                <button class="modal-close-btn" @onclick="CloseStatInfoModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="stat-info-content">
+                    <div class="stat-info-icon">@statInfoEmoji</div>
+                    <p>@statInfoDescription</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Modal pour afficher les prises d'une date -->
 @if (showCatchesModal && selectedDateCatches != null && selectedDateCatches.Any())
 {
@@ -288,6 +307,12 @@
     private bool showCatchesModal = false;
     private DateTime selectedDate;
     private List<FishCatch>? selectedDateCatches;
+
+    // Modal info statistiques
+    private bool showStatInfoModal = false;
+    private string statInfoTitle = "";
+    private string statInfoDescription = "";
+    private string statInfoEmoji = "ℹ️";
 
     // Classe helper pour les statistiques par espèce
     private class SpeciesWeatherStats
@@ -447,5 +472,74 @@
             96 or 99 => "⛈️",
             _ => "🌡️"
         };
+    }
+
+    private void ShowTotalInfo()
+    {
+        statInfoTitle = "🎣 Prises totales";
+        statInfoEmoji = "🎣";
+        statInfoDescription = "Le nombre total de poissons que vous avez capturés et enregistrés dans l'application. Continuez ainsi pour améliorer vos statistiques !";
+        showStatInfoModal = true;
+    }
+
+    private void ShowBiggestInfo()
+    {
+        statInfoTitle = "📏 Plus gros poisson";
+        statInfoEmoji = "📏";
+        statInfoDescription = "Le poisson le plus long que vous avez capturé, mesuré en centimètres. C'est un record à battre lors de vos prochaines sessions !";
+        showStatInfoModal = true;
+    }
+
+    private void ShowHeaviestInfo()
+    {
+        statInfoTitle = "⚖️ Plus lourd";
+        statInfoEmoji = "⚖️";
+        statInfoDescription = "Le poisson le plus lourd que vous avez attrapé, mesuré en kilogrammes. Un vrai trophée de pêcheur !";
+        showStatInfoModal = true;
+    }
+
+    private void ShowTotalWeightInfo()
+    {
+        statInfoTitle = "🏆 Poids total capturé";
+        statInfoEmoji = "🏆";
+        statInfoDescription = "La somme du poids de tous les poissons que vous avez capturés. Une belle mesure de votre succès de pêche au fil du temps !";
+        showStatInfoModal = true;
+    }
+
+    private void ShowTemperatureInfo()
+    {
+        statInfoTitle = "🌡️ Température moyenne";
+        statInfoEmoji = "🌡️";
+        statInfoDescription = "La température moyenne lors de vos sessions de pêche réussies. Cette information vous aide à identifier les conditions idéales pour pêcher.";
+        showStatInfoModal = true;
+    }
+
+    private void ShowWeatherInfo()
+    {
+        statInfoTitle = "☁️ Condition météo la plus fréquente";
+        statInfoEmoji = mostFrequentWeatherEmoji;
+        statInfoDescription = $"La condition météo la plus courante lors de vos sorties de pêche. Vous avez pêché {mostFrequentWeatherCount} fois par temps {mostFrequentWeatherCondition.ToLower()}.";
+        showStatInfoModal = true;
+    }
+
+    private void ShowWindInfo()
+    {
+        statInfoTitle = "💨 Vent moyen";
+        statInfoEmoji = "💨";
+        statInfoDescription = "La vitesse moyenne du vent lors de vos sessions de pêche. Le vent peut influencer le comportement des poissons et votre technique de pêche.";
+        showStatInfoModal = true;
+    }
+
+    private void ShowHumidityInfo()
+    {
+        statInfoTitle = "💧 Humidité moyenne";
+        statInfoEmoji = "💧";
+        statInfoDescription = "Le niveau d'humidité moyen pendant vos sorties. L'humidité peut affecter l'activité des poissons et votre confort de pêche.";
+        showStatInfoModal = true;
+    }
+
+    private void CloseStatInfoModal()
+    {
+        showStatInfoModal = false;
     }
 }
