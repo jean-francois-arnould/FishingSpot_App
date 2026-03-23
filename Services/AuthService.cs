@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using FishingSpot.PWA.Models;
+using FishingSpot.PWA.Models.Auth;
 using Microsoft.JSInterop;
 
 namespace FishingSpot.PWA.Services
