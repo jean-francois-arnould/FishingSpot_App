@@ -34,43 +34,124 @@
         }
         else
         {
-            <div class="catch-list">
-                @foreach (var fishCatch in catches)
-                {
-                    <div class="swipeable-item @(swipedItemId == fishCatch.Id ? "swiped" : "")" 
-                         @ontouchstart="@((args) => HandleTouchStart(args, fishCatch.Id))"
-                         @ontouchmove="@((args) => HandleTouchMove(args))"
-                         @ontouchend="@((args) => HandleTouchEnd(args))">
+            <!-- Section de filtres -->
+            <div class="filters-section">
+                <div class="filters-header" @onclick="ToggleFilters">
+                    <h3>🔍 Filtres</h3>
+                    <span class="toggle-icon">@(showFilters ? "▼" : "▶")</span>
+                </div>
 
-                        <div class="swipe-content" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
-                            @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
-                            {
-                                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="list-item-img" />
-                            }
-                            else
-                            {
-                                <div class="list-item-icon">🐟</div>
-                            }
-                            <div class="list-item-content">
-                                <div class="list-item-title">@fishCatch.FishName</div>
-                                <div class="list-item-subtitle">
-                                    📍 @fishCatch.LocationName
-                                </div>
-                                <div class="list-item-meta">
-                                    <span class="badge badge-info">@fishCatch.Length cm</span>
-                                    <span class="badge badge-info">@fishCatch.Weight kg</span>
-                                    <span class="badge badge-secondary">@fishCatch.CatchDate.ToShortDateString()</span>
-                                </div>
-                            </div>
-                            <div class="list-item-action">›</div>
+                @if (showFilters)
+                {
+                    <div class="filters-content">
+                        <div class="filter-group">
+                            <label class="filter-label">📅 Période</label>
+                            <select class="form-control" @bind="selectedPeriod" @bind:after="ApplyFilters">
+                                <option value="all">Toutes les dates</option>
+                                <option value="today">Aujourd'hui</option>
+                                <option value="week">Cette semaine</option>
+                                <option value="month">Ce mois-ci</option>
+                                <option value="year">Cette année</option>
+                                <option value="custom">Période personnalisée</option>
+                            </select>
                         </div>
 
-                        <div class="swipe-delete" @onclick="() => ShowDeleteConfirmation(fishCatch)">
-                            <span class="delete-icon">🗑️</span>
+                        @if (selectedPeriod == "custom")
+                        {
+                            <div class="filter-row">
+                                <div class="filter-group">
+                                    <label class="filter-label">Du</label>
+                                    <input type="date" class="form-control" @bind="filterDateFrom" @bind:after="ApplyFilters" />
+                                </div>
+                                <div class="filter-group">
+                                    <label class="filter-label">Au</label>
+                                    <input type="date" class="form-control" @bind="filterDateTo" @bind:after="ApplyFilters" />
+                                </div>
+                            </div>
+                        }
+
+                        <div class="filter-group">
+                            <label class="filter-label">🐟 Espèce</label>
+                            <select class="form-control" @bind="selectedFishName" @bind:after="ApplyFilters">
+                                <option value="">Toutes les espèces</option>
+                                @foreach (var fishName in availableFishNames)
+                                {
+                                    <option value="@fishName">@fishName</option>
+                                }
+                            </select>
+                        </div>
+
+                        @if (IsAnyFilterActive())
+                        {
+                            <button class="btn btn-outline-secondary btn-block" @onclick="ResetFilters">
+                                ↺ Réinitialiser les filtres
+                            </button>
+                        }
+
+                        <div class="filter-results">
+                            @if (filteredCatches.Count != catches.Count)
+                            {
+                                <small class="text-muted">
+                                    @filteredCatches.Count prise(s) sur @catches.Count
+                                </small>
+                            }
                         </div>
                     </div>
                 }
             </div>
+
+            <!-- Liste des prises filtrées -->
+            @if (!filteredCatches.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <h3>Aucune prise trouvée</h3>
+                    <p class="text-muted">Aucune prise ne correspond aux filtres sélectionnés.</p>
+                    <button class="btn btn-outline-primary" @onclick="ResetFilters">
+                        Réinitialiser les filtres
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="catch-list">
+                    @foreach (var fishCatch in filteredCatches)
+                    {
+                        <div class="swipeable-item @(swipedItemId == fishCatch.Id ? "swiped" : "")" 
+                             @ontouchstart="@((args) => HandleTouchStart(args, fishCatch.Id))"
+                             @ontouchmove="@((args) => HandleTouchMove(args))"
+                             @ontouchend="@((args) => HandleTouchEnd(args))">
+
+                            <div class="swipe-content" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
+                                @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
+                                {
+                                    <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="list-item-img" />
+                                }
+                                else
+                                {
+                                    <div class="list-item-icon">🐟</div>
+                                }
+                                <div class="list-item-content">
+                                    <div class="list-item-title">@fishCatch.FishName</div>
+                                    <div class="list-item-subtitle">
+                                        📍 @fishCatch.LocationName
+                                    </div>
+                                    <div class="list-item-meta">
+                                        <span class="badge badge-info">@fishCatch.Length cm</span>
+                                        <span class="badge badge-info">@fishCatch.Weight kg</span>
+                                        <span class="badge badge-secondary">@fishCatch.CatchDate.ToShortDateString()</span>
+                                    </div>
+                                </div>
+                                <div class="list-item-action">›</div>
+                            </div>
+
+                            <div class="swipe-delete" @onclick="() => ShowDeleteConfirmation(fishCatch)">
+                                <span class="delete-icon">🗑️</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         }
     </div>
 
@@ -96,11 +177,20 @@
 
 @code {
     private List<FishCatch>? catches;
+    private List<FishCatch> filteredCatches = new();
+    private List<string> availableFishNames = new();
     private UserProfile? userProfile;
     private bool isLoading = true;
     private bool showDeleteModal = false;
     private bool isDeleting = false;
     private FishCatch? catchToDelete = null;
+
+    // Filtres
+    private bool showFilters = false;
+    private string selectedPeriod = "all";
+    private string selectedFishName = "";
+    private DateTime? filterDateFrom = null;
+    private DateTime? filterDateTo = null;
 
     // Pour le swipe
     private int? swipedItemId = null;
@@ -152,6 +242,16 @@
             catches = await catchesTask;
 
             Console.WriteLine($"✅ {catches.Count} prises chargées");
+
+            // Extraire les noms de poissons uniques
+            availableFishNames = catches
+                .Select(c => c.FishName)
+                .Distinct()
+                .OrderBy(name => name)
+                .ToList();
+
+            // Appliquer les filtres
+            ApplyFilters();
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
@@ -163,6 +263,7 @@
         {
             Console.WriteLine($"Error loading data: {ex.Message}");
             catches = new List<FishCatch>();
+            filteredCatches = new List<FishCatch>();
 
             if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized") || ex.Message.Contains("auth"))
             {
@@ -175,6 +276,75 @@
         {
             isLoading = false;
         }
+    }
+
+    private void ToggleFilters()
+    {
+        showFilters = !showFilters;
+    }
+
+    private void ApplyFilters()
+    {
+        if (catches == null || !catches.Any())
+        {
+            filteredCatches = new List<FishCatch>();
+            return;
+        }
+
+        var query = catches.AsEnumerable();
+
+        // Filtre par période
+        switch (selectedPeriod)
+        {
+            case "today":
+                query = query.Where(c => c.CatchDate.Date == DateTime.Today);
+                break;
+            case "week":
+                var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + (int)DayOfWeek.Monday);
+                query = query.Where(c => c.CatchDate.Date >= startOfWeek);
+                break;
+            case "month":
+                var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                query = query.Where(c => c.CatchDate.Date >= startOfMonth);
+                break;
+            case "year":
+                var startOfYear = new DateTime(DateTime.Today.Year, 1, 1);
+                query = query.Where(c => c.CatchDate.Date >= startOfYear);
+                break;
+            case "custom":
+                if (filterDateFrom.HasValue)
+                {
+                    query = query.Where(c => c.CatchDate.Date >= filterDateFrom.Value.Date);
+                }
+                if (filterDateTo.HasValue)
+                {
+                    query = query.Where(c => c.CatchDate.Date <= filterDateTo.Value.Date);
+                }
+                break;
+        }
+
+        // Filtre par nom de poisson
+        if (!string.IsNullOrEmpty(selectedFishName))
+        {
+            query = query.Where(c => c.FishName.Equals(selectedFishName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredCatches = query.OrderByDescending(c => c.CatchDate).ToList();
+        Console.WriteLine($"🔍 Filtres appliqués: {filteredCatches.Count} prises affichées sur {catches.Count}");
+    }
+
+    private void ResetFilters()
+    {
+        selectedPeriod = "all";
+        selectedFishName = "";
+        filterDateFrom = null;
+        filterDateTo = null;
+        ApplyFilters();
+    }
+
+    private bool IsAnyFilterActive()
+    {
+        return selectedPeriod != "all" || !string.IsNullOrEmpty(selectedFishName);
     }
 
     private async Task HandleLogout()
