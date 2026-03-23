@@ -7,6 +7,7 @@
 @inject IAuthService AuthService
 @inject IUserProfileService ProfileService
 @inject IWeatherService WeatherService
+@inject IImageCompressionService ImageCompression
 @inject IToastService Toast
 @inject ILoggerService Logger
 @inject NavigationManager Navigation
@@ -722,24 +723,57 @@
                     return;
                 }
 
-                // Créer un aperçu local IMMÉDIATEMENT avec data URL
+                Console.WriteLine($"📸 Traitement de la photo : {file.Name} ({file.Size} bytes)");
+
+                // Étape 1 : Lire le fichier en mémoire
                 var buffer = new byte[file.Size];
                 await file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).ReadAsync(buffer);
-                var base64 = Convert.ToBase64String(buffer);
-                tempPhotoUrl = $"data:{file.ContentType};base64,{base64}";
-                newCatch.PhotoUrl = tempPhotoUrl; // Afficher l'aperçu immédiatement
-                StateHasChanged();
+                Console.WriteLine($"✅ Fichier lu en mémoire");
 
-                // Upload vers Supabase Storage en arrière-plan (si online)
+                // Étape 2 : Convertir en base64 pour la compression JavaScript
+                var base64Original = Convert.ToBase64String(buffer);
+                var base64DataUrl = $"data:{file.ContentType};base64,{base64Original}";
+                Console.WriteLine($"✅ Conversion base64 terminée");
+
+                // Étape 3 : Compresser l'image avec le service
+                Console.WriteLine($"🗜️ Compression de l'image...");
+                var compressionStartTime = DateTime.Now;
+                var compressed = await ImageCompression.CompressImageAsync(base64DataUrl, maxWidth: 1200, thumbnailSize: 150, quality: 85);
+                var compressionTime = (DateTime.Now - compressionStartTime).TotalMilliseconds;
+
+                var reductionPercent = 100 - (compressed.CompressedSize * 100 / compressed.OriginalSize);
+                Console.WriteLine($"✅ Compression terminée en {compressionTime:F0}ms");
+                Console.WriteLine($"📊 Taille originale: {compressed.OriginalSize / 1024}KB");
+                Console.WriteLine($"📊 Taille compressée: {compressed.CompressedSize / 1024}KB");
+                Console.WriteLine($"📊 Réduction: {reductionPercent:F1}%");
+
+                // Étape 4 : Afficher l'aperçu immédiatement (version compressée)
+                tempPhotoUrl = compressed.Base64Data;
+                newCatch.PhotoUrl = tempPhotoUrl;
+                StateHasChanged();
+                Console.WriteLine($"✅ Aperçu affiché");
+
+                // Étape 5 : Upload vers Supabase Storage en arrière-plan (si online)
                 try
                 {
-                    var stream = new MemoryStream(buffer);
+                    Console.WriteLine($"🌐 Upload vers Supabase...");
+                    var uploadStartTime = DateTime.Now;
+
+                    // Extraire les données base64 (sans le préfixe data:image/jpeg;base64,)
+                    var base64Data = compressed.Base64Data.Contains(",") 
+                        ? compressed.Base64Data.Split(',')[1] 
+                        : compressed.Base64Data;
+                    var compressedBytes = Convert.FromBase64String(base64Data);
+                    var stream = new MemoryStream(compressedBytes);
+
                     var photoUrl = await SupabaseService.UploadPhotoAsync(stream, file.Name);
+                    var uploadTime = (DateTime.Now - uploadStartTime).TotalMilliseconds;
+                    Console.WriteLine($"✅ Upload terminé en {uploadTime:F0}ms");
 
                     if (!string.IsNullOrEmpty(photoUrl) && !photoUrl.StartsWith("offline_"))
                     {
                         newCatch.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
-                        successMessage = "✅ Photo uploadée avec succès !";
+                        successMessage = $"✅ Photo uploadée avec succès ! (-{reductionPercent:F0}% taille)";
                         StateHasChanged();
                         await Task.Delay(2000);
                         successMessage = null;
@@ -756,16 +790,16 @@
                         StateHasChanged();
                     }
                 }
-                         catch (Exception uploadEx)
-                        {
-                            Console.WriteLine($"⚠️ Erreur upload photo (mode offline?): {uploadEx.Message}");
-                            // Garder l'aperçu local en mode offline
-                            successMessage = "📸 Photo ajoutée localement";
-                            StateHasChanged();
-                            await Task.Delay(2000);
-                            successMessage = null;
-                            StateHasChanged();
-                        }
+                catch (Exception uploadEx)
+                {
+                    Console.WriteLine($"⚠️ Erreur upload photo (mode offline?): {uploadEx.Message}");
+                    // Garder l'aperçu local en mode offline
+                    successMessage = "📸 Photo ajoutée localement";
+                    StateHasChanged();
+                    await Task.Delay(2000);
+                    successMessage = null;
+                    StateHasChanged();
+                }
                     }
                 }
                 catch (Exception ex)
