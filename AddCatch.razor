@@ -526,21 +526,8 @@
 
     protected override void OnParametersSet()
     {
-        // ✅ CRITICAL: Réinitialiser newCatch à chaque fois qu'on arrive sur cette page
-        // Cela évite que l'objet garde son ID d'une précédente sauvegarde
-        if (newCatch.Id != 0)
-        {
-            Console.WriteLine($"⚠️⚠️⚠️ RÉINITIALISATION FORCÉE - newCatch avait ID={newCatch.Id}");
-            newCatch = new FishCatch
-            {
-                CatchDate = DateTime.Today,
-                CatchTimeString = DateTime.Now.ToString("HH:mm")
-            };
-            isSaving = false;
-            errorMessage = null;
-            successMessage = null;
-        }
-
+        // La réinitialisation n'est plus nécessaire car nous créons une copie lors de la sauvegarde
+        // Cela évite que l'objet newCatch soit modifié par référence
         base.OnParametersSet();
     }
 
@@ -1000,7 +987,31 @@
             Console.WriteLine($"Taille: {newCatch.Length}cm, Poids: {newCatch.Weight}kg");
             Console.WriteLine($"========================================");
 
-            var catchId = await SupabaseService.AddCatchAsync(newCatch);
+            // ✅ IMPORTANT: Créer une copie pour éviter que les services modifient newCatch par référence
+            var catchToSave = new FishCatch
+            {
+                Id = 0, // Force à 0 pour une nouvelle prise
+                UserId = newCatch.UserId,
+                FishName = newCatch.FishName,
+                PhotoUrl = newCatch.PhotoUrl,
+                Latitude = newCatch.Latitude,
+                Longitude = newCatch.Longitude,
+                LocationName = newCatch.LocationName,
+                CatchDate = newCatch.CatchDate,
+                CatchTime = newCatch.CatchTime,
+                Length = newCatch.Length,
+                Weight = newCatch.Weight,
+                Notes = newCatch.Notes,
+                SetupId = newCatch.SetupId,
+                CreatedAt = newCatch.CreatedAt,
+                WeatherTemperature = newCatch.WeatherTemperature,
+                WeatherCondition = newCatch.WeatherCondition,
+                WeatherCode = newCatch.WeatherCode,
+                WindSpeed = newCatch.WindSpeed,
+                Humidity = newCatch.Humidity
+            };
+
+            var catchId = await SupabaseService.AddCatchAsync(catchToSave);
 
             Console.WriteLine($"========================================");
             Console.WriteLine($"✅ SAUVEGARDE TERMINÉE");
