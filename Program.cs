@@ -23,6 +23,13 @@ builder.Services.AddScoped<ISyncService, SyncService>();
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// WeatherService avec son propre HttpClient
+builder.Services.AddScoped<IWeatherService>(sp =>
+{
+    var httpClient = new HttpClient();
+    return new WeatherService(httpClient);
+});
+
 // UserProfileService avec son propre HttpClient configuré pour Supabase
 builder.Services.AddScoped<IUserProfileService>(sp =>
 {

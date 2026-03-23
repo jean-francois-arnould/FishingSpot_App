@@ -1989,6 +1989,221 @@ code {
     padding: 0.5rem 0;
 }
 
+/* ===== WEATHER INFO STYLES ===== */
+.weather-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.weather-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.weather-icon {
+    font-size: 2.5rem;
+}
+
+.weather-temp {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.weather-desc {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.weather-details {
+    display: flex;
+    gap: 1.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.weather-details small {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+}
+
+.weather-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: var(--grey-light);
+    border-radius: var(--border-radius);
+}
+
+.weather-loading .spinner {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+}
+
+/* Weather detail page styles */
+.weather-detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.weather-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.weather-detail-icon {
+    font-size: 2.5rem;
+}
+
+.weather-detail-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.weather-detail-temp {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.weather-detail-condition {
+    font-size: 0.875rem;
+    color: var(--grey);
+}
+
+.weather-detail-extras {
+    display: flex;
+    gap: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--grey-light);
+}
+
+.weather-extra-item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--grey);
+}
+
+/* ===== STATISTICS WEATHER STYLES ===== */
+.stats-section {
+    margin-bottom: 2rem;
+}
+
+.stats-section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+.stat-card-weather {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-card-weather .stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-card-weather .stat-value,
+.stat-card-weather .stat-label,
+.stat-card-weather .stat-detail {
+    color: white;
+}
+
+.species-weather-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.species-weather-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--grey-light);
+    transition: var(--transition);
+}
+
+.species-weather-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.species-weather-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--grey-light);
+}
+
+.species-weather-header h4 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0;
+}
+
+.species-catch-count {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.species-weather-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.weather-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: var(--light);
+    border-radius: var(--border-radius-sm);
+}
+
+.weather-detail-label {
+    font-size: 0.875rem;
+    color: var(--grey);
+    font-weight: 500;
+}
+
+.weather-detail-value {
+    font-size: 0.875rem;
+    color: var(--dark);
+    font-weight: 700;
+}
+
+.badge-weather {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+
+
+
 .calendar-day {
     aspect-ratio: 1;
     display: flex;

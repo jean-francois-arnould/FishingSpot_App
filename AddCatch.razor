@@ -6,6 +6,7 @@
 @inject ISupabaseService SupabaseService
 @inject IAuthService AuthService
 @inject IUserProfileService ProfileService
+@inject IWeatherService WeatherService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -168,6 +169,41 @@
                         }
                     </div>
                     <small class="text-muted">Position détectée automatiquement • Cliquez sur 📋 pour partager</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🌤️ Conditions météo</label>
+                    @if (weatherData != null)
+                    {
+                        <div class="weather-info">
+                            <div class="weather-main">
+                                <span class="weather-icon">@weatherData.WeatherEmoji</span>
+                                <span class="weather-temp">@weatherData.Temperature.ToString("F1")°C</span>
+                                <span class="weather-desc">@weatherData.WeatherDescription</span>
+                            </div>
+                            <div class="weather-details">
+                                <small>💨 Vent: @weatherData.WindSpeed.ToString("F1") km/h</small>
+                                <small>💧 Humidité: @weatherData.Humidity%</small>
+                            </div>
+                        </div>
+                    }
+                    else if (isGettingWeather)
+                    {
+                        <div class="weather-loading">
+                            <div class="spinner"></div>
+                            <span>Récupération de la météo...</span>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
+                    {
+                        <button type="button" class="btn btn-outline-primary" @onclick="GetWeatherData">
+                            🌤️ Récupérer la météo
+                        </button>
+                    }
+                    else
+                    {
+                        <small class="text-muted">Obtenez d'abord votre position GPS pour récupérer la météo</small>
+                    }
                 </div>
 
                 <div class="form-row">
@@ -427,6 +463,8 @@
     private bool showFishSpeciesModal = false;
     private bool showAddFishModal = false;
     private bool isLoadingData = true;
+    private WeatherData? weatherData;
+    private bool isGettingWeather = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -809,6 +847,9 @@
                     successMessage = "📍 Position récupérée (lieu non trouvé)";
                 }
 
+                // Récupérer automatiquement la météo après avoir obtenu la position
+                await GetWeatherData();
+
                 await Task.Delay(2000);
                 successMessage = null;
             }
@@ -821,6 +862,56 @@
         finally
         {
             isGettingLocation = false;
+        }
+    }
+
+    private async Task GetWeatherData()
+    {
+        if (string.IsNullOrEmpty(newCatch.Latitude) || string.IsNullOrEmpty(newCatch.Longitude))
+        {
+            return;
+        }
+
+        if (!double.TryParse(newCatch.Latitude, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double lat) ||
+            !double.TryParse(newCatch.Longitude, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double lon))
+        {
+            return;
+        }
+
+        isGettingWeather = true;
+        errorMessage = null;
+
+        try
+        {
+            weatherData = await WeatherService.GetCurrentWeatherAsync(lat, lon);
+
+            if (weatherData != null)
+            {
+                // Enregistrer les données météo dans la prise
+                newCatch.WeatherTemperature = weatherData.Temperature;
+                newCatch.WeatherCondition = weatherData.WeatherDescription;
+                newCatch.WeatherCode = weatherData.WeatherCode;
+                newCatch.WindSpeed = weatherData.WindSpeed;
+                newCatch.Humidity = weatherData.Humidity;
+
+                successMessage = "🌤️ Données météo récupérées !";
+                await Task.Delay(2000);
+                successMessage = null;
+            }
+            else
+            {
+                errorMessage = "Impossible de récupérer les données météo";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting weather: {ex.Message}");
+            errorMessage = "Erreur lors de la récupération de la météo";
+        }
+        finally
+        {
+            isGettingWeather = false;
+            StateHasChanged();
         }
     }
 

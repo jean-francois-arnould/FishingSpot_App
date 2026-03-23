@@ -79,6 +79,45 @@
                 </div>
             }
 
+            <!-- Carte Météo -->
+            @if (fishCatch.WeatherTemperature.HasValue || !string.IsNullOrEmpty(fishCatch.WeatherCondition))
+            {
+                <div class="card detail-card">
+                    <div class="card-icon">🌤️</div>
+                    <div class="card-content">
+                        <h3 class="card-title">CONDITIONS MÉTÉO</h3>
+                        <div class="weather-detail-info">
+                            @if (fishCatch.WeatherTemperature.HasValue)
+                            {
+                                <div class="weather-detail-item">
+                                    <span class="weather-detail-icon">@GetWeatherEmoji(fishCatch.WeatherCode ?? 0)</span>
+                                    <div class="weather-detail-text">
+                                        <span class="weather-detail-temp">@fishCatch.WeatherTemperature.Value.ToString("F1")°C</span>
+                                        @if (!string.IsNullOrEmpty(fishCatch.WeatherCondition))
+                                        {
+                                            <span class="weather-detail-condition">@fishCatch.WeatherCondition</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (fishCatch.WindSpeed.HasValue || fishCatch.Humidity.HasValue)
+                            {
+                                <div class="weather-detail-extras">
+                                    @if (fishCatch.WindSpeed.HasValue)
+                                    {
+                                        <span class="weather-extra-item">💨 @fishCatch.WindSpeed.Value.ToString("F1") km/h</span>
+                                    }
+                                    @if (fishCatch.Humidity.HasValue)
+                                    {
+                                        <span class="weather-extra-item">💧 @fishCatch.Humidity%</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
             <!-- Carte Dimensions -->
             @if (fishCatch.Length > 0 || fishCatch.Weight > 0)
             {
@@ -207,5 +246,26 @@
             return $"{kilograms} kg {grams} g";
         }
         return $"{grams} g";
+    }
+
+    private string GetWeatherEmoji(int code)
+    {
+        return code switch
+        {
+            0 => "☀️",
+            1 => "🌤️",
+            2 => "⛅",
+            3 => "☁️",
+            45 or 48 => "🌫️",
+            51 or 53 or 55 => "🌦️",
+            61 or 63 or 65 => "🌧️",
+            71 or 73 or 75 => "🌨️",
+            77 => "🌨️",
+            80 or 81 or 82 => "🌧️",
+            85 or 86 => "🌨️",
+            95 => "⛈️",
+            96 or 99 => "⛈️",
+            _ => "🌡️"
+        };
     }
 }

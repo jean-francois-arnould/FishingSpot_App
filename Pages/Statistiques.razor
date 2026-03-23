@@ -74,6 +74,87 @@
                 </div>
             </div>
 
+            <!-- Statistiques météo -->
+            @if (catchesWithWeather != null && catchesWithWeather.Any())
+            {
+                <div class="stats-section">
+                    <h2 class="stats-section-title">🌤️ Statistiques météo</h2>
+
+                    <div class="stats-cards-container">
+                        <!-- Température moyenne -->
+                        <div class="stat-card stat-card-weather">
+                            <div class="stat-icon">🌡️</div>
+                            <div class="stat-content">
+                                <div class="stat-value">@averageTemperature.ToString("F1")°C</div>
+                                <div class="stat-label">Température moyenne</div>
+                            </div>
+                        </div>
+
+                        <!-- Condition la plus fréquente -->
+                        <div class="stat-card stat-card-weather">
+                            <div class="stat-icon">@mostFrequentWeatherEmoji</div>
+                            <div class="stat-content">
+                                <div class="stat-value">@mostFrequentWeatherCount</div>
+                                <div class="stat-label">@mostFrequentWeatherCondition</div>
+                                <div class="stat-detail">Condition la plus fréquente</div>
+                            </div>
+                        </div>
+
+                        <!-- Vent moyen -->
+                        <div class="stat-card stat-card-weather">
+                            <div class="stat-icon">💨</div>
+                            <div class="stat-content">
+                                <div class="stat-value">@averageWindSpeed.ToString("F1") km/h</div>
+                                <div class="stat-label">Vent moyen</div>
+                            </div>
+                        </div>
+
+                        <!-- Humidité moyenne -->
+                        <div class="stat-card stat-card-weather">
+                            <div class="stat-icon">💧</div>
+                            <div class="stat-content">
+                                <div class="stat-value">@averageHumidity.ToString("F0")%</div>
+                                <div class="stat-label">Humidité moyenne</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meilleures conditions par espèce -->
+                @if (topSpeciesStats.Any())
+                {
+                    <div class="stats-section">
+                        <h2 class="stats-section-title">🎯 Meilleures conditions par espèce</h2>
+
+                        <div class="species-weather-cards">
+                            @foreach (var stat in topSpeciesStats)
+                            {
+                                <div class="species-weather-card">
+                                    <div class="species-weather-header">
+                                        <h4>@stat.FishName</h4>
+                                        <span class="species-catch-count">@stat.CatchCount prises</span>
+                                    </div>
+                                    <div class="species-weather-details">
+                                        <div class="weather-detail-row">
+                                            <span class="weather-detail-label">@stat.WeatherEmoji @stat.MostCommonCondition</span>
+                                            <span class="weather-detail-value">@stat.ConditionCount fois</span>
+                                        </div>
+                                        <div class="weather-detail-row">
+                                            <span class="weather-detail-label">🌡️ Température moyenne</span>
+                                            <span class="weather-detail-value">@stat.AverageTemp.ToString("F1")°C</span>
+                                        </div>
+                                        <div class="weather-detail-row">
+                                            <span class="weather-detail-label">💨 Vent moyen</span>
+                                            <span class="weather-detail-value">@stat.AverageWind.ToString("F1") km/h</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
             <!-- Calendrier -->
             <div class="calendar-section">
                 <div class="calendar-header">
@@ -153,6 +234,10 @@
                                     {
                                         <span class="badge badge-secondary">⏰ @fishCatch.CatchTime.Value.ToString(@"hh\:mm")</span>
                                     }
+                                    @if (fishCatch.WeatherTemperature.HasValue)
+                                    {
+                                        <span class="badge badge-weather">@GetWeatherEmoji(fishCatch.WeatherCode ?? 0) @fishCatch.WeatherTemperature.Value.ToString("F1")°C</span>
+                                    }
                                 </div>
                             </div>
                             <div class="catch-modal-arrow">›</div>
@@ -174,6 +259,18 @@
     private FishCatch? heaviestFish;
     private double totalWeight => allCatches?.Sum(c => c.Weight) ?? 0;
 
+    // Statistiques météo
+    private List<FishCatch>? catchesWithWeather => allCatches?.Where(c => c.WeatherTemperature.HasValue).ToList();
+    private double averageTemperature => catchesWithWeather?.Average(c => c.WeatherTemperature ?? 0) ?? 0;
+    private double averageWindSpeed => catchesWithWeather?.Where(c => c.WindSpeed.HasValue).Average(c => c.WindSpeed ?? 0) ?? 0;
+    private double averageHumidity => catchesWithWeather?.Where(c => c.Humidity.HasValue).Average(c => c.Humidity ?? 0) ?? 0;
+
+    private string mostFrequentWeatherCondition = "";
+    private int mostFrequentWeatherCount = 0;
+    private string mostFrequentWeatherEmoji = "🌤️";
+
+    private List<SpeciesWeatherStats> topSpeciesStats = new List<SpeciesWeatherStats>();
+
     // Calendrier
     private DateTime currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
     private int daysInMonth => DateTime.DaysInMonth(currentMonth.Year, currentMonth.Month);
@@ -191,6 +288,18 @@
     private bool showCatchesModal = false;
     private DateTime selectedDate;
     private List<FishCatch>? selectedDateCatches;
+
+    // Classe helper pour les statistiques par espèce
+    private class SpeciesWeatherStats
+    {
+        public string FishName { get; set; } = "";
+        public int CatchCount { get; set; }
+        public string MostCommonCondition { get; set; } = "";
+        public int ConditionCount { get; set; }
+        public string WeatherEmoji { get; set; } = "🌤️";
+        public double AverageTemp { get; set; }
+        public double AverageWind { get; set; }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -217,6 +326,9 @@
 
                 // Plus lourd poisson
                 heaviestFish = allCatches.OrderByDescending(c => c.Weight).FirstOrDefault();
+
+                // Calculer les statistiques météo
+                CalculateWeatherStats();
             }
         }
         catch (Exception ex)
@@ -227,6 +339,53 @@
         {
             isLoading = false;
         }
+    }
+
+    private void CalculateWeatherStats()
+    {
+        if (catchesWithWeather == null || !catchesWithWeather.Any())
+            return;
+
+        // Condition météo la plus fréquente
+        var weatherGroups = catchesWithWeather
+            .Where(c => !string.IsNullOrEmpty(c.WeatherCondition))
+            .GroupBy(c => new { c.WeatherCondition, c.WeatherCode })
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+
+        if (weatherGroups != null)
+        {
+            mostFrequentWeatherCondition = weatherGroups.Key.WeatherCondition ?? "Inconnu";
+            mostFrequentWeatherCount = weatherGroups.Count();
+            mostFrequentWeatherEmoji = GetWeatherEmoji(weatherGroups.Key.WeatherCode ?? 0);
+        }
+
+        // Statistiques par espèce (top 5 espèces avec le plus de prises)
+        var speciesGroups = catchesWithWeather
+            .GroupBy(c => c.FishName)
+            .OrderByDescending(g => g.Count())
+            .Take(5);
+
+        topSpeciesStats = speciesGroups.Select(group =>
+        {
+            var catches = group.ToList();
+            var weatherConditionGroup = catches
+                .Where(c => !string.IsNullOrEmpty(c.WeatherCondition))
+                .GroupBy(c => new { c.WeatherCondition, c.WeatherCode })
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+
+            return new SpeciesWeatherStats
+            {
+                FishName = group.Key,
+                CatchCount = group.Count(),
+                MostCommonCondition = weatherConditionGroup?.Key.WeatherCondition ?? "Inconnu",
+                ConditionCount = weatherConditionGroup?.Count() ?? 0,
+                WeatherEmoji = GetWeatherEmoji(weatherConditionGroup?.Key.WeatherCode ?? 0),
+                AverageTemp = catches.Where(c => c.WeatherTemperature.HasValue).Average(c => c.WeatherTemperature ?? 0),
+                AverageWind = catches.Where(c => c.WindSpeed.HasValue).Average(c => c.WindSpeed ?? 0)
+            };
+        }).ToList();
     }
 
     private List<FishCatch> GetCatchesForDate(DateTime date)
@@ -267,5 +426,26 @@
     private void NavigateToCatchDetail(int catchId)
     {
         Navigation.NavigateTo($"/FishingSpot_App/catch/{catchId}");
+    }
+
+    private string GetWeatherEmoji(int code)
+    {
+        return code switch
+        {
+            0 => "☀️",
+            1 => "🌤️",
+            2 => "⛅",
+            3 => "☁️",
+            45 or 48 => "🌫️",
+            51 or 53 or 55 => "🌦️",
+            61 or 63 or 65 => "🌧️",
+            71 or 73 or 75 => "🌨️",
+            77 => "🌨️",
+            80 or 81 or 82 => "🌧️",
+            85 or 86 => "🌨️",
+            95 => "⛈️",
+            96 or 99 => "⛈️",
+            _ => "🌡️"
+        };
     }
 }
