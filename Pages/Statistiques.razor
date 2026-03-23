@@ -55,7 +55,7 @@
                 <div class="stat-card stat-card-warning">
                     <div class="stat-icon">⚖️</div>
                     <div class="stat-content">
-                        <div class="stat-value">@(heaviestFish?.Weight / 1000).ToString("0.00") kg</div>
+                        <div class="stat-value">@((heaviestFish?.Weight ?? 0) / 1000.0).ToString("0.00") kg</div>
                         <div class="stat-label">Plus lourd</div>
                         @if (heaviestFish != null)
                         {
@@ -68,7 +68,7 @@
                 <div class="stat-card stat-card-info">
                     <div class="stat-icon">🏆</div>
                     <div class="stat-content">
-                        <div class="stat-value">@(totalWeight / 1000).ToString("0.00") kg</div>
+                        <div class="stat-value">@(totalWeight / 1000.0).ToString("0.00") kg</div>
                         <div class="stat-label">Poids total capturé</div>
                     </div>
                 </div>

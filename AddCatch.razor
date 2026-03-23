@@ -681,42 +681,59 @@
                 newCatch.PhotoUrl = tempPhotoUrl; // Afficher l'aperçu immédiatement
                 StateHasChanged();
 
-                // Upload vers Supabase Storage en arrière-plan
-                var stream = new MemoryStream(buffer);
-                var photoUrl = await SupabaseService.UploadPhotoAsync(stream, file.Name);
+                // Upload vers Supabase Storage en arrière-plan (si online)
+                try
+                {
+                    var stream = new MemoryStream(buffer);
+                    var photoUrl = await SupabaseService.UploadPhotoAsync(stream, file.Name);
 
-                if (!string.IsNullOrEmpty(photoUrl))
+                    if (!string.IsNullOrEmpty(photoUrl) && !photoUrl.StartsWith("offline_"))
+                    {
+                        newCatch.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
+                        successMessage = "✅ Photo uploadée avec succès !";
+                        StateHasChanged();
+                        await Task.Delay(2000);
+                        successMessage = null;
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        // Mode offline : garder l'aperçu local
+                        Console.WriteLine("⚠️ Mode offline détecté, la photo sera uploadée lors de la synchronisation");
+                        successMessage = "📸 Photo ajoutée (sera uploadée en ligne)";
+                        StateHasChanged();
+                        await Task.Delay(2000);
+                        successMessage = null;
+                        StateHasChanged();
+                    }
+                }
+                         catch (Exception uploadEx)
+                        {
+                            Console.WriteLine($"⚠️ Erreur upload photo (mode offline?): {uploadEx.Message}");
+                            // Garder l'aperçu local en mode offline
+                            successMessage = "📸 Photo ajoutée localement";
+                            StateHasChanged();
+                            await Task.Delay(2000);
+                            successMessage = null;
+                            StateHasChanged();
+                        }
+                    }
+                }
+                catch (Exception ex)
                 {
-                    newCatch.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
-                    successMessage = "✅ Photo uploadée avec succès !";
-                    StateHasChanged();
-                    await Task.Delay(2000);
-                    successMessage = null;
+                    Console.WriteLine($"Error uploading photo: {ex.Message}");
+                    errorMessage = $"Erreur lors de l'upload: {ex.Message}";
+                    if (!string.IsNullOrEmpty(tempPhotoUrl))
+                    {
+                        newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local en cas d'erreur
+                    }
                     StateHasChanged();
                 }
-                else
+                finally
                 {
-                    errorMessage = "Erreur lors de l'upload de la photo. Vérifiez que le bucket 'fishing-photos' existe dans Supabase Storage.";
-                    newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local
+                    isUploadingPhoto = false;
                     StateHasChanged();
                 }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error uploading photo: {ex.Message}");
-            errorMessage = $"Erreur lors de l'upload: {ex.Message}";
-            if (!string.IsNullOrEmpty(tempPhotoUrl))
-            {
-                newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local en cas d'erreur
-            }
-            StateHasChanged();
-        }
-        finally
-        {
-            isUploadingPhoto = false;
-            StateHasChanged();
-        }
     }
 
     private async Task OpenGallery()
@@ -852,7 +869,8 @@
             var catchId = await SupabaseService.AddCatchAsync(newCatch);
             Console.WriteLine($"✅ Catch saved with ID: {catchId}");
 
-            if (catchId > 0)
+            // En mode offline, l'ID peut être négatif (temporaire)
+            if (catchId != 0)
             {
                 // Redirection immédiate vers la liste avec forceLoad pour rafraîchir
                 Navigation.NavigateTo("/FishingSpot_App/catches", forceLoad: true);
