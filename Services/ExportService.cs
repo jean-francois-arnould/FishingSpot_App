@@ -25,17 +25,17 @@ namespace FishingSpot.PWA.Services
                 csv.AppendLine("Date,Heure,Poisson,Longueur (cm),Poids (kg),Lieu,Latitude,Longitude,Notes");
 
                 // Data
-                foreach (var catch in catches.OrderByDescending(c => c.CatchDate))
+                foreach (var fishCatch in catches.OrderByDescending(c => c.CatchDate))
                 {
-                    csv.AppendLine($"{catch.CatchDate:yyyy-MM-dd}," +
-                                   $"{catch.CatchTimeString}," +
-                                   $"\"{catch.FishName}\"," +
-                                   $"{catch.Length}," +
-                                   $"{catch.Weight}," +
-                                   $"\"{catch.LocationName}\"," +
-                                   $"{catch.Latitude}," +
-                                   $"{catch.Longitude}," +
-                                   $"\"{catch.Notes?.Replace("\"", "\"\"")}\"");
+                    csv.AppendLine($"{fishCatch.CatchDate:yyyy-MM-dd}," +
+                                   $"{fishCatch.CatchTimeString}," +
+                                   $"\"{fishCatch.FishName}\"," +
+                                   $"{fishCatch.Length}," +
+                                   $"{fishCatch.Weight}," +
+                                   $"\"{fishCatch.LocationName}\"," +
+                                   $"{fishCatch.Latitude}," +
+                                   $"{fishCatch.Longitude}," +
+                                   $"\"{fishCatch.Notes?.Replace("\"", "\"\"")}\"");
                 }
 
                 _logger.LogInformation($"CSV export completed: {catches.Count} catches");
