@@ -21,4 +21,8 @@
     <None Include=".github\workflows\blazor-deploy.yml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="docs\" />
+  </ItemGroup>
+
 </Project>
