@@ -2564,41 +2564,125 @@ h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
     box-shadow: none !important;
 }
 
-/* ===== STAT INFO MODAL ===== */
-.stat-info-modal {
-    max-width: 400px;
+/* ===== STAT INFO POPOVER (Tooltip style) ===== */
+.stat-info-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.stat-info-popover {
+    position: fixed;
+    transform: translate(-50%, -100%);
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 1.25rem;
+    max-width: 320px;
+    width: 90vw;
+    z-index: 1001;
+    animation: popoverSlideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    margin-top: -10px; /* Espace entre la carte et le popover */
+}
+
+@keyframes popoverSlideIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -80%);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -100%);
+    }
+}
+
+.stat-info-arrow {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .stat-info-content {
     text-align: center;
-    padding: 1rem 0;
 }
 
 .stat-info-icon {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
     animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-@keyframes popIn {
-    0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+.stat-info-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 0.75rem 0;
 }
 
-.stat-info-content p {
-    font-size: 1rem;
-    line-height: 1.6;
+.stat-info-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
     color: var(--dark);
     margin: 0;
+}
+
+.stat-info-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--grey-light);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--grey);
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0;
+}
+
+.stat-info-close:hover {
+    background: var(--grey);
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Mobile adjustments pour le popover */
+@media (max-width: 768px) {
+    .stat-info-popover {
+        max-width: 280px;
+        padding: 1rem;
+    }
+
+    .stat-info-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-info-title {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-info-description {
+        font-size: 0.85rem;
+    }
 }
 
 /* ===== WEATHER STATS IMPROVEMENTS (Mobile First) ===== */
