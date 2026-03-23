@@ -57,14 +57,34 @@ namespace FishingSpot.PWA.Services
                 {
                     var catches = await _onlineService.GetAllCatchesAsync();
 
-                    // Cache the results
+                    // IMPORTANT: Récupérer les prises offline (ID négatifs) AVANT de nettoyer
+                    var cachedCatches = await _indexedDb.GetAllItemsAsync<FishCatch>(CATCHES_STORE);
+                    var offlineCatches = cachedCatches.Where(c => c.Id < 0).ToList();
+
+                    if (offlineCatches.Any())
+                    {
+                        Console.WriteLine($"📦 {offlineCatches.Count} prises offline détectées, préservation...");
+                    }
+
+                    // Vider le cache
                     await _indexedDb.ClearStoreAsync(CATCHES_STORE);
+
+                    // Remettre les prises du serveur
                     foreach (var catchItem in catches)
                     {
                         await _indexedDb.SetItemAsync(CATCHES_STORE, catchItem.Id.ToString(), catchItem);
                     }
 
-                    return catches;
+                    // REMETTRE les prises offline qui n'ont pas encore été synchronisées
+                    foreach (var offlineCatch in offlineCatches)
+                    {
+                        await _indexedDb.SetItemAsync(CATCHES_STORE, offlineCatch.Id.ToString(), offlineCatch);
+                        Console.WriteLine($"📦 Prise offline préservée: {offlineCatch.FishName} (ID: {offlineCatch.Id})");
+                    }
+
+                    // Retourner la combinaison des deux
+                    var allCatches = catches.Concat(offlineCatches).ToList();
+                    return allCatches;
                 }
                 catch (Exception ex)
                 {

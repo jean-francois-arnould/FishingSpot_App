@@ -51,5 +51,10 @@ namespace FishingSpot.PWA.Services.Offline
         /// Clear all completed sync items
         /// </summary>
         Task ClearCompletedItemsAsync();
+
+        /// <summary>
+        /// Synchronize offline catches with negative IDs
+        /// </summary>
+        Task SyncOfflineCatchesAsync();
     }
 }

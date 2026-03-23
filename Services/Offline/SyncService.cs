@@ -9,6 +9,7 @@ namespace FishingSpot.PWA.Services.Offline
     public class SyncService : ISyncService
     {
         private const string SYNC_QUEUE_STORE = "syncQueue";
+        private const string CATCHES_STORE = "catches";
         private const int MAX_RETRY_COUNT = 3;
 
         private readonly IIndexedDbService _indexedDb;
@@ -37,7 +38,12 @@ namespace FishingSpot.PWA.Services.Offline
             {
                 if (isOnline)
                 {
-                    Console.WriteLine("🔄 Network back online, starting auto-sync...");
+                    Console.WriteLine("🔄 Network back online, checking offline catches...");
+
+                    // D'abord synchroniser les prises offline
+                    await SyncOfflineCatchesAsync();
+
+                    // Puis traiter la queue normale
                     await SyncAllAsync();
                 }
             };
@@ -151,6 +157,37 @@ namespace FishingSpot.PWA.Services.Offline
 
             await UpdatePendingCountAsync();
             Console.WriteLine($"🗑️ Cleared {completedItems.Count} completed sync items");
+        }
+
+        public async Task SyncOfflineCatchesAsync()
+        {
+            if (!_networkStatus.IsOnline)
+            {
+                Console.WriteLine("⚠️ Cannot sync offline catches while offline");
+                return;
+            }
+
+            Console.WriteLine("🔄 Checking for offline catches to sync...");
+
+            var cachedCatches = await _indexedDb.GetAllItemsAsync<FishingSpot.PWA.Models.FishCatch>(CATCHES_STORE);
+            var offlineCatches = cachedCatches.Where(c => c.Id < 0).ToList();
+
+            if (!offlineCatches.Any())
+            {
+                Console.WriteLine("✅ No offline catches to sync");
+                return;
+            }
+
+            Console.WriteLine($"📤 Found {offlineCatches.Count} offline catches to sync");
+
+            foreach (var offlineCatch in offlineCatches)
+            {
+                // Queue the catch for sync
+                await QueueActionAsync(SyncAction.Create, "catch", offlineCatch.Id.ToString(), offlineCatch);
+                Console.WriteLine($"📋 Queued offline catch: {offlineCatch.FishName} (ID: {offlineCatch.Id})");
+            }
+
+            Console.WriteLine($"✅ {offlineCatches.Count} offline catches queued for synchronization");
         }
 
         private async Task ProcessSyncItemAsync(SyncQueueItem item)

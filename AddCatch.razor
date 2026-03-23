@@ -872,8 +872,8 @@
             // En mode offline, l'ID peut être négatif (temporaire)
             if (catchId != 0)
             {
-                // Redirection immédiate vers la liste avec forceLoad pour rafraîchir
-                Navigation.NavigateTo("/FishingSpot_App/catches", forceLoad: true);
+                // Navigation SANS forceLoad pour éviter l'écran noir en offline
+                Navigation.NavigateTo("/FishingSpot_App/catches");
             }
             else
             {
