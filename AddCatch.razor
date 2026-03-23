@@ -7,6 +7,8 @@
 @inject IAuthService AuthService
 @inject IUserProfileService ProfileService
 @inject IWeatherService WeatherService
+@inject IToastService Toast
+@inject ILoggerService Logger
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -959,52 +961,108 @@
 
         try
         {
-            Console.WriteLine($"User authenticated: {AuthService.CurrentUser.Email}");
-            Console.WriteLine($"Access token present: {!string.IsNullOrEmpty(AuthService.AccessToken)}");
-            Console.WriteLine($"Saving catch: {newCatch.FishName}, Lat: {newCatch.Latitude}, Lon: {newCatch.Longitude}");
-            Console.WriteLine($"Length: {newCatch.Length}cm, Weight: {newCatch.Weight}g");
+            Logger.LogInformation("Saving catch", new Dictionary<string, object>
+            {
+                { "FishName", newCatch.FishName },
+                { "UserId", AuthService.CurrentUser.Id }
+            });
+
+            Console.WriteLine($"========================================");
+            Console.WriteLine($"🎣 DÉBUT DE LA SAUVEGARDE");
+            Console.WriteLine($"========================================");
+            Console.WriteLine($"User: {AuthService.CurrentUser.Email}");
+            Console.WriteLine($"User ID: {AuthService.CurrentUser.Id}");
+            Console.WriteLine($"Token présent: {!string.IsNullOrEmpty(AuthService.AccessToken)}");
+            Console.WriteLine($"Token expiré: {AuthService.IsTokenExpired}");
+            Console.WriteLine($"Poisson: {newCatch.FishName}");
+            Console.WriteLine($"Localisation: Lat={newCatch.Latitude}, Lon={newCatch.Longitude}");
+            Console.WriteLine($"Taille: {newCatch.Length}cm, Poids: {newCatch.Weight}kg");
+            Console.WriteLine($"========================================");
 
             var catchId = await SupabaseService.AddCatchAsync(newCatch);
-            Console.WriteLine($"✅ Catch saved with ID: {catchId}");
 
-            // En mode offline, l'ID peut être négatif (temporaire)
-            if (catchId != 0)
+            Console.WriteLine($"========================================");
+            Console.WriteLine($"✅ SAUVEGARDE TERMINÉE");
+            Console.WriteLine($"ID retourné: {catchId}");
+            Console.WriteLine($"Est offline: {catchId < 0}");
+            Console.WriteLine($"========================================");
+
+            // Vérifier que l'ID est valide
+            if (catchId == 0)
             {
-                // Navigation SANS forceLoad pour éviter l'écran noir en offline
-                Navigation.NavigateTo("/FishingSpot_App/catches");
+                Logger.LogError("Server returned ID = 0");
+                errorMessage = "❌ Erreur critique: Le serveur n'a pas retourné d'ID valide.";
+                Toast.ShowError("Erreur critique de sauvegarde");
+                isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // ID valide (positif ou négatif)
+            Logger.LogInformation("Catch saved successfully", new Dictionary<string, object>
+            {
+                { "CatchId", catchId },
+                { "IsOffline", catchId < 0 }
+            });
+
+            if (catchId < 0)
+            {
+                Console.WriteLine($"📱 Mode offline: Prise enregistrée localement");
+                Toast.ShowInfo("Prise enregistrée en mode hors-ligne. Elle sera synchronisée une fois connecté.");
             }
             else
             {
-                errorMessage = "❌ Erreur lors de la sauvegarde. Le serveur n'a pas retourné d'ID. Vérifiez votre connexion et que vous êtes connecté.";
-                isSaving = false;
-                StateHasChanged();
+                Console.WriteLine($"🌐 Mode online: Prise enregistrée sur le serveur");
+                Toast.ShowSuccess("Prise enregistrée avec succès !");
             }
+
+            // Attendre que le toast soit visible
+            await Task.Delay(1500);
+
+            // Navigation vers la liste
+            Console.WriteLine($"🔄 Navigation vers /FishingSpot_App/catches");
+            Navigation.NavigateTo("/FishingSpot_App/catches", forceLoad: false);
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("409"))
         {
-            Console.WriteLine($"❌ Conflict error (409): {ex.Message}");
-            errorMessage = "❌ Erreur de conflit (409): Cette prise existe peut-être déjà. Vérifiez dans la liste.";
+            Logger.LogError("Conflict error (409)", ex);
+            Console.WriteLine($"❌ Conflit (409): {ex.Message}");
+            errorMessage = "❌ Cette prise existe peut-être déjà. Vérifiez dans la liste.";
+            Toast.ShowError("Conflit détecté");
             isSaving = false;
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error adding catch: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            Logger.LogError("Error adding catch", ex);
+            Console.WriteLine($"========================================");
+            Console.WriteLine($"❌ ERREUR LORS DE LA SAUVEGARDE");
+            Console.WriteLine($"Type: {ex.GetType().Name}");
+            Console.WriteLine($"Message: {ex.Message}");
+            Console.WriteLine($"Stack: {ex.StackTrace}");
+            Console.WriteLine($"========================================");
 
             if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
             {
-                errorMessage = "❌ Session expirée. Veuillez vous reconnecter.";
+                errorMessage = "❌ Session expirée. Reconnexion requise.";
+                Toast.ShowError("Session expirée");
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/FishingSpot_App/login");
             }
             else if (ex.Message.Contains("409") || ex.Message.Contains("Conflict"))
             {
                 errorMessage = "❌ Erreur de conflit (409): Cette prise existe peut-être déjà ou il y a un problème de contrainte unique.";
+                Toast.ShowError("Conflit de données. Vérifiez dans la liste des prises.");
+            }
+            else if (ex.Message.Contains("Empty response") || ex.Message.Contains("return=representation"))
+            {
+                errorMessage = "❌ Configuration serveur incorrecte. Contactez l'administrateur.";
+                Toast.ShowError("Erreur de configuration du serveur.");
             }
             else
             {
                 errorMessage = $"❌ Erreur: {ex.Message}";
+                Toast.ShowError($"Erreur: {ex.Message.Substring(0, Math.Min(50, ex.Message.Length))}...");
             }
 
             isSaving = false;

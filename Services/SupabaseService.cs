@@ -228,8 +228,31 @@ namespace FishingSpot.PWA.Services
                     throw new HttpRequestException($"HTTP {response.StatusCode}: {responseBody}");
                 }
 
+                // Vérifier si la réponse est vide
+                if (string.IsNullOrWhiteSpace(responseBody) || responseBody == "[]")
+                {
+                    Console.WriteLine($"⚠️ Empty response body from Supabase! Checking if Prefer header was sent correctly.");
+                    Console.WriteLine($"Prefer header value: {_httpClient.DefaultRequestHeaders.GetValues("Prefer").FirstOrDefault()}");
+                    throw new Exception("Supabase returned empty response. Ensure 'return=representation' Prefer header is set.");
+                }
+
                 var result = await response.Content.ReadFromJsonAsync<List<FishCatch>>();
-                var id = result?.FirstOrDefault()?.Id ?? 0;
+
+                if (result == null || !result.Any())
+                {
+                    Console.WriteLine($"❌ Deserialization resulted in null or empty list");
+                    throw new Exception("Failed to deserialize response or no catch returned");
+                }
+
+                var id = result.FirstOrDefault()?.Id ?? 0;
+
+                if (id == 0)
+                {
+                    Console.WriteLine($"❌ Returned catch has ID = 0");
+                    Console.WriteLine($"Full catch data: {JsonSerializer.Serialize(result.FirstOrDefault())}");
+                    throw new Exception("Returned catch ID is 0 or invalid");
+                }
+
                 Console.WriteLine($"✅ Returned catch ID: {id}");
                 return id;
             }

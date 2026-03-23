@@ -143,11 +143,29 @@ namespace FishingSpot.PWA.Services
             // Save to cache immediately
             await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
 
-            if (_networkStatus.IsOnline)
+            if (_networkStatus.IsOnline && !_authService.IsTokenExpired)
             {
+                // Vérifier et rafraîchir le token si nécessaire
+                var tokenValid = await _authService.EnsureValidTokenAsync();
+                if (!tokenValid)
+                {
+                    Console.WriteLine("⚠️ Token invalide, mode offline activé");
+                    await _syncService.QueueActionAsync(SyncAction.Create, "catch", fishCatch.Id.ToString(), fishCatch);
+                    return fishCatch.Id;
+                }
+
                 try
                 {
+                    Console.WriteLine("🌐 Tentative de sauvegarde en ligne...");
                     var newId = await _onlineService.AddCatchAsync(fishCatch);
+
+                    if (newId == 0)
+                    {
+                        Console.WriteLine("❌ Le serveur a retourné ID = 0");
+                        throw new Exception("Le serveur n'a pas retourné un ID valide");
+                    }
+
+                    Console.WriteLine($"✅ Prise enregistrée en ligne avec ID: {newId}");
 
                     // Update with real ID
                     if (fishCatch.Id < 0)
@@ -161,13 +179,17 @@ namespace FishingSpot.PWA.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"⚠️ Error adding catch online, queued for sync: {ex.Message}");
+                    Console.WriteLine($"❌ Error adding catch online: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
+                    // NE PAS avaler l'exception - la propager à l'UI
+                    throw;
                 }
             }
 
-            // Queue for synchronization
+            // Mode offline ou pas de connexion
+            Console.WriteLine($"📋 Mode offline: Prise mise en queue pour synchronisation");
             await _syncService.QueueActionAsync(SyncAction.Create, "catch", fishCatch.Id.ToString(), fishCatch);
-            Console.WriteLine($"📋 Catch queued for sync (offline mode)");
 
             return fishCatch.Id;
         }
