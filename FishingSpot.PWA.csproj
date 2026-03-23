@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <None Include=".github\workflows\blazor-deploy.yml" />
+    <None Include="FishingSpot.Tests\FishingSpot.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

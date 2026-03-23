@@ -1,0 +1,244 @@
+@page "/statistiques-avancees"
+@page "/FishingSpot_App/statistiques-avancees"
+@using FishingSpot.PWA.Services
+@using FishingSpot.PWA.Models
+@inject IStatisticsService StatisticsService
+@inject IAuthService AuthService
+@inject ILoggerService Logger
+@inject NavigationManager Navigation
+
+<PageTitle>Statistiques Avancées</PageTitle>
+
+<div class="page-content">
+    @if (!AuthService.IsAuthenticated)
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">🔒</div>
+            <h2>Connexion requise</h2>
+            <p class="empty-state-text">Veuillez vous connecter pour voir vos statistiques</p>
+            <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/FishingSpot_App/login"))">
+                Se connecter
+            </button>
+        </div>
+    }
+    else if (isLoading)
+    {
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p class="mt-3">Calcul des statistiques...</p>
+        </div>
+    }
+    else if (statistics != null)
+    {
+        <!-- Vue d'ensemble -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">📊 Vue d'ensemble</h3>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">@statistics.TotalCatches</div>
+                        <div class="stat-label">Prises totales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">@statistics.TotalSpecies</div>
+                        <div class="stat-label">Espèces différentes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">@statistics.TotalWeight.ToString("F1") kg</div>
+                        <div class="stat-label">Poids total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">@statistics.AverageWeight.ToString("F1") kg</div>
+                        <div class="stat-label">Poids moyen</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records personnels -->
+        @if (statistics.BiggestCatch != null || statistics.HeaviestCatch != null)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">🏆 Records personnels</h3>
+                </div>
+                <div class="card-body">
+                    @if (statistics.BiggestCatch != null)
+                    {
+                        <div class="record-item">
+                            <div class="record-icon">📏</div>
+                            <div class="record-content">
+                                <div class="record-title">Plus grande prise</div>
+                                <div class="record-detail">
+                                    @statistics.BiggestCatch.FishName - @statistics.BiggestCatch.Length cm
+                                    <span class="text-muted">le @statistics.BiggestCatch.CatchDate.ToShortDateString()</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (statistics.HeaviestCatch != null)
+                    {
+                        <div class="record-item">
+                            <div class="record-icon">⚖️</div>
+                            <div class="record-content">
+                                <div class="record-title">Plus lourde prise</div>
+                                <div class="record-detail">
+                                    @statistics.HeaviestCatch.FishName - @statistics.HeaviestCatch.Weight kg
+                                    <span class="text-muted">le @statistics.HeaviestCatch.CatchDate.ToShortDateString()</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Prises par espèce -->
+        @if (statistics.CatchesBySpecies.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">🐟 Par espèce</h3>
+                </div>
+                <div class="card-body">
+                    @foreach (var species in statistics.CatchesBySpecies.OrderByDescending(s => s.Value).Take(10))
+                    {
+                        var percentage = (species.Value * 100.0 / statistics.TotalCatches);
+                        <div class="chart-item">
+                            <div class="chart-label">
+                                <span>@species.Key</span>
+                                <span class="chart-value">@species.Value</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" style="width: @percentage%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Top localisations -->
+        @if (statistics.TopLocations.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">📍 Top localisations</h3>
+                </div>
+                <div class="card-body">
+                    @foreach (var location in statistics.TopLocations)
+                    {
+                        <div class="location-item">
+                            <div class="location-name">@location.LocationName</div>
+                            <div class="location-stats">
+                                <span>@location.Count prises</span>
+                                <span class="text-muted">• Taille moy. @location.AverageSize.ToString("F0") cm</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Tendances mensuelles -->
+        @if (statistics.MonthlyTrends.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">📈 Tendances mensuelles</h3>
+                </div>
+                <div class="card-body">
+                    <div class="monthly-chart">
+                        @{
+                            var maxCount = statistics.MonthlyTrends.Max(t => t.Count);
+                        }
+                        @foreach (var trend in statistics.MonthlyTrends.TakeLast(12))
+                        {
+                            var height = maxCount > 0 ? (trend.Count * 100.0 / maxCount) : 0;
+                            <div class="monthly-bar">
+                                <div class="bar-value">@trend.Count</div>
+                                <div class="bar-fill" style="height: @height%"></div>
+                                <div class="bar-label">@trend.Month</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Météo -->
+        @if (statistics.CatchesByWeather.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">🌤️ Conditions météo favorables</h3>
+                </div>
+                <div class="card-body">
+                    @foreach (var weather in statistics.CatchesByWeather.OrderByDescending(w => w.Value).Take(5))
+                    {
+                        <div class="weather-item">
+                            <span class="weather-condition">@weather.Key</span>
+                            <span class="weather-count">@weather.Value prises</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Meilleure heure -->
+        @if (statistics.BestTimeOfDay.HasValue)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">⏰ Meilleure heure</h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="best-time">
+                        @statistics.BestTimeOfDay.Value.ToString(@"hh\:mm")
+                    </div>
+                    <p class="text-muted">L'heure la plus productive</p>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private FishingStatistics? statistics;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated)
+        {
+            await LoadStatisticsAsync();
+        }
+        else
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadStatisticsAsync()
+    {
+        try
+        {
+            isLoading = true;
+            Logger.LogInformation("Loading advanced statistics");
+
+            statistics = await StatisticsService.GetStatisticsAsync();
+
+            Logger.LogInformation("Statistics loaded successfully");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Error loading statistics", ex);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

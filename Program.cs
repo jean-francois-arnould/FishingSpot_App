@@ -20,8 +20,15 @@ builder.Services.AddScoped<INetworkStatusService, NetworkStatusService>();
 builder.Services.AddScoped<IIndexedDbService, IndexedDbService>();
 builder.Services.AddScoped<ISyncService, SyncService>();
 
-// Services
+// Core Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILoggerService, LoggerService>();
+builder.Services.AddScoped<IToastService, ToastService>();
+builder.Services.AddScoped<IImageCompressionService, ImageCompressionService>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+builder.Services.AddScoped<IExportService, ExportService>();
+builder.Services.AddScoped<IShareService, ShareService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // WeatherService avec son propre HttpClient
 builder.Services.AddScoped<IWeatherService>(sp =>
