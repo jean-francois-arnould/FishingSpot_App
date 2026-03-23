@@ -659,6 +659,8 @@
                 if (file.Size > 5 * 1024 * 1024)
                 {
                     errorMessage = "La photo est trop volumineuse (max 5 MB).";
+                    isUploadingPhoto = false;
+                    StateHasChanged();
                     return;
                 }
 
@@ -666,6 +668,8 @@
                 if (!file.ContentType.StartsWith("image/"))
                 {
                     errorMessage = "Seules les images sont acceptées.";
+                    isUploadingPhoto = false;
+                    StateHasChanged();
                     return;
                 }
 
@@ -685,13 +689,16 @@
                 {
                     newCatch.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
                     successMessage = "✅ Photo uploadée avec succès !";
+                    StateHasChanged();
                     await Task.Delay(2000);
                     successMessage = null;
+                    StateHasChanged();
                 }
                 else
                 {
                     errorMessage = "Erreur lors de l'upload de la photo. Vérifiez que le bucket 'fishing-photos' existe dans Supabase Storage.";
                     newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local
+                    StateHasChanged();
                 }
             }
         }
@@ -703,23 +710,51 @@
             {
                 newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local en cas d'erreur
             }
+            StateHasChanged();
         }
         finally
         {
             isUploadingPhoto = false;
+            StateHasChanged();
         }
     }
 
     private async Task OpenGallery()
     {
-        // Déclencher le click sur l'input file pour la galerie
-        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileGallery').click()");
+        try
+        {
+            // Utiliser la fonction JavaScript dédiée au lieu de eval
+            var result = await JSRuntime.InvokeAsync<bool>("triggerFileInput", "photoFileGallery");
+            if (!result)
+            {
+                errorMessage = "Impossible d'ouvrir la galerie de photos. Veuillez réessayer.";
+                Console.WriteLine("Failed to trigger gallery file input");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error opening gallery: {ex.Message}");
+            errorMessage = "Erreur lors de l'ouverture de la galerie.";
+        }
     }
 
     private async Task OpenCamera()
     {
-        // Utiliser simplement l'input file avec l'attribut capture pour mobile
-        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('photoFileCamera').click()");
+        try
+        {
+            // Utiliser la fonction JavaScript dédiée au lieu de eval
+            var result = await JSRuntime.InvokeAsync<bool>("triggerFileInput", "photoFileCamera");
+            if (!result)
+            {
+                errorMessage = "Impossible d'ouvrir la caméra. Veuillez réessayer.";
+                Console.WriteLine("Failed to trigger camera file input");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error opening camera: {ex.Message}");
+            errorMessage = "Erreur lors de l'ouverture de la caméra.";
+        }
     }
 
     private void RemovePhoto()

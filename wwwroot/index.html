@@ -287,6 +287,25 @@
         };
 
         // ==========================================
+        // TRIGGER FILE INPUT - Pour sélectionner photo galerie/caméra
+        // ==========================================
+        window.triggerFileInput = function(inputId) {
+            try {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.click();
+                    return true;
+                } else {
+                    console.error(`Element with ID '${inputId}' not found`);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error triggering file input:', error);
+                return false;
+            }
+        };
+
+        // ==========================================
         // NOTIFICATION SESSION EXPIRÉE
         // ==========================================
         window.showSessionExpiredNotification = function() {
