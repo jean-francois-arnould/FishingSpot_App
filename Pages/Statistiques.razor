@@ -202,19 +202,17 @@
     </div>
 </AuthorizeView>
 
-<!-- Popover pour afficher l'explication d'une statistique -->
+<!-- Modal d'information statistique (style iOS/Material) -->
 @if (showStatInfoModal)
 {
-    <div class="stat-info-popover" style="top: @popoverTop; left: @popoverLeft;">
-        <div class="stat-info-arrow"></div>
-        <div class="stat-info-content">
-            <div class="stat-info-icon">@statInfoEmoji</div>
-            <h4 class="stat-info-title">@statInfoTitle</h4>
-            <p class="stat-info-description">@statInfoDescription</p>
+    <div class="stat-modal-overlay" @onclick="CloseStatInfoModal">
+        <div class="stat-modal-dialog" @onclick:stopPropagation>
+            <div class="stat-modal-icon">@statInfoEmoji</div>
+            <h3 class="stat-modal-title">@statInfoTitle</h3>
+            <p class="stat-modal-message">@statInfoDescription</p>
+            <button class="stat-modal-button" @onclick="CloseStatInfoModal">OK</button>
         </div>
-        <button class="stat-info-close" @onclick="CloseStatInfoModal">✕</button>
     </div>
-    <div class="stat-info-backdrop" @onclick="CloseStatInfoModal"></div>
 }
 
 <!-- Modal pour afficher les prises d'une date -->
@@ -309,8 +307,6 @@
     private string statInfoTitle = "";
     private string statInfoDescription = "";
     private string statInfoEmoji = "ℹ️";
-    private string popoverTop = "0px";
-    private string popoverLeft = "0px";
 
     // Classe helper pour les statistiques par espèce
     private class SpeciesWeatherStats
@@ -472,93 +468,68 @@
         };
     }
 
-    private void ShowTotalInfo(MouseEventArgs e)
+    private void ShowTotalInfo()
     {
         statInfoTitle = "Prises totales";
         statInfoEmoji = "🎣";
         statInfoDescription = "Le nombre total de poissons que vous avez capturés et enregistrés dans l'application. Continuez ainsi pour améliorer vos statistiques !";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
     }
 
-    private void ShowBiggestInfo(MouseEventArgs e)
+    private void ShowBiggestInfo()
     {
         statInfoTitle = "Plus gros poisson";
         statInfoEmoji = "📏";
         statInfoDescription = "Le poisson le plus long que vous avez capturé, mesuré en centimètres. C'est un record à battre lors de vos prochaines sessions !";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
     }
 
-    private void ShowHeaviestInfo(MouseEventArgs e)
+    private void ShowHeaviestInfo()
     {
         statInfoTitle = "Plus lourd";
         statInfoEmoji = "⚖️";
         statInfoDescription = "Le poisson le plus lourd que vous avez attrapé, mesuré en kilogrammes. Un vrai trophée de pêcheur !";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
     }
 
-    private void ShowTotalWeightInfo(MouseEventArgs e)
+    private void ShowTotalWeightInfo()
     {
         statInfoTitle = "Poids total capturé";
         statInfoEmoji = "🏆";
         statInfoDescription = "La somme du poids de tous les poissons que vous avez capturés. Une belle mesure de votre succès de pêche au fil du temps !";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
     }
 
-    private void ShowTemperatureInfo(MouseEventArgs e)
+    private void ShowTemperatureInfo()
     {
         statInfoTitle = "Température moyenne";
         statInfoEmoji = "🌡️";
         statInfoDescription = "La température moyenne lors de vos sessions de pêche réussies. Cette information vous aide à identifier les conditions idéales pour pêcher.";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
     }
 
-    private void ShowWeatherInfo(MouseEventArgs e)
+    private void ShowWeatherInfo()
     {
         statInfoTitle = "Condition météo la plus fréquente";
         statInfoEmoji = mostFrequentWeatherEmoji;
         statInfoDescription = $"La condition météo la plus courante lors de vos sorties de pêche. Vous avez pêché {mostFrequentWeatherCount} fois par temps {mostFrequentWeatherCondition.ToLower()}.";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
     }
 
-    private void ShowWindInfo(MouseEventArgs e)
+    private void ShowWindInfo()
     {
         statInfoTitle = "Vent moyen";
         statInfoEmoji = "💨";
         statInfoDescription = "La vitesse moyenne du vent lors de vos sessions de pêche. Le vent peut influencer le comportement des poissons et votre technique de pêche.";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
     }
 
-    private void ShowHumidityInfo(MouseEventArgs e)
+    private void ShowHumidityInfo()
     {
         statInfoTitle = "Humidité moyenne";
         statInfoEmoji = "💧";
         statInfoDescription = "Le niveau d'humidité moyen pendant vos sorties. L'humidité peut affecter l'activité des poissons et votre confort de pêche.";
-        SetPopoverPosition(e);
         showStatInfoModal = true;
-    }
-
-    private void SetPopoverPosition(MouseEventArgs e)
-    {
-        // Position le popover au-dessus du curseur
-        double top = e.ClientY - 20; // 20px au-dessus du curseur
-        double left = e.ClientX;
-
-        // Ajustement pour éviter que le popover sorte de l'écran
-        // On centre horizontalement le popover (largeur max 320px / 2 = 160px)
-        if (left < 160)
-        {
-            left = 160; // Position minimale (popover de 320px centré)
-        }
-
-        popoverTop = $"{top}px";
-        popoverLeft = $"{left}px";
     }
 
     private void CloseStatInfoModal()
