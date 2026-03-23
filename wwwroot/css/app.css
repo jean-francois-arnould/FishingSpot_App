@@ -2556,32 +2556,33 @@ h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
+    align-items: flex-end; /* Position en bas pour style iOS */
     justify-content: center;
     z-index: 2000;
     animation: fadeIn 0.25s ease;
-    padding: 1rem;
+    padding: 0;
 }
 
 .stat-modal-dialog {
     background: white;
-    border-radius: 14px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 320px;
+    border-radius: 14px 14px 0 0; /* Coins arrondis uniquement en haut */
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
     width: 100%;
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 2rem 1.5rem; /* Plus de padding en bas */
     text-align: center;
     animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    margin-bottom: 0; /* Collé au bas de l'écran */
 }
 
 @keyframes modalSlideUp {
     0% {
         opacity: 0;
-        transform: scale(0.9) translateY(20px);
+        transform: translateY(100%); /* Vient du bas */
     }
     100% {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: translateY(0);
     }
 }
 
@@ -2646,9 +2647,15 @@ h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
+    .stat-modal-overlay {
+        padding-bottom: 65px; /* Espace pour le bottom-nav */
+    }
+
     .stat-modal-dialog {
-        max-width: 90vw;
-        padding: 1.25rem;
+        max-width: 100%;
+        padding: 1.25rem 1.5rem 1.5rem 1.5rem;
+        border-radius: 20px 20px 0 0; /* Plus arrondi sur mobile */
+        margin-bottom: 0;
     }
 
     .stat-modal-icon {

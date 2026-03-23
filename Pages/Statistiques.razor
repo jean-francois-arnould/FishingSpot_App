@@ -470,10 +470,13 @@
 
     private void ShowTotalInfo()
     {
+        Console.WriteLine("ShowTotalInfo appelé");
         statInfoTitle = "Prises totales";
         statInfoEmoji = "🎣";
         statInfoDescription = "Le nombre total de poissons que vous avez capturés et enregistrés dans l'application. Continuez ainsi pour améliorer vos statistiques !";
         showStatInfoModal = true;
+        StateHasChanged();
+        Console.WriteLine($"showStatInfoModal = {showStatInfoModal}");
     }
 
     private void ShowBiggestInfo()
@@ -482,6 +485,7 @@
         statInfoEmoji = "📏";
         statInfoDescription = "Le poisson le plus long que vous avez capturé, mesuré en centimètres. C'est un record à battre lors de vos prochaines sessions !";
         showStatInfoModal = true;
+        StateHasChanged();
     }
 
     private void ShowHeaviestInfo()
@@ -490,6 +494,7 @@
         statInfoEmoji = "⚖️";
         statInfoDescription = "Le poisson le plus lourd que vous avez attrapé, mesuré en kilogrammes. Un vrai trophée de pêcheur !";
         showStatInfoModal = true;
+        StateHasChanged();
     }
 
     private void ShowTotalWeightInfo()
@@ -498,6 +503,7 @@
         statInfoEmoji = "🏆";
         statInfoDescription = "La somme du poids de tous les poissons que vous avez capturés. Une belle mesure de votre succès de pêche au fil du temps !";
         showStatInfoModal = true;
+        StateHasChanged();
     }
 
     private void ShowTemperatureInfo()
@@ -506,6 +512,7 @@
         statInfoEmoji = "🌡️";
         statInfoDescription = "La température moyenne lors de vos sessions de pêche réussies. Cette information vous aide à identifier les conditions idéales pour pêcher.";
         showStatInfoModal = true;
+        StateHasChanged();
     }
 
     private void ShowWeatherInfo()
@@ -514,6 +521,7 @@
         statInfoEmoji = mostFrequentWeatherEmoji;
         statInfoDescription = $"La condition météo la plus courante lors de vos sorties de pêche. Vous avez pêché {mostFrequentWeatherCount} fois par temps {mostFrequentWeatherCondition.ToLower()}.";
         showStatInfoModal = true;
+        StateHasChanged();
     }
 
     private void ShowWindInfo()
@@ -522,6 +530,7 @@
         statInfoEmoji = "💨";
         statInfoDescription = "La vitesse moyenne du vent lors de vos sessions de pêche. Le vent peut influencer le comportement des poissons et votre technique de pêche.";
         showStatInfoModal = true;
+        StateHasChanged();
     }
 
     private void ShowHumidityInfo()
@@ -530,10 +539,12 @@
         statInfoEmoji = "💧";
         statInfoDescription = "Le niveau d'humidité moyen pendant vos sorties. L'humidité peut affecter l'activité des poissons et votre confort de pêche.";
         showStatInfoModal = true;
+        StateHasChanged();
     }
 
     private void CloseStatInfoModal()
     {
         showStatInfoModal = false;
+        StateHasChanged();
     }
 }
