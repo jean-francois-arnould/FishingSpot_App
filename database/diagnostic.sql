@@ -182,9 +182,54 @@ ORDER BY tablename, policyname;
 \echo '';
 
 -- ============================================
--- 9. STATISTIQUES DES TABLES
+-- 9. VÉRIFIER LES DOUBLONS DE PRISES
 -- ============================================
-\echo '9. TAILLE DES TABLES';
+\echo '9. DOUBLONS DE PRISES';
+\echo '--------------------';
+
+-- Détecter les prises potentiellement dupliquées (même utilisateur, poisson, date, heure, lieu)
+WITH duplicates AS (
+    SELECT 
+        user_id,
+        fish_name,
+        catch_date,
+        catch_time,
+        location_name,
+        latitude,
+        longitude,
+        COUNT(*) as nombre_doublons,
+        string_agg(id::text, ', ' ORDER BY created_at) as ids,
+        MIN(created_at) as premiere_creation,
+        MAX(created_at) as derniere_creation
+    FROM fish_catches
+    GROUP BY user_id, fish_name, catch_date, catch_time, location_name, latitude, longitude
+    HAVING COUNT(*) > 1
+)
+SELECT 
+    fish_name,
+    catch_date,
+    catch_time,
+    nombre_doublons,
+    ids,
+    premiere_creation,
+    derniere_creation,
+    CASE 
+        WHEN derniere_creation - premiere_creation < INTERVAL '5 seconds' THEN '🔴 SUSPECT (< 5s)'
+        WHEN derniere_creation - premiere_creation < INTERVAL '1 minute' THEN '🟠 PROBABLE (< 1min)'
+        ELSE '🟢 NORMAL'
+    END as statut
+FROM duplicates
+ORDER BY derniere_creation DESC;
+
+\echo '';
+\echo '💡 Doublons suspects = créés à moins de 5 secondes d''intervalle';
+\echo '💡 Si des doublons sont détectés, utilisez le script cleanup_duplicates.sql';
+\echo '';
+
+-- ============================================
+-- 10. STATISTIQUES DES TABLES
+-- ============================================
+\echo '10. TAILLE DES TABLES';
 \echo '--------------------';
 
 SELECT 
@@ -199,9 +244,9 @@ LIMIT 10;
 \echo '';
 
 -- ============================================
--- 10. RÉSUMÉ
+-- 11. RÉSUMÉ
 -- ============================================
-\echo '10. RÉSUMÉ';
+\echo '11. RÉSUMÉ';
 \echo '----------';
 
 SELECT 

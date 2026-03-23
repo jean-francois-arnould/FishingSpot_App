@@ -144,16 +144,16 @@ namespace FishingSpot.PWA.Services
                 return fishCatch.Id;
             }
 
-            // Generate temporary ID for offline
-            if (fishCatch.Id == 0)
-            {
-                fishCatch.Id = -new Random().Next(1, 1000000); // Negative ID for offline items
-                Console.WriteLine($"🆔 ID temporaire généré: {fishCatch.Id}");
-            }
+            // Sauvegarder l'ID temporaire AVANT l'appel au service (car le service modifie fishCatch.Id)
+            int temporaryId = fishCatch.Id;
 
-            // Save to cache immediately
-            Console.WriteLine($"💾 Sauvegarde dans IndexedDB avec ID: {fishCatch.Id}");
-            await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
+            // Generate temporary ID for offline
+            if (temporaryId == 0)
+            {
+                temporaryId = -new Random().Next(1, 1000000); // Negative ID for offline items
+                fishCatch.Id = temporaryId;
+                Console.WriteLine($"🆔 ID temporaire généré: {temporaryId}");
+            }
 
             if (_networkStatus.IsOnline && !_authService.IsTokenExpired)
             {
@@ -162,6 +162,9 @@ namespace FishingSpot.PWA.Services
                 if (!tokenValid)
                 {
                     Console.WriteLine("⚠️ Token invalide, mode offline activé");
+                    // Save to cache immediately
+                    Console.WriteLine($"💾 Sauvegarde dans IndexedDB avec ID: {fishCatch.Id}");
+                    await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
                     await _syncService.QueueActionAsync(SyncAction.Create, "catch", fishCatch.Id.ToString(), fishCatch);
                     return fishCatch.Id;
                 }
@@ -179,14 +182,8 @@ namespace FishingSpot.PWA.Services
 
                     Console.WriteLine($"✅ Prise enregistrée en ligne avec ID: {newId}");
 
-                    // Update with real ID
-                    if (fishCatch.Id < 0)
-                    {
-                        Console.WriteLine($"🗑️ Suppression de l'ancien ID temporaire: {fishCatch.Id}");
-                        await _indexedDb.DeleteItemAsync(CATCHES_STORE, fishCatch.Id.ToString());
-                    }
-
-                    Console.WriteLine($"🔄 Mise à jour avec le nouvel ID: {newId}");
+                    // ✅ Sauvegarder directement avec le nouvel ID (pas besoin de sauvegarder avec l'ID temporaire)
+                    Console.WriteLine($"💾 Sauvegarde dans IndexedDB avec ID définitif: {newId}");
                     fishCatch.Id = newId;
                     await _indexedDb.SetItemAsync(CATCHES_STORE, newId.ToString(), fishCatch);
 
@@ -205,6 +202,8 @@ namespace FishingSpot.PWA.Services
 
             // Mode offline ou pas de connexion
             Console.WriteLine($"📋 Mode offline: Prise mise en queue pour synchronisation");
+            Console.WriteLine($"💾 Sauvegarde dans IndexedDB avec ID: {fishCatch.Id}");
+            await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
             await _syncService.QueueActionAsync(SyncAction.Create, "catch", fishCatch.Id.ToString(), fishCatch);
 
             Console.WriteLine($"🔍 [AddCatchAsync] SORTIE - ID offline: {fishCatch.Id}");
