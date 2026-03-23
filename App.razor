@@ -1,5 +1,8 @@
 ﻿@using FishingSpot.PWA.Services
+@using FishingSpot.PWA.Components
 @inject IAuthService AuthService
+
+<SessionWatcher />
 
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">

@@ -1,0 +1,25 @@
+@using FishingSpot.PWA.Services
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+@code {
+    protected override void OnInitialized()
+    {
+        AuthService.OnSessionExpired += HandleSessionExpired;
+    }
+
+    private void HandleSessionExpired()
+    {
+        Console.WriteLine("🚪 Session expirée détectée, redirection vers login...");
+        InvokeAsync(() =>
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login?expired=true", forceLoad: true);
+        });
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnSessionExpired -= HandleSessionExpired;
+    }
+}

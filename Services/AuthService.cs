@@ -19,10 +19,12 @@ namespace FishingSpot.PWA.Services
         private System.Timers.Timer? _refreshTimer;
 
         public event Action<User?>? OnAuthStateChanged;
+        public event Action? OnSessionExpired;
 
         public User? CurrentUser => _currentUser;
         public string? AccessToken => _accessToken;
-        public bool IsAuthenticated => _currentUser != null && !string.IsNullOrEmpty(_accessToken);
+        public bool IsAuthenticated => _currentUser != null && !string.IsNullOrEmpty(_accessToken) && !IsTokenExpired;
+        public bool IsTokenExpired => _tokenExpiresAt.HasValue && _tokenExpiresAt.Value <= DateTime.UtcNow;
 
         public AuthService(HttpClient httpClient, IConfiguration configuration, IJSRuntime jsRuntime)
         {
@@ -293,6 +295,8 @@ namespace FishingSpot.PWA.Services
         {
             try
             {
+                Console.WriteLine("🚪 Session expirée, déconnexion...");
+
                 // Déconnecter l'utilisateur
                 _currentUser = null;
                 _accessToken = null;
@@ -305,25 +309,35 @@ namespace FishingSpot.PWA.Services
                 await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_user");
                 await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "supabase_token_expires_at");
 
-                // Afficher une notification élégante à l'utilisateur
-                await _jsRuntime.InvokeVoidAsync("showSessionExpiredNotification");
-
+                // Notifier les listeners
                 OnAuthStateChanged?.Invoke(null);
+                OnSessionExpired?.Invoke();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error notifying session expired: {ex.Message}");
-                // Fallback : redirection directe
-                try
-                {
-                    await _jsRuntime.InvokeVoidAsync("eval", "window.location.href = '/FishingSpot_App/login';");
-                }
-                catch
-                {
-                    // Si tout échoue, au moins nettoyer l'état
-                    OnAuthStateChanged?.Invoke(null);
-                }
+                // Fallback
+                OnAuthStateChanged?.Invoke(null);
+                OnSessionExpired?.Invoke();
             }
+        }
+
+        public async Task<bool> EnsureValidTokenAsync()
+        {
+            // Si pas de token, retourner false
+            if (string.IsNullOrEmpty(_accessToken))
+            {
+                return false;
+            }
+
+            // Si le token est expiré ou expire dans moins de 5 minutes
+            if (_tokenExpiresAt.HasValue && _tokenExpiresAt.Value <= DateTime.UtcNow.AddMinutes(5))
+            {
+                Console.WriteLine("🔄 Token expiré, tentative de rafraîchissement...");
+                return await RefreshTokenAsync();
+            }
+
+            return true;
         }
 
         private void ScheduleTokenRefresh()

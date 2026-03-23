@@ -72,7 +72,8 @@ builder.Services.AddScoped<ISupabaseService>(sp =>
     var networkStatus = sp.GetRequiredService<INetworkStatusService>();
     var indexedDb = sp.GetRequiredService<IIndexedDbService>();
     var syncService = sp.GetRequiredService<ISyncService>();
-    return new OfflineSupabaseService(onlineService, networkStatus, indexedDb, syncService);
+    var authService = sp.GetRequiredService<IAuthService>();
+    return new OfflineSupabaseService(onlineService, networkStatus, indexedDb, syncService, authService);
 });
 
 // Initialize offline services

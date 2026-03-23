@@ -19,17 +19,20 @@ namespace FishingSpot.PWA.Services
         private readonly INetworkStatusService _networkStatus;
         private readonly IIndexedDbService _indexedDb;
         private readonly ISyncService _syncService;
+        private readonly IAuthService _authService;
 
         public OfflineSupabaseService(
             ISupabaseService onlineService,
             INetworkStatusService networkStatus,
             IIndexedDbService indexedDb,
-            ISyncService syncService)
+            ISyncService syncService,
+            IAuthService authService)
         {
             _onlineService = onlineService;
             _networkStatus = networkStatus;
             _indexedDb = indexedDb;
             _syncService = syncService;
+            _authService = authService;
         }
 
         public Task InitializeAsync()
@@ -40,8 +43,16 @@ namespace FishingSpot.PWA.Services
         // Fish Catches
         public async Task<List<FishCatch>> GetAllCatchesAsync()
         {
-            if (_networkStatus.IsOnline)
+            if (_networkStatus.IsOnline && !_authService.IsTokenExpired)
             {
+                // Vérifier et rafraîchir le token si nécessaire
+                var tokenValid = await _authService.EnsureValidTokenAsync();
+                if (!tokenValid)
+                {
+                    Console.WriteLine("⚠️ Token invalide, utilisation du cache offline");
+                    return await _indexedDb.GetAllItemsAsync<FishCatch>(CATCHES_STORE);
+                }
+
                 try
                 {
                     var catches = await _onlineService.GetAllCatchesAsync();

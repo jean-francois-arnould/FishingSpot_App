@@ -63,9 +63,15 @@
     private string? errorMessage;
     private string? successMessage;
     private bool isLoading;
+    private bool sessionExpired;
 
     protected override async Task OnInitializedAsync()
     {
+        // Vérifier si on vient d'une expiration de session
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        sessionExpired = query["expired"] == "true";
+
         if (AuthService.IsAuthenticated)
         {
             Navigation.NavigateTo("/FishingSpot_App/");
