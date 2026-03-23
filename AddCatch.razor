@@ -470,6 +470,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine($"🔵 [OnInitializedAsync] Composant initialisé - newCatch.Id = {newCatch.Id}");
+
         if (!AuthService.IsAuthenticated)
         {
             Navigation.NavigateTo("/FishingSpot_App/login");
@@ -520,6 +522,26 @@
 
         // Lancer la géolocalisation automatiquement au chargement
         await GetCurrentLocation();
+    }
+
+    protected override void OnParametersSet()
+    {
+        // ✅ CRITICAL: Réinitialiser newCatch à chaque fois qu'on arrive sur cette page
+        // Cela évite que l'objet garde son ID d'une précédente sauvegarde
+        if (newCatch.Id != 0)
+        {
+            Console.WriteLine($"⚠️⚠️⚠️ RÉINITIALISATION FORCÉE - newCatch avait ID={newCatch.Id}");
+            newCatch = new FishCatch
+            {
+                CatchDate = DateTime.Today,
+                CatchTimeString = DateTime.Now.ToString("HH:mm")
+            };
+            isSaving = false;
+            errorMessage = null;
+            successMessage = null;
+        }
+
+        base.OnParametersSet();
     }
 
     private void ShowFishSpeciesList()
@@ -1017,6 +1039,15 @@
 
             // Attendre que le toast soit visible
             await Task.Delay(1500);
+
+            // ✅ IMPORTANT : Réinitialiser l'objet pour éviter la double sauvegarde si l'utilisateur revient
+            Console.WriteLine($"🔄 Réinitialisation de newCatch (ancien ID: {newCatch.Id})");
+            newCatch = new FishCatch
+            {
+                CatchDate = DateTime.Today,
+                CatchTimeString = DateTime.Now.ToString("HH:mm")
+            };
+            isSaving = false; // Réinitialiser le flag
 
             // Navigation vers la liste
             Console.WriteLine($"🔄 Navigation vers /FishingSpot_App/catches");
