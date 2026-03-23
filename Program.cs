@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using FishingSpot.PWA;
 using FishingSpot.PWA.Services;
+using FishingSpot.PWA.Services.Offline;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -13,6 +14,11 @@ var supabaseKey = builder.Configuration["Supabase:Key"] ?? "";
 
 // HttpClient par défaut (pour les ressources statiques)
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+// Offline Services
+builder.Services.AddScoped<INetworkStatusService, NetworkStatusService>();
+builder.Services.AddScoped<IIndexedDbService, IndexedDbService>();
+builder.Services.AddScoped<ISyncService, SyncService>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -28,7 +34,8 @@ builder.Services.AddScoped<IUserProfileService>(sp =>
 });
 
 // EquipmentService avec son propre HttpClient configuré pour Supabase
-builder.Services.AddScoped<IEquipmentService>(sp =>
+// Online service
+builder.Services.AddScoped<EquipmentService>(sp =>
 {
     var httpClient = new HttpClient { BaseAddress = new Uri(supabaseUrl) };
     httpClient.DefaultRequestHeaders.Add("apikey", supabaseKey);
@@ -37,8 +44,19 @@ builder.Services.AddScoped<IEquipmentService>(sp =>
     return new EquipmentService(httpClient, config, authService);
 });
 
+// Offline wrapper
+builder.Services.AddScoped<IEquipmentService>(sp =>
+{
+    var onlineService = sp.GetRequiredService<EquipmentService>();
+    var networkStatus = sp.GetRequiredService<INetworkStatusService>();
+    var indexedDb = sp.GetRequiredService<IIndexedDbService>();
+    var syncService = sp.GetRequiredService<ISyncService>();
+    return new OfflineEquipmentService(onlineService, networkStatus, indexedDb, syncService);
+});
+
 // SupabaseService avec son propre HttpClient configuré pour Supabase
-builder.Services.AddScoped<ISupabaseService>(sp =>
+// Online service
+builder.Services.AddScoped<SupabaseService>(sp =>
 {
     var httpClient = new HttpClient { BaseAddress = new Uri(supabaseUrl) };
     httpClient.DefaultRequestHeaders.Add("apikey", supabaseKey);
@@ -47,4 +65,25 @@ builder.Services.AddScoped<ISupabaseService>(sp =>
     return new SupabaseService(httpClient, config, authService);
 });
 
-await builder.Build().RunAsync();
+// Offline wrapper
+builder.Services.AddScoped<ISupabaseService>(sp =>
+{
+    var onlineService = sp.GetRequiredService<SupabaseService>();
+    var networkStatus = sp.GetRequiredService<INetworkStatusService>();
+    var indexedDb = sp.GetRequiredService<IIndexedDbService>();
+    var syncService = sp.GetRequiredService<ISyncService>();
+    return new OfflineSupabaseService(onlineService, networkStatus, indexedDb, syncService);
+});
+
+// Initialize offline services
+var app = builder.Build();
+
+var networkStatus = app.Services.GetRequiredService<INetworkStatusService>();
+var indexedDb = app.Services.GetRequiredService<IIndexedDbService>();
+var syncService = app.Services.GetRequiredService<ISyncService>();
+
+await networkStatus.InitializeAsync();
+await indexedDb.InitializeAsync();
+await syncService.InitializeAsync();
+
+await app.RunAsync();

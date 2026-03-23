@@ -39,6 +39,7 @@ async function onActivate(event) {
 
 async function onFetch(event) {
     let cachedResponse = null;
+
     if (event.request.method === 'GET') {
         // For all navigation requests, try to serve index.html from cache,
         // unless that request is for an offline resource.
@@ -51,5 +52,37 @@ async function onFetch(event) {
         cachedResponse = await cache.match(request);
     }
 
-    return cachedResponse || fetch(event.request);
+    // If we have a cached response, return it
+    if (cachedResponse) {
+        return cachedResponse;
+    }
+
+    // Try to fetch from network
+    try {
+        const networkResponse = await fetch(event.request);
+
+        // Cache successful GET requests to Supabase API (read-only data)
+        if (event.request.method === 'GET' && 
+            event.request.url.includes('supabase.co') && 
+            networkResponse.ok) {
+            const cache = await caches.open(apiCacheName);
+            cache.put(event.request, networkResponse.clone());
+        }
+
+        return networkResponse;
+    } catch (error) {
+        // Network failed, try API cache for GET requests
+        if (event.request.method === 'GET') {
+            const apiCache = await caches.open(apiCacheName);
+            const apiCachedResponse = await apiCache.match(event.request);
+
+            if (apiCachedResponse) {
+                console.log('📦 Serving from API cache (offline):', event.request.url);
+                return apiCachedResponse;
+            }
+        }
+
+        // If all else fails, throw the error
+        throw error;
+    }
 }

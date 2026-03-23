@@ -1,10 +1,14 @@
 ﻿@inherits LayoutComponentBase
 @using FishingSpot.PWA.Services
+@using FishingSpot.PWA.Components
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 
 @if (_initialized)
 {
+    <!-- Network Status Indicator -->
+    <NetworkStatusIndicator />
+
     <div class="app-container">
         <!-- Top Bar -->
         <div class="top-bar">

@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="docs\" />
     <Folder Include="Equipment\" />
   </ItemGroup>
 

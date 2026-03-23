@@ -1,0 +1,74 @@
+/* Network Status Indicator Styles */
+.offline-banner,
+.syncing-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: slideDown 0.3s ease-out;
+}
+
+.offline-banner {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.syncing-banner {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.offline-banner-content,
+.syncing-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.offline-icon,
+.syncing-icon {
+    font-size: 1.2rem;
+}
+
+.syncing-icon {
+    animation: rotate 2s linear infinite;
+}
+
+.offline-pending {
+    opacity: 0.9;
+    font-size: 0.8rem;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Adjust top-bar when offline banner is shown */
+.app-container:has(.offline-banner) .top-bar,
+.app-container:has(.syncing-banner) .top-bar {
+    margin-top: 2.5rem;
+}

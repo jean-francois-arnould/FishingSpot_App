@@ -1,0 +1,69 @@
+@using FishingSpot.PWA.Services.Offline
+@implements IDisposable
+@inject INetworkStatusService NetworkStatus
+@inject ISyncService SyncService
+
+@if (!isOnline)
+{
+    <div class="offline-banner">
+        <div class="offline-banner-content">
+            <span class="offline-icon">📡</span>
+            <span class="offline-text">Mode hors ligne</span>
+            @if (pendingCount > 0)
+            {
+                <span class="offline-pending">(@pendingCount en attente)</span>
+            }
+        </div>
+    </div>
+}
+else if (isSyncing)
+{
+    <div class="syncing-banner">
+        <div class="syncing-banner-content">
+            <span class="syncing-icon">🔄</span>
+            <span class="syncing-text">Synchronisation...</span>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isOnline = true;
+    private bool isSyncing = false;
+    private int pendingCount = 0;
+
+    protected override void OnInitialized()
+    {
+        isOnline = NetworkStatus.IsOnline;
+        isSyncing = SyncService.IsSyncing;
+        pendingCount = SyncService.PendingItemsCount;
+
+        NetworkStatus.OnlineStatusChanged += HandleNetworkStatusChanged;
+        SyncService.SyncStatusChanged += HandleSyncStatusChanged;
+        SyncService.SyncQueueChanged += HandleSyncQueueChanged;
+    }
+
+    private void HandleNetworkStatusChanged(object? sender, bool online)
+    {
+        isOnline = online;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleSyncStatusChanged(object? sender, bool syncing)
+    {
+        isSyncing = syncing;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleSyncQueueChanged(object? sender, int count)
+    {
+        pendingCount = count;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NetworkStatus.OnlineStatusChanged -= HandleNetworkStatusChanged;
+        SyncService.SyncStatusChanged -= HandleSyncStatusChanged;
+        SyncService.SyncQueueChanged -= HandleSyncQueueChanged;
+    }
+}
