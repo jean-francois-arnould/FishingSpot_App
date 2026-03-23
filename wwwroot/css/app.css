@@ -1217,6 +1217,8 @@ code {
     max-height: 90vh;
     z-index: 1050;
     animation: slideUp 0.3s ease-out;
+    pointer-events: none;
+    animation: slideUp 0.3s ease-out, enablePointerEvents 0s 0.35s forwards;
 }
 
 @keyframes slideUp {
@@ -1227,6 +1229,15 @@ code {
     to {
         transform: translate(-50%, -50%);
         opacity: 1;
+    }
+}
+
+@keyframes enablePointerEvents {
+    from {
+        pointer-events: none;
+    }
+    to {
+        pointer-events: auto;
     }
 }
 
@@ -1518,9 +1529,11 @@ code {
     }
 }
 
+/* Animation désactivée - ne pas lancer automatiquement le swipe hint
 .swipeable-item:first-child .swipe-content {
     animation: swipe-hint 0.8s ease-in-out 1s 2;
 }
+*/
 
 /* ===== CATCH DETAIL PAGE REDESIGN ===== */
 .catch-detail-page {
