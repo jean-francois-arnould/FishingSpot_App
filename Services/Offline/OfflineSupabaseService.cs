@@ -99,23 +99,36 @@ namespace FishingSpot.PWA.Services
 
         public async Task<FishCatch?> GetCatchByIdAsync(int id)
         {
-            if (_networkStatus.IsOnline)
+            // Si l'ID est négatif, c'est une prise offline, chercher directement dans le cache
+            if (id < 0)
             {
-                try
+                Console.WriteLine($"📦 Loading offline catch {id} from cache...");
+                return await _indexedDb.GetItemAsync<FishCatch>(CATCHES_STORE, id.ToString());
+            }
+
+            // ID positif : essayer d'abord l'API si online
+            if (_networkStatus.IsOnline && !_authService.IsTokenExpired)
+            {
+                var tokenValid = await _authService.EnsureValidTokenAsync();
+                if (tokenValid)
                 {
-                    var catchItem = await _onlineService.GetCatchByIdAsync(id);
-                    if (catchItem != null)
+                    try
                     {
-                        await _indexedDb.SetItemAsync(CATCHES_STORE, id.ToString(), catchItem);
+                        var catchItem = await _onlineService.GetCatchByIdAsync(id);
+                        if (catchItem != null)
+                        {
+                            await _indexedDb.SetItemAsync(CATCHES_STORE, id.ToString(), catchItem);
+                        }
+                        return catchItem;
                     }
-                    return catchItem;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Error fetching catch online, falling back to cache: {ex.Message}");
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ Error fetching catch online, falling back to cache: {ex.Message}");
+                    }
                 }
             }
 
+            // Fallback au cache
             return await _indexedDb.GetItemAsync<FishCatch>(CATCHES_STORE, id.ToString());
         }
 
