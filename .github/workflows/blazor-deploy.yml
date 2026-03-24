@@ -65,12 +65,17 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
+        continue-on-error: true
+        timeout-minutes: 5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: output/wwwroot
+        timeout-minutes: 10
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        timeout-minutes: 10
+        continue-on-error: false
