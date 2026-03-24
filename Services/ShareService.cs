@@ -197,23 +197,14 @@ namespace FishingSpot.PWA.Services
 
                 try
                 {
-                    // Générer l'image via JavaScript
+                    // Générer l'image via JavaScript (retourne directement la base64)
                     Console.WriteLine("🎨 Appel de generateShareImage...");
-                    var generatedBlob = await _jsRuntime.InvokeAsync<object>("shareImageGenerator.generateShareImage", catchData);
-
-                    if (generatedBlob == null)
-                    {
-                        Console.WriteLine("❌ generateShareImage a retourné null");
-                        _logger.LogError("Failed to generate share image - blob is null");
-                        return false;
-                    }
-
-                    Console.WriteLine("✅ Blob généré, conversion en base64...");
-                    var base64Image = await _jsRuntime.InvokeAsync<string>("shareImageGenerator.blobToBase64", generatedBlob);
+                    var base64Image = await _jsRuntime.InvokeAsync<string>("shareImageGenerator.generateShareImage", catchData);
 
                     if (string.IsNullOrEmpty(base64Image))
                     {
-                        Console.WriteLine("❌ Conversion base64 échouée - résultat vide");
+                        Console.WriteLine("❌ generateShareImage a retourné une chaîne vide");
+                        _logger.LogError("Failed to generate share image - result is empty");
                         return false;
                     }
 

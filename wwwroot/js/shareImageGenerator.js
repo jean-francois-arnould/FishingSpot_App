@@ -196,11 +196,21 @@ window.shareImageGenerator = {
             ctx.textAlign = 'center';
             ctx.fillText('Partagé via FishingSpot App', canvas.width / 2, footerY);
 
-            // 8. Convertir en Blob
+            // 8. Convertir en Blob puis en Base64 directement
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
 
-            console.log('✅ Image générée avec succès');
-            return blob;
+            if (!blob) {
+                console.error('❌ Impossible de créer le blob');
+                throw new Error('Canvas toBlob failed');
+            }
+
+            console.log('✅ Blob créé, conversion en base64...');
+
+            // Convertir directement en base64
+            const base64 = await this.blobToBase64(blob);
+
+            console.log(`✅ Image générée avec succès (base64 length: ${base64.length})`);
+            return base64;
 
         } catch (error) {
             console.error('❌ Erreur lors de la génération de l\'image:', error);
