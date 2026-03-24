@@ -110,5 +110,154 @@ namespace FishingSpot.PWA.Services
             // En production, retourner l'URL réelle du site
             return "https://jean-francois-arnould.github.io/FishingSpot_App";
         }
+
+        // ============================================
+        // NOUVELLES MÉTHODES POUR LE PARTAGE AVEC IMAGE
+        // ============================================
+
+        public async Task<bool> ShareCatchImageAsync(FishCatch fishCatch)
+        {
+            try
+            {
+                _logger.LogInformation("Generating share image for catch", new Dictionary<string, object>
+                {
+                    { "CatchId", fishCatch.Id },
+                    { "FishName", fishCatch.FishName }
+                });
+
+                // Préparer les données pour le générateur d'image JavaScript
+                var catchData = new
+                {
+                    fishName = fishCatch.FishName,
+                    length = fishCatch.Length,
+                    weight = fishCatch.Weight,
+                    locationName = fishCatch.LocationName,
+                    catchDate = fishCatch.CatchDate.ToString("O"), // Format ISO
+                    photoUrl = fishCatch.PhotoUrl,
+                    weatherTemperature = fishCatch.WeatherTemperature,
+                    weatherCondition = fishCatch.WeatherCondition,
+                    windSpeed = fishCatch.WindSpeed
+                };
+
+                // Générer l'image via JavaScript
+                var base64Image = await _jsRuntime.InvokeAsync<string>(
+                    "shareImageGenerator.blobToBase64",
+                    await _jsRuntime.InvokeAsync<object>("shareImageGenerator.generateShareImage", catchData)
+                );
+
+                if (string.IsNullOrEmpty(base64Image))
+                {
+                    _logger.LogError("Failed to generate share image");
+                    return false;
+                }
+
+                // Convertir en byte array
+                var imageBytes = Convert.FromBase64String(base64Image);
+
+                // Partager l'image
+                var fileName = $"fishingspot_{fishCatch.FishName.ToLower().Replace(" ", "_")}_{DateTime.Now:yyyyMMdd}.jpg";
+                var title = $"Ma prise : {fishCatch.FishName} 🎣";
+                var text = $"{fishCatch.FishName} • {fishCatch.Length}cm • {fishCatch.Weight}kg";
+
+                return await ShareFileAsync(title, text, imageBytes, fileName, "image/jpeg");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error generating or sharing catch image", ex);
+                return false;
+            }
+        }
+
+        public async Task<bool> ShareCatchToWhatsAppAsync(FishCatch fishCatch)
+        {
+            try
+            {
+                _logger.LogInformation("Sharing catch to WhatsApp", new Dictionary<string, object>
+                {
+                    { "CatchId", fishCatch.Id },
+                    { "FishName", fishCatch.FishName }
+                });
+
+                // Créer le texte de partage
+                var text = $"🎣 Ma prise du jour !\n\n" +
+                          $"🐟 {fishCatch.FishName}\n" +
+                          $"📏 {fishCatch.Length} cm\n" +
+                          $"⚖️ {fishCatch.Weight} kg\n";
+
+                if (!string.IsNullOrEmpty(fishCatch.LocationName))
+                {
+                    text += $"📍 {fishCatch.LocationName}\n";
+                }
+
+                if (fishCatch.WeatherTemperature.HasValue)
+                {
+                    text += $"🌡️ {fishCatch.WeatherTemperature}°C";
+                    if (!string.IsNullOrEmpty(fishCatch.WeatherCondition))
+                    {
+                        text += $" - {fishCatch.WeatherCondition}";
+                    }
+                    text += "\n";
+                }
+
+                text += $"\n📅 {fishCatch.CatchDate:dd/MM/yyyy}\n";
+                text += "\n#peche #fishing #fishingspot";
+
+                // Encoder l'URL WhatsApp
+                var encodedText = Uri.EscapeDataString(text);
+                var whatsappUrl = $"https://wa.me/?text={encodedText}";
+
+                // Ouvrir WhatsApp dans un nouvel onglet
+                await _jsRuntime.InvokeVoidAsync("open", whatsappUrl, "_blank");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error sharing to WhatsApp", ex);
+                return false;
+            }
+        }
+
+        public async Task<bool> ShareCatchToFacebookAsync(FishCatch fishCatch)
+        {
+            try
+            {
+                _logger.LogInformation("Sharing catch to Facebook", new Dictionary<string, object>
+                {
+                    { "CatchId", fishCatch.Id },
+                    { "FishName", fishCatch.FishName }
+                });
+
+                // Pour Facebook, on utilise l'image générée
+                // Facebook ne permet pas de partage de texte direct via URL scheme
+                // On utilise donc le partage d'image
+                return await ShareCatchImageAsync(fishCatch);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error sharing to Facebook", ex);
+                return false;
+            }
+        }
+
+        public async Task<bool> ShareCatchToInstagramAsync(FishCatch fishCatch)
+        {
+            try
+            {
+                _logger.LogInformation("Sharing catch to Instagram", new Dictionary<string, object>
+                {
+                    { "CatchId", fishCatch.Id },
+                    { "FishName", fishCatch.FishName }
+                });
+
+                // Instagram nécessite une image
+                return await ShareCatchImageAsync(fishCatch);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error sharing to Instagram", ex);
+                return false;
+            }
+        }
     }
 }

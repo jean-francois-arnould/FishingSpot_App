@@ -4,6 +4,7 @@
 @using FishingSpot.PWA.Services
 @inject ISupabaseService SupabaseService
 @inject IAuthService AuthService
+@inject IShareService ShareService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
@@ -156,6 +157,72 @@
                     </div>
                 </div>
             }
+
+            <!-- Carte Partage -->
+            <div class="card detail-card share-card">
+                <div class="card-icon">📤</div>
+                <div class="card-content">
+                    <h3 class="card-title">PARTAGER</h3>
+                    <p class="text-muted mb-3">Partagez votre prise avec vos amis</p>
+
+                    <div class="share-buttons-grid">
+                        <button class="btn btn-share btn-share-image" @onclick="ShareAsImage" disabled="@isSharing">
+                            @if (isSharing && sharingType == "image")
+                            {
+                                <div class="spinner-small"></div>
+                            }
+                            else
+                            {
+                                <span class="share-icon">🖼️</span>
+                            }
+                            <span class="share-label">Image</span>
+                        </button>
+
+                        <button class="btn btn-share btn-share-whatsapp" @onclick="ShareToWhatsApp" disabled="@isSharing">
+                            @if (isSharing && sharingType == "whatsapp")
+                            {
+                                <div class="spinner-small"></div>
+                            }
+                            else
+                            {
+                                <span class="share-icon">💬</span>
+                            }
+                            <span class="share-label">WhatsApp</span>
+                        </button>
+
+                        <button class="btn btn-share btn-share-facebook" @onclick="ShareToFacebook" disabled="@isSharing">
+                            @if (isSharing && sharingType == "facebook")
+                            {
+                                <div class="spinner-small"></div>
+                            }
+                            else
+                            {
+                                <span class="share-icon">📘</span>
+                            }
+                            <span class="share-label">Facebook</span>
+                        </button>
+
+                        <button class="btn btn-share btn-share-instagram" @onclick="ShareToInstagram" disabled="@isSharing">
+                            @if (isSharing && sharingType == "instagram")
+                            {
+                                <div class="spinner-small"></div>
+                            }
+                            else
+                            {
+                                <span class="share-icon">📷</span>
+                            }
+                            <span class="share-label">Instagram</span>
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(shareMessage))
+                    {
+                        <div class="share-message @shareMessageType">
+                            @shareMessage
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
 
         <!-- Boutons d'action fixés en bas -->
@@ -176,6 +243,12 @@
 
     private FishCatch? fishCatch;
     private bool isLoading = true;
+
+    // Variables pour le partage
+    private bool isSharing = false;
+    private string sharingType = "";
+    private string? shareMessage = null;
+    private string shareMessageType = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -218,6 +291,187 @@
     private void EditCatch()
     {
         Navigation.NavigateTo($"/FishingSpot_App/edit-catch/{Id}");
+    }
+
+    // ============================================
+    // MÉTHODES DE PARTAGE
+    // ============================================
+
+    private async Task ShareAsImage()
+    {
+        if (fishCatch == null || isSharing) return;
+
+        isSharing = true;
+        sharingType = "image";
+        shareMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            Console.WriteLine($"📤 Génération de l'image de partage pour {fishCatch.FishName}...");
+            var success = await ShareService.ShareCatchImageAsync(fishCatch);
+
+            if (success)
+            {
+                shareMessage = "✅ Image générée et partagée !";
+                shareMessageType = "success";
+                Console.WriteLine("✅ Image partagée avec succès");
+            }
+            else
+            {
+                shareMessage = "❌ Impossible de partager l'image";
+                shareMessageType = "error";
+                Console.WriteLine("❌ Échec du partage");
+            }
+        }
+        catch (Exception ex)
+        {
+            shareMessage = $"❌ Erreur: {ex.Message}";
+            shareMessageType = "error";
+            Console.WriteLine($"❌ Erreur lors du partage: {ex.Message}");
+        }
+        finally
+        {
+            isSharing = false;
+            StateHasChanged();
+
+            // Effacer le message après 3 secondes
+            await Task.Delay(3000);
+            shareMessage = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ShareToWhatsApp()
+    {
+        if (fishCatch == null || isSharing) return;
+
+        isSharing = true;
+        sharingType = "whatsapp";
+        shareMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            Console.WriteLine($"📤 Partage sur WhatsApp pour {fishCatch.FishName}...");
+            var success = await ShareService.ShareCatchToWhatsAppAsync(fishCatch);
+
+            if (success)
+            {
+                shareMessage = "✅ Ouverture de WhatsApp...";
+                shareMessageType = "success";
+                Console.WriteLine("✅ WhatsApp ouvert");
+            }
+            else
+            {
+                shareMessage = "❌ Impossible d'ouvrir WhatsApp";
+                shareMessageType = "error";
+                Console.WriteLine("❌ Échec de l'ouverture de WhatsApp");
+            }
+        }
+        catch (Exception ex)
+        {
+            shareMessage = $"❌ Erreur: {ex.Message}";
+            shareMessageType = "error";
+            Console.WriteLine($"❌ Erreur lors du partage: {ex.Message}");
+        }
+        finally
+        {
+            isSharing = false;
+            StateHasChanged();
+
+            await Task.Delay(3000);
+            shareMessage = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ShareToFacebook()
+    {
+        if (fishCatch == null || isSharing) return;
+
+        isSharing = true;
+        sharingType = "facebook";
+        shareMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            Console.WriteLine($"📤 Partage sur Facebook pour {fishCatch.FishName}...");
+            var success = await ShareService.ShareCatchToFacebookAsync(fishCatch);
+
+            if (success)
+            {
+                shareMessage = "✅ Image générée pour Facebook !";
+                shareMessageType = "success";
+                Console.WriteLine("✅ Image partagée sur Facebook");
+            }
+            else
+            {
+                shareMessage = "❌ Impossible de partager sur Facebook";
+                shareMessageType = "error";
+                Console.WriteLine("❌ Échec du partage sur Facebook");
+            }
+        }
+        catch (Exception ex)
+        {
+            shareMessage = $"❌ Erreur: {ex.Message}";
+            shareMessageType = "error";
+            Console.WriteLine($"❌ Erreur lors du partage: {ex.Message}");
+        }
+        finally
+        {
+            isSharing = false;
+            StateHasChanged();
+
+            await Task.Delay(3000);
+            shareMessage = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ShareToInstagram()
+    {
+        if (fishCatch == null || isSharing) return;
+
+        isSharing = true;
+        sharingType = "instagram";
+        shareMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            Console.WriteLine($"📤 Partage sur Instagram pour {fishCatch.FishName}...");
+            var success = await ShareService.ShareCatchToInstagramAsync(fishCatch);
+
+            if (success)
+            {
+                shareMessage = "✅ Image générée pour Instagram !";
+                shareMessageType = "success";
+                Console.WriteLine("✅ Image partagée sur Instagram");
+            }
+            else
+            {
+                shareMessage = "❌ Impossible de partager sur Instagram";
+                shareMessageType = "error";
+                Console.WriteLine("❌ Échec du partage sur Instagram");
+            }
+        }
+        catch (Exception ex)
+        {
+            shareMessage = $"❌ Erreur: {ex.Message}";
+            shareMessageType = "error";
+            Console.WriteLine($"❌ Erreur lors du partage: {ex.Message}");
+        }
+        finally
+        {
+            isSharing = false;
+            StateHasChanged();
+
+            await Task.Delay(3000);
+            shareMessage = null;
+            StateHasChanged();
+        }
     }
 
     private string GetFormattedLength()
