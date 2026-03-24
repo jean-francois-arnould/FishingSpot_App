@@ -164,14 +164,8 @@
                                 <span>📍</span>
                             }
                         </button>
-                        @if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
-                        {
-                            <button type="button" class="btn btn-outline-secondary" @onclick="CopyGpsCoordinates" title="Copier les coordonnées">
-                                📋
-                            </button>
-                        }
                     </div>
-                    <small class="text-muted">Position détectée automatiquement • Cliquez sur 📋 pour partager</small>
+                    <small class="text-muted">Position détectée automatiquement</small>
                 </div>
 
                 <div class="form-group">
@@ -1295,27 +1289,6 @@
     private void Cancel()
     {
         Navigation.NavigateTo("/FishingSpot_App/catches");
-    }
-
-    private async Task CopyGpsCoordinates()
-    {
-        if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
-        {
-            var coordinates = $"{newCatch.Latitude}, {newCatch.Longitude}";
-            try
-            {
-                await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", coordinates);
-                successMessage = "📋 Coordonnées GPS copiées dans le presse-papier !";
-                await Task.Delay(2000);
-                successMessage = null;
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error copying coordinates: {ex.Message}");
-                errorMessage = "Impossible de copier les coordonnées";
-            }
-        }
     }
 
     private async Task HandleLogout()
