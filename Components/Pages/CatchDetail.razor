@@ -280,15 +280,15 @@
 
             if (success)
             {
-                shareMessage = "✅ Ouverture de WhatsApp...";
+                shareMessage = "✅ Image générée ! Partagez-la sur WhatsApp";
                 shareMessageType = "success";
-                Console.WriteLine("✅ WhatsApp ouvert");
+                Console.WriteLine("✅ Image prête pour WhatsApp");
             }
             else
             {
-                shareMessage = "ℹ️ Utilisez un appareil mobile pour partager directement";
-                shareMessageType = "info";
-                Console.WriteLine("❌ Web Share API non disponible");
+                shareMessage = "❌ Impossible de générer l'image";
+                shareMessageType = "error";
+                Console.WriteLine("❌ Échec de génération");
             }
         }
         catch (Exception ex)

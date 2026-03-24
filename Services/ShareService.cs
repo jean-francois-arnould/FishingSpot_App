@@ -178,7 +178,44 @@ namespace FishingSpot.PWA.Services
                     { "FishName", fishCatch.FishName }
                 });
 
-                // Créer le texte de partage
+                Console.WriteLine($"📤 Génération de l'image pour WhatsApp...");
+
+                // Préparer les données pour le générateur d'image JavaScript
+                var catchData = new
+                {
+                    fishName = fishCatch.FishName,
+                    length = fishCatch.Length,
+                    weight = fishCatch.Weight,
+                    locationName = fishCatch.LocationName,
+                    catchDate = fishCatch.CatchDate.ToString("O"), // Format ISO
+                    photoUrl = fishCatch.PhotoUrl,
+                    weatherTemperature = fishCatch.WeatherTemperature,
+                    weatherCondition = fishCatch.WeatherCondition,
+                    windSpeed = fishCatch.WindSpeed
+                };
+
+                // Générer l'image via JavaScript
+                var generatedBlob = await _jsRuntime.InvokeAsync<object>("shareImageGenerator.generateShareImage", catchData);
+
+                if (generatedBlob == null)
+                {
+                    Console.WriteLine("❌ Impossible de générer l'image");
+                    _logger.LogError("Failed to generate share image");
+                    return false;
+                }
+
+                var base64Image = await _jsRuntime.InvokeAsync<string>("shareImageGenerator.blobToBase64", generatedBlob);
+
+                if (string.IsNullOrEmpty(base64Image))
+                {
+                    Console.WriteLine("❌ Conversion base64 échouée");
+                    return false;
+                }
+
+                // Convertir en byte array
+                var imageBytes = Convert.FromBase64String(base64Image);
+
+                // Créer le texte de caption
                 var text = $"🎣 Ma prise du jour !\n\n" +
                           $"🐟 {fishCatch.FishName}\n" +
                           $"📏 {fishCatch.Length} cm\n" +
@@ -202,15 +239,14 @@ namespace FishingSpot.PWA.Services
                 text += $"\n📅 {fishCatch.CatchDate:dd/MM/yyyy}\n";
                 text += "\n#peche #fishing #fishingspot";
 
-                // Encoder l'URL WhatsApp
-                var encodedText = Uri.EscapeDataString(text);
-                var whatsappUrl = $"https://wa.me/?text={encodedText}";
+                var fileName = $"fishingspot_{fishCatch.FishName.ToLower().Replace(" ", "_")}_{DateTime.Now:yyyyMMdd}.jpg";
+                var title = $"Ma prise : {fishCatch.FishName} 🎣";
 
-                Console.WriteLine($"📤 Ouverture de WhatsApp avec le lien: {whatsappUrl}");
+                Console.WriteLine($"✅ Image générée, tentative de partage...");
 
-                // Ouvrir WhatsApp dans un nouvel onglet/application
-                await _jsRuntime.InvokeVoidAsync("open", whatsappUrl, "_blank");
-                return true;
+                // Essayer d'abord Web Share API (mobile)
+                // Si échec, télécharger l'image automatiquement (desktop)
+                return await ShareFileAsync(title, text, imageBytes, fileName, "image/jpeg");
             }
             catch (Exception ex)
             {
