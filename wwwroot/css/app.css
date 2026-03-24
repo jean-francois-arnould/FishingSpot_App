@@ -920,15 +920,20 @@ h6 { font-size: 1rem; }
     background: linear-gradient(to top, white 90%, transparent);
     z-index: 100;
     justify-content: center;
-    align-items: center;
+    align-items: stretch; /* Tous les boutons même hauteur */
 }
 
 .detail-actions-fixed .btn {
     flex: 1;
-    max-width: 200px;
+    max-width: 150px; /* Réduit pour mobile */
     font-weight: 600;
-    font-size: 0.95rem;
-    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
+    padding: 0.875rem 0.75rem;
+    white-space: nowrap; /* Évite le retour à la ligne */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
 }
 
 .btn-success {
@@ -1010,13 +1015,17 @@ h6 { font-size: 1rem; }
     }
 
     .detail-actions-fixed {
-        flex-direction: column;
+        flex-direction: row; /* Garder en ligne horizontale sur mobile */
         gap: 0.5rem;
-        padding: 0.75rem;
+        padding: 0.75rem 0.5rem;
+        bottom: 60px; /* Légèrement plus haut pour éviter la navbar */
     }
 
     .detail-actions-fixed .btn {
-        max-width: 100%;
+        max-width: none; /* Pas de limite, prend l'espace disponible */
+        flex: 1;
+        font-size: 0.85rem; /* Légèrement plus petit sur mobile */
+        padding: 0.75rem 0.5rem;
     }
 }
 
