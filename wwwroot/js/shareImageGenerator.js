@@ -50,7 +50,9 @@ window.shareImageGenerator = {
 
             if (catchData.photoUrl && !catchData.photoUrl.startsWith('offline_')) {
                 try {
+                    console.log('📸 Chargement de la photo:', catchData.photoUrl);
                     const img = await this.loadImage(catchData.photoUrl);
+                    console.log('✅ Photo chargée:', img.width, 'x', img.height);
 
                     // Calculer les dimensions pour centrer et adapter la photo
                     const maxPhotoWidth = canvas.width - 80; // Marges de 40px
@@ -84,10 +86,13 @@ window.shareImageGenerator = {
                     ctx.restore();
 
                     photoYOffset += photoHeight + 50;
-                } catch (error) {
-                    console.warn('Impossible de charger la photo:', error);
+                    console.log('✅ Photo dessinée dans le canvas');
+                } catch (photoError) {
+                    console.warn('⚠️ Impossible de charger la photo, continuation sans photo:', photoError);
                     // Continuer sans la photo
                 }
+            } else {
+                console.log('ℹ️ Pas de photo à charger ou photo offline');
             }
 
             // 4. Dessiner le nom du poisson (titre principal)
@@ -209,9 +214,34 @@ window.shareImageGenerator = {
     loadImage: function (url) {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = 'anonymous'; // Important pour les images externes
-            img.onload = () => resolve(img);
-            img.onerror = reject;
+
+            // Première tentative avec crossOrigin
+            img.crossOrigin = 'anonymous';
+
+            img.onload = () => {
+                console.log('✅ Image chargée avec crossOrigin');
+                resolve(img);
+            };
+
+            img.onerror = (error) => {
+                console.warn('⚠️ Échec avec crossOrigin, tentative sans...', error);
+
+                // Deuxième tentative SANS crossOrigin
+                const img2 = new Image();
+
+                img2.onload = () => {
+                    console.log('✅ Image chargée sans crossOrigin');
+                    resolve(img2);
+                };
+
+                img2.onerror = (error2) => {
+                    console.error('❌ Impossible de charger l\'image:', error2);
+                    reject(error2);
+                };
+
+                img2.src = url;
+            };
+
             img.src = url;
         });
     },
