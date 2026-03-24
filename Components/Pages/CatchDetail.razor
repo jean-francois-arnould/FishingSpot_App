@@ -290,7 +290,8 @@
 
     private void EditCatch()
     {
-        Navigation.NavigateTo($"/FishingSpot_App/edit-catch/{Id}");
+        Console.WriteLine($"🔀 Navigation vers édition de la prise {Id}");
+        Navigation.NavigateTo($"/FishingSpot_App/catches/edit/{Id}");
     }
 
     // ============================================
