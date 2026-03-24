@@ -2611,6 +2611,12 @@ code {
     margin-top: 1rem;
 }
 
+.share-buttons-grid-simple {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
 .btn-share {
     display: flex;
     flex-direction: column;
