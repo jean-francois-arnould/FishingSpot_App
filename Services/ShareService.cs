@@ -214,38 +214,13 @@ namespace FishingSpot.PWA.Services
                     var imageBytes = Convert.FromBase64String(base64Image);
                     Console.WriteLine($"✅ Image convertie en bytes: {imageBytes.Length} bytes");
 
-                    // Créer le texte de caption
-                    var text = $"🎣 Ma prise du jour !\n\n" +
-                              $"🐟 {fishCatch.FishName}\n" +
-                              $"📏 {fishCatch.Length} cm\n" +
-                              $"⚖️ {fishCatch.Weight} kg\n";
-
-                    if (!string.IsNullOrEmpty(fishCatch.LocationName))
-                    {
-                        text += $"📍 {fishCatch.LocationName}\n";
-                    }
-
-                    if (fishCatch.WeatherTemperature.HasValue)
-                    {
-                        text += $"🌡️ {fishCatch.WeatherTemperature}°C";
-                        if (!string.IsNullOrEmpty(fishCatch.WeatherCondition))
-                        {
-                            text += $" - {fishCatch.WeatherCondition}";
-                        }
-                        text += "\n";
-                    }
-
-                    text += $"\n📅 {fishCatch.CatchDate:dd/MM/yyyy}\n";
-                    text += "\n#peche #fishing #fishingspot";
-
                     var fileName = $"fishingspot_{fishCatch.FishName.ToLower().Replace(" ", "_")}_{DateTime.Now:yyyyMMdd}.jpg";
                     var title = $"Ma prise : {fishCatch.FishName} 🎣";
 
-                    Console.WriteLine($"📤 Tentative de partage/téléchargement...");
+                    Console.WriteLine($"📤 Tentative de partage/téléchargement de l'image...");
 
-                    // Essayer d'abord Web Share API (mobile)
-                    // Si échec, télécharger l'image automatiquement (desktop)
-                    return await ShareFileAsync(title, text, imageBytes, fileName, "image/jpeg");
+                    // Partager uniquement l'image, sans texte
+                    return await ShareFileAsync(title, "", imageBytes, fileName, "image/jpeg");
                 }
                 catch (Exception jsEx)
                 {
