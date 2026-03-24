@@ -176,36 +176,98 @@
 
                 <div class="form-group">
                     <label class="form-label">🌤️ Conditions météo</label>
-                    @if (weatherData != null)
+
+                    <!-- Toggle pour activer/désactiver la météo -->
+                    <div class="weather-toggle">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="useWeatherData" @bind:after="OnWeatherToggleChanged" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">@(useWeatherData ? "Météo activée" : "Météo désactivée")</span>
+                    </div>
+
+                    @if (useWeatherData)
                     {
-                        <div class="weather-info">
-                            <div class="weather-main">
-                                <span class="weather-icon">@weatherData.WeatherEmoji</span>
-                                <span class="weather-temp">@weatherData.Temperature.ToString("F1")°C</span>
-                                <span class="weather-desc">@weatherData.WeatherDescription</span>
-                            </div>
-                            <div class="weather-details">
-                                <small>💨 Vent: @weatherData.WindSpeed.ToString("F1") km/h</small>
-                                <small>💧 Humidité: @weatherData.Humidity%</small>
-                            </div>
+                        <div class="weather-mode-selector">
+                            <button type="button" 
+                                    class="btn btn-sm @(weatherMode == "auto" ? "btn-primary" : "btn-outline-secondary")" 
+                                    @onclick="@(() => SetWeatherMode("auto"))">
+                                🤖 Automatique
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-sm @(weatherMode == "manual" ? "btn-primary" : "btn-outline-secondary")" 
+                                    @onclick="@(() => SetWeatherMode("manual"))">
+                                ✏️ Manuel
+                            </button>
                         </div>
-                    }
-                    else if (isGettingWeather)
-                    {
-                        <div class="weather-loading">
-                            <div class="spinner"></div>
-                            <span>Récupération de la météo...</span>
-                        </div>
-                    }
-                    else if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
-                    {
-                        <button type="button" class="btn btn-outline-primary" @onclick="GetWeatherData">
-                            🌤️ Récupérer la météo
-                        </button>
+
+                        @if (weatherMode == "auto")
+                        {
+                            @if (weatherData != null)
+                            {
+                                <div class="weather-info">
+                                    <div class="weather-main">
+                                        <span class="weather-icon">@weatherData.WeatherEmoji</span>
+                                        <span class="weather-temp">@weatherData.Temperature.ToString("F1")°C</span>
+                                        <span class="weather-desc">@weatherData.WeatherDescription</span>
+                                    </div>
+                                    <div class="weather-details">
+                                        <small>💨 Vent: @weatherData.WindSpeed.ToString("F1") km/h</small>
+                                        <small>💧 Humidité: @weatherData.Humidity%</small>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @onclick="GetWeatherData">
+                                        🔄 Actualiser la météo
+                                    </button>
+                                </div>
+                            }
+                            else if (isGettingWeather)
+                            {
+                                <div class="weather-loading">
+                                    <div class="spinner"></div>
+                                    <span>Récupération de la météo...</span>
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
+                            {
+                                <button type="button" class="btn btn-outline-primary" @onclick="GetWeatherData">
+                                    🌤️ Récupérer la météo
+                                </button>
+                            }
+                            else
+                            {
+                                <small class="text-muted">Obtenez d'abord votre position GPS pour récupérer la météo</small>
+                            }
+                        }
+                        else if (weatherMode == "manual")
+                        {
+                            <div class="weather-manual-inputs">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">🌡️ Température (°C)</label>
+                                        <InputNumber class="form-control" @bind-Value="manualTemperature" step="0.1" placeholder="Ex: 18.5" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">💧 Humidité (%)</label>
+                                        <InputNumber class="form-control" @bind-Value="manualHumidity" min="0" max="100" placeholder="Ex: 65" />
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">💨 Vitesse du vent (km/h)</label>
+                                        <InputNumber class="form-control" @bind-Value="manualWindSpeed" step="0.1" placeholder="Ex: 12.5" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">☁️ Condition</label>
+                                        <InputText class="form-control" @bind-Value="manualWeatherCondition" placeholder="Ex: Ensoleillé, Nuageux..." />
+                                    </div>
+                                </div>
+                                <small class="text-muted">💡 Saisissez manuellement les conditions météo au moment de la prise</small>
+                            </div>
+                        }
                     }
                     else
                     {
-                        <small class="text-muted">Obtenez d'abord votre position GPS pour récupérer la météo</small>
+                        <small class="text-muted">Les données météo ne seront pas enregistrées pour cette prise</small>
                     }
                 </div>
 
@@ -468,6 +530,14 @@
     private bool isLoadingData = true;
     private WeatherData? weatherData;
     private bool isGettingWeather = false;
+
+    // Météo optionnelle et éditable
+    private bool useWeatherData = true; // Par défaut activé
+    private string weatherMode = "auto"; // "auto" ou "manual"
+    private double? manualTemperature = null;
+    private int? manualHumidity = null;
+    private double? manualWindSpeed = null;
+    private string? manualWeatherCondition = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -892,8 +962,11 @@
                     successMessage = "📍 Position récupérée (lieu non trouvé)";
                 }
 
-                // Récupérer automatiquement la météo après avoir obtenu la position
-                await GetWeatherData();
+                // Récupérer automatiquement la météo après avoir obtenu la position (si activée et en mode auto)
+                if (useWeatherData && weatherMode == "auto")
+                {
+                    await GetWeatherData();
+                }
 
                 await Task.Delay(2000);
                 successMessage = null;
@@ -960,6 +1033,50 @@
         }
     }
 
+    private void OnWeatherToggleChanged()
+    {
+        if (!useWeatherData)
+        {
+            // Si on désactive la météo, réinitialiser les données
+            weatherData = null;
+            newCatch.WeatherTemperature = null;
+            newCatch.WeatherCondition = null;
+            newCatch.WeatherCode = null;
+            newCatch.WindSpeed = null;
+            newCatch.Humidity = null;
+            Console.WriteLine("🌤️ Météo désactivée");
+        }
+        else
+        {
+            Console.WriteLine("🌤️ Météo activée");
+        }
+    }
+
+    private void SetWeatherMode(string mode)
+    {
+        weatherMode = mode;
+        Console.WriteLine($"🌤️ Mode météo changé: {mode}");
+
+        if (mode == "manual")
+        {
+            // Pré-remplir avec les données existantes si disponibles
+            if (weatherData != null)
+            {
+                manualTemperature = weatherData.Temperature;
+                manualHumidity = weatherData.Humidity;
+                manualWindSpeed = weatherData.WindSpeed;
+                manualWeatherCondition = weatherData.WeatherDescription;
+            }
+            else if (newCatch.WeatherTemperature.HasValue)
+            {
+                manualTemperature = newCatch.WeatherTemperature;
+                manualHumidity = newCatch.Humidity;
+                manualWindSpeed = newCatch.WindSpeed;
+                manualWeatherCondition = newCatch.WeatherCondition;
+            }
+        }
+    }
+
     private async Task HandleAddCatch()
     {
         // Empêcher les soumissions multiples (protection critique)
@@ -1020,6 +1137,36 @@
             Console.WriteLine($"Localisation: Lat={newCatch.Latitude}, Lon={newCatch.Longitude}");
             Console.WriteLine($"Taille: {newCatch.Length}cm, Poids: {newCatch.Weight}kg");
             Console.WriteLine($"========================================");
+
+            // Appliquer les données météo selon le mode sélectionné
+            if (useWeatherData)
+            {
+                if (weatherMode == "manual")
+                {
+                    // Mode manuel : utiliser les données saisies par l'utilisateur
+                    newCatch.WeatherTemperature = manualTemperature;
+                    newCatch.Humidity = manualHumidity;
+                    newCatch.WindSpeed = manualWindSpeed;
+                    newCatch.WeatherCondition = manualWeatherCondition;
+                    newCatch.WeatherCode = null; // Pas de code météo en mode manuel
+                    Console.WriteLine($"🌤️ Météo manuelle: Temp={manualTemperature}°C, Humidité={manualHumidity}%, Vent={manualWindSpeed}km/h");
+                }
+                else
+                {
+                    // Mode auto : les données sont déjà dans newCatch si récupérées
+                    Console.WriteLine($"🌤️ Météo automatique: Temp={newCatch.WeatherTemperature}°C");
+                }
+            }
+            else
+            {
+                // Météo désactivée : s'assurer que les champs sont null
+                newCatch.WeatherTemperature = null;
+                newCatch.WeatherCondition = null;
+                newCatch.WeatherCode = null;
+                newCatch.WindSpeed = null;
+                newCatch.Humidity = null;
+                Console.WriteLine($"🌤️ Météo désactivée pour cette prise");
+            }
 
             // ✅ IMPORTANT: Créer une copie pour éviter que les services modifient newCatch par référence
             var catchToSave = new FishCatch
