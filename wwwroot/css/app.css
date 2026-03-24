@@ -2704,6 +2704,12 @@ code {
     border: 1px solid rgba(239, 71, 111, 0.3);
 }
 
+.share-message.info {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
 .spinner-small {
     width: 24px;
     height: 24px;

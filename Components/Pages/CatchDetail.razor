@@ -365,9 +365,9 @@
             }
             else
             {
-                shareMessage = "❌ Impossible d'ouvrir WhatsApp";
-                shareMessageType = "error";
-                Console.WriteLine("❌ Échec de l'ouverture de WhatsApp");
+                shareMessage = "ℹ️ Utilisez un appareil mobile pour partager directement";
+                shareMessageType = "info";
+                Console.WriteLine("❌ Web Share API non disponible");
             }
         }
         catch (Exception ex)
@@ -453,9 +453,9 @@
             }
             else
             {
-                shareMessage = "❌ Impossible de partager sur Instagram";
-                shareMessageType = "error";
-                Console.WriteLine("❌ Échec du partage sur Instagram");
+                shareMessage = "ℹ️ Utilisez un appareil mobile pour partager directement";
+                shareMessageType = "info";
+                Console.WriteLine("❌ Web Share API non disponible");
             }
         }
         catch (Exception ex)
