@@ -158,41 +158,29 @@
                 </div>
             }
 
-            <!-- Carte Partage -->
-            <div class="card detail-card share-card">
-                <div class="card-icon">📤</div>
-                <div class="card-content">
-                    <h3 class="card-title">PARTAGER</h3>
-                    <p class="text-muted mb-3">Partagez votre prise avec vos amis</p>
-
-                    <div class="share-buttons-grid-simple">
-                        <button class="btn btn-share btn-share-whatsapp" @onclick="ShareToWhatsApp" disabled="@isSharing">
-                            @if (isSharing && sharingType == "whatsapp")
-                            {
-                                <div class="spinner-small"></div>
-                            }
-                            else
-                            {
-                                <span class="share-icon">💬</span>
-                            }
-                            <span class="share-label">Partager</span>
-                        </button>
-                    </div>
-
-                    @if (!string.IsNullOrEmpty(shareMessage))
-                    {
-                        <div class="share-message @shareMessageType">
-                            @shareMessage
-                        </div>
-                    }
+            <!-- Message de partage (si présent) -->
+            @if (!string.IsNullOrEmpty(shareMessage))
+            {
+                <div class="share-message-toast @shareMessageType">
+                    @shareMessage
                 </div>
-            </div>
+            }
         </div>
 
         <!-- Boutons d'action fixés en bas -->
         <div class="detail-actions-fixed">
             <button class="btn btn-secondary" @onclick="GoToCatchesList">
-                ← Fermer
+                ← Retour
+            </button>
+            <button class="btn btn-success" @onclick="ShareToWhatsApp" disabled="@isSharing">
+                @if (isSharing)
+                {
+                    <span class="spinner-small-inline"></span>
+                }
+                else
+                {
+                    <text>📤 Partager</text>
+                }
             </button>
             <button class="btn btn-primary" @onclick="EditCatch">
                 ✏️ Modifier
