@@ -1899,8 +1899,8 @@ code {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
-    padding: 1rem;
-    margin: 0 auto;
+    padding: 0 1rem; /* Padding horizontal uniquement */
+    margin: 1rem 0; /* Margin vertical */
     max-width: 100%;
     box-sizing: border-box;
 }
