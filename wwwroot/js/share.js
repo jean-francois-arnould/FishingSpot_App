@@ -63,8 +63,8 @@ window.shareHelper = {
             return true;
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log('Share cancelled by user');
-                return false;
+                console.log('✅ Partage annulé par l\'utilisateur');
+                return true; // Retourner true car c'est une annulation volontaire, pas une erreur
             }
             console.error('Error sharing file, téléchargement de l\'image...', error);
             // Fallback: télécharger l'image en cas d'erreur
