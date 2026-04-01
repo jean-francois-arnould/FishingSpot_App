@@ -1891,7 +1891,7 @@ code {
 
 /* ===== STATISTIQUES PAGE ===== */
 .stats-page {
-    padding-bottom: 2rem;
+    padding: 0; /* Pas de padding, géré par les enfants */
 }
 
 /* Cards de statistiques */
