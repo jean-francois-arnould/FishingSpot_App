@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Folder Include="assets\" />
+    <Folder Include="Components\Materiel\" />
     <Folder Include="Equipment\" />
   </ItemGroup>
 

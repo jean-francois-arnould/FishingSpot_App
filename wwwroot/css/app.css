@@ -1899,7 +1899,7 @@ code {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
-    padding: 1rem; /* Padding uniforme tout autour */
+    padding: 1rem 1.25rem; /* Plus d'espace sur les côtés */
     margin: 0;
     max-width: 100%;
     box-sizing: border-box;
