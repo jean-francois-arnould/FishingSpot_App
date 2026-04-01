@@ -2907,7 +2907,7 @@ code {
 /* Responsive - Mobile */
 @media (max-width: 768px) {
     .stats-cards-container {
-        padding: 0.75rem;
+        padding: 1rem 1.25rem; /* Même espacement que desktop pour éviter les cartes collées au bord */
         gap: 0.75rem;
         grid-template-columns: 1fr 1fr; /* 2 colonnes sur mobile */
     }
@@ -2938,7 +2938,7 @@ code {
     }
 
     .calendar-section {
-        margin: 0 0.75rem 1rem 0.75rem;
+        margin: 0 1.25rem 1rem 1.25rem; /* Même marge que les cartes de stats */
         padding: 0.75rem;
     }
 
@@ -3366,12 +3366,12 @@ h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
     }
 
     .stats-section {
-        padding: 0 0.75rem;
+        padding: 0 1.25rem; /* Même padding que stats-cards-container */
     }
 
     .stats-section-title {
         font-size: 1.1rem;
-        padding-left: 0.25rem;
+        padding-left: 0; /* Alignement avec le contenu */
     }
 
     .species-weather-cards {
