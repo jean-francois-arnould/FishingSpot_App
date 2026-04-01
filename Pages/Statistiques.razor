@@ -218,46 +218,43 @@
 <!-- Modal pour afficher les prises d'une date -->
 @if (showCatchesModal && selectedDateCatches != null && selectedDateCatches.Any())
 {
-    <div class="modal-overlay" @onclick="CloseCatchesModal">
-        <div class="modal-content catches-modal" @onclick:stopPropagation>
-            <div class="modal-header">
-                <h3>🐟 Prises du @selectedDate.ToString("dd/MM/yyyy")</h3>
-                <button class="modal-close-btn" @onclick="CloseCatchesModal">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="catches-modal-list">
-                    @foreach (var fishCatch in selectedDateCatches)
-                    {
-                        <div class="catch-modal-item" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
+    <div class="stat-modal-overlay" @onclick="CloseCatchesModal">
+        <div class="stat-modal-dialog catches-modal-dialog" @onclick:stopPropagation>
+            <div class="stat-modal-icon">📅</div>
+            <h3 class="stat-modal-title">Prises du @selectedDate.ToString("dd/MM/yyyy")</h3>
+
+            <div class="catches-modal-list">
+                @foreach (var fishCatch in selectedDateCatches)
+                {
+                    <div class="catch-preview-card" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
+                        <div class="catch-preview-header">
                             @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
                             {
-                                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="catch-modal-img" />
+                                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="catch-preview-img" />
                             }
                             else
                             {
-                                <div class="catch-modal-icon">🐟</div>
+                                <div class="catch-preview-icon">🐟</div>
                             }
-                            <div class="catch-modal-content">
-                                <div class="catch-modal-name">@fishCatch.FishName</div>
-                                <div class="catch-modal-location">📍 @fishCatch.LocationName</div>
-                                <div class="catch-modal-stats">
-                                    <span class="badge badge-info">@fishCatch.Length cm</span>
-                                    <span class="badge badge-info">@(fishCatch.Weight / 1000).ToString("0.00") kg</span>
-                                    @if (fishCatch.CatchTime.HasValue)
-                                    {
-                                        <span class="badge badge-secondary">⏰ @fishCatch.CatchTime.Value.ToString(@"hh\:mm")</span>
-                                    }
-                                    @if (fishCatch.WeatherTemperature.HasValue)
-                                    {
-                                        <span class="badge badge-weather">@GetWeatherEmoji(fishCatch.WeatherCode ?? 0) @fishCatch.WeatherTemperature.Value.ToString("F1")°C</span>
-                                    }
-                                </div>
+                            <div class="catch-preview-info">
+                                <div class="catch-preview-name">@fishCatch.FishName</div>
+                                <div class="catch-preview-location">📍 @fishCatch.LocationName</div>
                             </div>
-                            <div class="catch-modal-arrow">›</div>
+                            <div class="catch-preview-arrow">›</div>
                         </div>
-                    }
-                </div>
+                        <div class="catch-preview-stats">
+                            <span class="catch-preview-badge">📏 @fishCatch.Length cm</span>
+                            <span class="catch-preview-badge">⚖️ @((fishCatch.Weight / 1000.0).ToString("0.00")) kg</span>
+                            @if (fishCatch.WeatherTemperature.HasValue)
+                            {
+                                <span class="catch-preview-badge">@GetWeatherEmoji(fishCatch.WeatherCode ?? 0) @fishCatch.WeatherTemperature.Value.ToString("F1")°C</span>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
+
+            <button class="stat-modal-button" @onclick="CloseCatchesModal">OK</button>
         </div>
     </div>
 }
