@@ -30,7 +30,7 @@
             <!-- Cards de statistiques -->
             <div class="stats-cards-container">
                 <!-- Total de prises -->
-                <div class="stat-card stat-card-primary" @onclick="ShowTotalInfo">
+                <div class="stat-card stat-card-weather" @onclick="ShowTotalInfo">
                     <div class="stat-icon">🎣</div>
                     <div class="stat-content">
                         <div class="stat-value">@totalCatches</div>
@@ -39,7 +39,7 @@
                 </div>
 
                 <!-- Plus gros poisson (longueur) -->
-                <div class="stat-card stat-card-success" @onclick="ShowBiggestInfo">
+                <div class="stat-card stat-card-weather" @onclick="ShowBiggestInfo">
                     <div class="stat-icon">📏</div>
                     <div class="stat-content">
                         <div class="stat-value">@(biggestFish?.Length.ToString("0")) cm</div>
@@ -52,7 +52,7 @@
                 </div>
 
                 <!-- Plus lourd poisson -->
-                <div class="stat-card stat-card-warning" @onclick="ShowHeaviestInfo">
+                <div class="stat-card stat-card-weather" @onclick="ShowHeaviestInfo">
                     <div class="stat-icon">⚖️</div>
                     <div class="stat-content">
                         <div class="stat-value">@(((heaviestFish?.Weight ?? 0) / 1000.0).ToString("0.00")) kg</div>
@@ -65,7 +65,7 @@
                 </div>
 
                 <!-- Poids total -->
-                <div class="stat-card stat-card-info" @onclick="ShowTotalWeightInfo">
+                <div class="stat-card stat-card-weather" @onclick="ShowTotalWeightInfo">
                     <div class="stat-icon">🏆</div>
                     <div class="stat-content">
                         <div class="stat-value">@((totalWeight / 1000.0).ToString("0.00")) kg</div>
