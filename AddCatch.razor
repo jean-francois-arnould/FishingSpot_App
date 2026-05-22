@@ -44,7 +44,7 @@
 
         <div class="card">
             <div class="card-header">
-                <h3 class="mb-0">🐟 Information du poisson</h3>
+                <h3 class="mb-0">Information du poisson</h3>
             </div>
             <div class="card-body">
                 <div class="form-group">
@@ -62,17 +62,17 @@
                         @if (availableFishSpecies != null && availableFishSpecies.Any())
                         {
                             <button type="button" class="btn btn-primary" @onclick="ShowFishSpeciesList">
-                                🔍 Chercher dans la liste
+                                Chercher dans la liste
                             </button>
                         }
                         <button type="button" class="btn btn-success" @onclick="ShowAddFishSpeciesForm">
-                            ➕ Ajouter une nouvelle espèce
+                            Ajouter une nouvelle espèce
                         </button>
                     </div>
                     @if (!string.IsNullOrEmpty(fishSpeciesError))
                     {
                         <small class="text-warning">
-                            ⚠️ @fishSpeciesError
+                            @fishSpeciesError
                         </small>
                     }
                     @if (selectedFishInfo != null && !string.IsNullOrEmpty(selectedFishInfo.Description))
@@ -91,7 +91,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">📏 Longueur</label>
+                        <label class="form-label">Longueur</label>
                         <div class="measurement-input">
                             <div class="measurement-unit">
                                 <InputSelect class="form-control" @bind-Value="newCatch.LengthMeters">
@@ -112,7 +112,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">⚖️ Poids</label>
+                        <label class="form-label">Poids</label>
                         <div class="measurement-input">
                             <div class="measurement-unit">
                                 <InputSelect class="form-control" @bind-Value="newCatch.WeightKilograms">
@@ -138,7 +138,7 @@
 
         <div class="card">
             <div class="card-header">
-                <h3 class="mb-0">📍 Lieu et date</h3>
+                <h3 class="mb-0">Lieu et date</h3>
             </div>
             <div class="card-body">
                 <div class="form-group">
@@ -161,7 +161,7 @@
                             }
                             else
                             {
-                                <span>📍</span>
+                                <span class="fs-icon fs-icon-map" aria-hidden="true"></span>
                             }
                         </button>
                     </div>
@@ -169,7 +169,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">🌤️ Conditions météo</label>
+                    <label class="form-label">Conditions météo</label>
 
                     <!-- Toggle pour activer/désactiver la météo -->
                     <div class="weather-toggle">
@@ -186,12 +186,12 @@
                             <button type="button" 
                                     class="btn btn-sm @(weatherMode == "auto" ? "btn-primary" : "btn-outline-secondary")" 
                                     @onclick="@(() => SetWeatherMode("auto"))">
-                                🤖 Automatique
+                                Automatique
                             </button>
                             <button type="button" 
                                     class="btn btn-sm @(weatherMode == "manual" ? "btn-primary" : "btn-outline-secondary")" 
                                     @onclick="@(() => SetWeatherMode("manual"))">
-                                ✏️ Manuel
+                                Manuel
                             </button>
                         </div>
 
@@ -206,11 +206,11 @@
                                         <span class="weather-desc">@weatherData.WeatherDescription</span>
                                     </div>
                                     <div class="weather-details">
-                                        <small>💨 Vent: @weatherData.WindSpeed.ToString("F1") km/h</small>
-                                        <small>💧 Humidité: @weatherData.Humidity%</small>
+                                        <small>Vent: @weatherData.WindSpeed.ToString("F1") km/h</small>
+                                        <small>Humidité: @weatherData.Humidity%</small>
                                     </div>
                                     <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @onclick="GetWeatherData">
-                                        🔄 Actualiser la météo
+                                        Actualiser la météo
                                     </button>
                                 </div>
                             }
@@ -224,7 +224,7 @@
                             else if (!string.IsNullOrEmpty(newCatch.Latitude) && !string.IsNullOrEmpty(newCatch.Longitude))
                             {
                                 <button type="button" class="btn btn-outline-primary" @onclick="GetWeatherData">
-                                    🌤️ Récupérer la météo
+                                    Récupérer la météo
                                 </button>
                             }
                             else
@@ -237,25 +237,25 @@
                             <div class="weather-manual-inputs">
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">🌡️ Température (°C)</label>
+                                        <label class="form-label">Température (°C)</label>
                                         <InputNumber class="form-control" @bind-Value="manualTemperature" step="0.1" placeholder="Ex: 18.5" />
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">💧 Humidité (%)</label>
+                                        <label class="form-label">Humidité (%)</label>
                                         <InputNumber class="form-control" @bind-Value="manualHumidity" min="0" max="100" placeholder="Ex: 65" />
                                     </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">💨 Vitesse du vent (km/h)</label>
+                                        <label class="form-label">Vitesse du vent (km/h)</label>
                                         <InputNumber class="form-control" @bind-Value="manualWindSpeed" step="0.1" placeholder="Ex: 12.5" />
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">☁️ Condition</label>
+                                        <label class="form-label">Condition</label>
                                         <InputText class="form-control" @bind-Value="manualWeatherCondition" placeholder="Ex: Ensoleillé, Nuageux..." />
                                     </div>
                                 </div>
-                                <small class="text-muted">💡 Saisissez manuellement les conditions météo au moment de la prise</small>
+                                <small class="text-muted">Saisissez manuellement les conditions météo au moment de la prise</small>
                             </div>
                         }
                     }
@@ -281,17 +281,17 @@
 
         <div class="card">
             <div class="card-header">
-                <h3 class="mb-0">📸 Photo et détails</h3>
+                <h3 class="mb-0">Photo et détails</h3>
             </div>
             <div class="card-body">
                 <div class="form-group">
                     <label class="form-label">Photo</label>
                     <div class="btn-group">
                         <button type="button" class="btn btn-outline-primary" @onclick="OpenGallery" disabled="@isUploadingPhoto">
-                            🖼️ Galerie
+                            Galerie
                         </button>
                         <button type="button" class="btn btn-outline-primary" @onclick="OpenCamera" disabled="@isUploadingPhoto">
-                            📷 Caméra
+                            Caméra
                         </button>
                     </div>
 
@@ -310,7 +310,7 @@
                         <div class="photo-preview">
                             <img src="@newCatch.PhotoUrl" alt="Aperçu" class="preview-img" />
                             <button type="button" class="btn btn-sm btn-danger" @onclick="RemovePhoto">
-                                ❌ Supprimer
+                                Supprimer
                             </button>
                         </div>
                     }
@@ -326,7 +326,7 @@
 
         <div class="card setup-card">
             <div class="card-header">
-                <h3 class="mb-0">🎣 Montage utilisé</h3>
+                <h3 class="mb-0">Montage utilisé</h3>
             </div>
             <div class="card-body">
                 <div class="form-group">
@@ -360,7 +360,7 @@
                 {
                     <div class="spinner"></div>
                 }
-                ✅ Enregistrer
+                Enregistrer
             </button>
         </div>
     </EditForm>
@@ -373,7 +373,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title">🔍 Sélectionner un poisson</h3>
+                    <h3 class="modal-title">Sélectionner un poisson</h3>
                     <button type="button" class="btn-close" @onclick="HideFishSpeciesModal">✕</button>
                 </div>
                 <div class="modal-body">
@@ -414,7 +414,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title">➕ Ajouter un nouveau poisson</h3>
+                    <h3 class="modal-title">Ajouter un nouveau poisson</h3>
                     <button type="button" class="btn-close" @onclick="HideAddFishModal">✕</button>
                 </div>
                 <div class="modal-body">
@@ -486,7 +486,7 @@
                                 {
                                     <div class="spinner"></div>
                                 }
-                                ✅ Ajouter
+                                Ajouter
                             </button>
                         </div>
                     </EditForm>

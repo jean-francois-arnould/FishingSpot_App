@@ -35,19 +35,19 @@
         {
             <div class="card">
                 <div class="card-header">
-                    <h3 class="mb-0">👤 Mon profil</h3>
+                    <h3 class="mb-0">Mon profil</h3>
                     <p class="text-muted mb-0">@AuthService.CurrentUser?.Email</p>
                 </div>
                 <div class="card-body">
                     <EditForm Model="@profile" OnValidSubmit="HandleSaveProfile">
                         <div class="form-group">
-                            <label for="displayName" class="form-label">👤 Nom d'affichage</label>
+                            <label for="displayName" class="form-label">Nom d'affichage</label>
                             <InputText id="displayName" class="form-control" @bind-Value="profile.DisplayName" placeholder="Jean Dupont" />
                             <small class="text-muted">Ce nom sera visible par les autres utilisateurs</small>
                         </div>
 
                         <div class="form-group">
-                            <label for="avatarUrl" class="form-label">🖼️ URL de l'avatar</label>
+                            <label for="avatarUrl" class="form-label">URL de l'avatar</label>
                             <InputText id="avatarUrl" class="form-control" @bind-Value="profile.AvatarUrl" placeholder="https://..." />
                             <small class="text-muted">URL de votre photo de profil</small>
                         </div>
@@ -55,7 +55,7 @@
                         @if (!string.IsNullOrEmpty(profile.AvatarUrl))
                         {
                             <div class="mb-3">
-                                <img src="@profile.AvatarUrl" alt="Avatar" style="max-width: 150px; border-radius: 50%;" />
+                                <img src="@profile.AvatarUrl" alt="Avatar" class="profile-avatar-preview" />
                             </div>
                         }
 
@@ -64,7 +64,7 @@
                             {
                                 <div class="spinner"></div>
                             }
-                            💾 Enregistrer
+                            Enregistrer
                         </button>
                     </EditForm>
                 </div>
@@ -72,11 +72,11 @@
 
             <div class="card card-danger">
                 <div class="card-header">
-                    <h3 class="mb-0">⚠️ Zone dangereuse</h3>
+                    <h3 class="mb-0">Zone dangereuse</h3>
                 </div>
                 <div class="card-body">
                     <div class="list-item" @onclick="HandleLogout">
-                        <div class="list-item-icon">🚪</div>
+                        <div class="list-item-icon fs-icon-logout" aria-hidden="true"></div>
                         <div class="list-item-content">
                             <div class="list-item-title">Se déconnecter</div>
                             <div class="list-item-subtitle">Déconnexion de votre compte</div>
@@ -92,14 +92,14 @@
                     @if (showDeleteConfirmation)
                     {
                         <div class="alert alert-danger">
-                            <p class="mb-2"><strong>Êtes-vous vraiment sûr(e)?</strong></p>
-                            <p class="mb-3">Cette action supprimera:</p>
+                            <p class="mb-2"><strong>Êtes-vous vraiment sûr(e) ?</strong></p>
+                            <p class="mb-3">Cette action supprimera :</p>
                             <ul>
                                 <li>Votre profil utilisateur</li>
                                 <li>Toutes vos prises de pêche</li>
                                 <li>Toutes vos données associées</li>
                             </ul>
-                            <p class="text-danger"><strong>Cette action est définitive et ne peut pas être annulée!</strong></p>
+                            <p class="text-danger"><strong>Cette action est définitive et ne peut pas être annulée.</strong></p>
                             <div class="btn-group">
                                 <button class="btn btn-danger" @onclick="ConfirmDeleteAccount" disabled="@isDeleting">
                                     @if (isDeleting)
@@ -115,7 +115,7 @@
                     else
                     {
                         <button class="btn btn-danger btn-block" @onclick="ShowDeleteConfirmation">
-                            🗑️ Supprimer mon compte
+                            Supprimer mon compte
                         </button>
                     }
                 </div>

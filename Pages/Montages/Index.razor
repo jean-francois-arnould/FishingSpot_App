@@ -14,9 +14,9 @@
 
 <div class="page-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>🎣 Mes Montages</h3>
+        <h3>Mes Montages</h3>
         <a href="/FishingSpot_App/montages/ajouter" class="btn btn-primary">
-            ➕ Nouveau montage
+            Nouveau montage
         </a>
     </div>
 
@@ -30,7 +30,7 @@
     else if (!setups.Any())
     {
         <div class="empty-state">
-            <div class="empty-icon">🎣</div>
+            <div class="empty-state-icon fs-icon-rig" aria-hidden="true"></div>
             <h4>Aucun montage enregistré</h4>
             <p class="text-muted">Utilisez le bouton + ci-dessus pour créer votre premier montage</p>
         </div>
@@ -39,7 +39,7 @@
     {
         <!-- Sélecteur de montage actuel -->
         <div class="current-setup-selector mb-4">
-            <label class="form-label fw-bold">🎯 Montage actuel</label>
+            <label class="form-label fw-bold">Montage actuel</label>
             <div class="d-flex align-items-center gap-3">
                 <select class="form-select" @onchange="OnCurrentSetupChangedAsync" value="@(currentSetup?.Id ?? 0)">
                     <option value="0" disabled>-- Sélectionner un montage --</option>
@@ -53,7 +53,7 @@
                 @if (currentSetup != null)
                 {
                     <button class="btn btn-outline-primary" @onclick="() => NavigateToDetails(currentSetup.Id)">
-                        👁️ Voir détails
+                        Voir détails
                     </button>
                 }
             </div>
@@ -68,7 +68,7 @@
                         <button class="accordion-button-custom @(isFavoritesExpanded ? "" : "collapsed")" 
                                 type="button" 
                                 @onclick="() => ToggleFavoritesAccordion()">
-                            ⭐ Mes Favoris (@favoriteSetups.Count)
+                            Mes favoris (@favoriteSetups.Count)
                             <span class="accordion-icon">@(isFavoritesExpanded ? "▲" : "▼")</span>
                         </button>
                     </h2>
@@ -94,7 +94,7 @@
                     <button class="accordion-button-custom @(isSetupsExpanded ? "" : "collapsed")" 
                             type="button" 
                             @onclick="() => ToggleSetupsAccordion()">
-                        🎣 Mes Montages (@setups.Count)
+                        Mes montages (@setups.Count)
                         <span class="accordion-icon">@(isSetupsExpanded ? "▲" : "▼")</span>
                     </button>
                 </h2>
@@ -281,11 +281,11 @@
                         <h5 class="card-title mb-0">
                             @if (setup.IsFavorite)
                             {
-                                <span>⭐</span>
+                                <span class="badge badge-info me-1">Favori</span>
                             }
                             @if (setup.IsCurrent)
                             {
-                                <span>🎯</span>
+                                <span class="badge badge-secondary me-1">Actuel</span>
                             }
                             @setup.Name
                         </h5>
@@ -296,31 +296,31 @@
                             <ul class="dropdown-menu">
                                 <li>
                                     <a class="dropdown-item" href="/FishingSpot_App/montages/details/@setup.Id">
-                                        👁️ Détails
+                                        Détails
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="/FishingSpot_App/montages/modifier/@setup.Id">
-                                        ✏️ Modifier
+                                        Modifier
                                     </a>
                                 </li>
                                 @if (!setup.IsCurrent)
                                 {
                                     <li>
                                         <button class="dropdown-item" @onclick="() => SetAsCurrentAsync(setup.Id)">
-                                            🎯 Définir comme actuel
+                                            Définir comme actuel
                                         </button>
                                     </li>
                                 }
                                 <li>
                                     <button class="dropdown-item" @onclick="() => ToggleFavoriteAsync(setup.Id, setup.IsFavorite)">
-                                        @(setup.IsFavorite ? "☆ Retirer des favoris" : "⭐ Ajouter aux favoris")
+                                        @(setup.IsFavorite ? "Retirer des favoris" : "Ajouter aux favoris")
                                     </button>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <button class="dropdown-item text-danger" @onclick="() => DeleteSetupAsync(setup.Id)">
-                                        🗑️ Supprimer
+                                        Supprimer
                                     </button>
                                 </li>
                             </ul>
@@ -339,7 +339,7 @@
                             if (rod != null)
                             {
                                 <div class="setup-item">
-                                    🎣 @rod.Brand @rod.Model @(!string.IsNullOrEmpty(rod.Length) ? $"({rod.Length})" : "")
+                                    Canne · @rod.Brand @rod.Model @(!string.IsNullOrEmpty(rod.Length) ? $"({rod.Length})" : "")
                                 </div>
                             }
                         }
@@ -348,7 +348,7 @@
                             var reel = reels.FirstOrDefault(r => r.Id == setup.ReelId);
                             if (reel != null)
                             {
-                                <div class="setup-item">🎡 @reel.Brand @reel.Model</div>
+                                <div class="setup-item">Moulinet · @reel.Brand @reel.Model</div>
                             }
                         }
                         @if (setup.LineId.HasValue)
@@ -357,7 +357,7 @@
                             if (line != null)
                             {
                                 <div class="setup-item">
-                                    🧵 @line.Brand @line.Type @(!string.IsNullOrEmpty(line.Strength) ? $"({line.Strength})" : "")
+                                    Fil · @line.Brand @line.Type @(!string.IsNullOrEmpty(line.Strength) ? $"({line.Strength})" : "")
                                 </div>
                             }
                         }
@@ -366,7 +366,7 @@
                             var lure = lures.FirstOrDefault(l => l.Id == setup.LureId);
                             if (lure != null)
                             {
-                                <div class="setup-item">🪝 @lure.Name</div>
+                                <div class="setup-item">Leurre · @lure.Name</div>
                             }
                         }
                         @if (setup.LeaderId.HasValue)
@@ -374,7 +374,7 @@
                             var leader = leaders.FirstOrDefault(l => l.Id == setup.LeaderId);
                             if (leader != null)
                             {
-                                <div class="setup-item">⛓️ @leader.Material</div>
+                                <div class="setup-item">Bas de ligne · @leader.Material</div>
                             }
                         }
                         @if (setup.HookId.HasValue)
@@ -382,7 +382,7 @@
                             var hook = hooks.FirstOrDefault(h => h.Id == setup.HookId);
                             if (hook != null)
                             {
-                                <div class="setup-item">🎣 Hameçon @hook.Size</div>
+                                <div class="setup-item">Hameçon · @hook.Size</div>
                             }
                         }
                     </div>

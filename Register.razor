@@ -6,12 +6,18 @@
 @inject IUserProfileService ProfileService
 @inject NavigationManager Navigation
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Créer un compte</PageTitle>
 
-<div class="container" style="max-width: 600px; margin-top: 50px;">
-    <div class="card">
+<div class="auth-shell register-shell">
+    <div class="card auth-card">
         <div class="card-body">
-            <h3 class="card-title text-center mb-4">🎣 Créer un compte</h3>
+            <div class="auth-title mb-4">
+                <span class="app-mark" aria-hidden="true"></span>
+                <div>
+                    <span class="top-bar-kicker">FishingSpot</span>
+                    <h1 class="card-title mb-0">Créer un compte</h1>
+                </div>
+            </div>
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -32,11 +38,11 @@
                 <ValidationSummary class="text-danger" />
 
                 <!-- Section Connexion -->
-                <div class="card mb-3">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">🔐 Informations de connexion</h5>
+                <section class="form-section mb-3">
+                    <div class="form-section-header">
+                        <h5 class="mb-0">Informations de connexion</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="form-section-body">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email *</label>
                             <InputText id="email" class="form-control" @bind-Value="registerModel.Email" placeholder="votre@email.com" required />
@@ -53,14 +59,14 @@
                             <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="••••••••" required />
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Section Profil -->
-                <div class="card mb-3">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">👤 Informations personnelles</h5>
+                <section class="form-section mb-3">
+                    <div class="form-section-header">
+                        <h5 class="mb-0">Informations personnelles</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="form-section-body">
                         <div class="mb-3">
                             <label for="displayName" class="form-label">Nom d'affichage *</label>
                             <InputText id="displayName" class="form-control" @bind-Value="registerModel.DisplayName" placeholder="Jean Dupont" required />
@@ -73,7 +79,7 @@
                             <small class="form-text text-muted">Optionnel : lien vers votre photo de profil</small>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <button type="submit" class="btn btn-success w-100" disabled="@isLoading">
                     @if (isLoading)
@@ -87,7 +93,7 @@
             <hr class="my-4" />
 
             <div class="text-center">
-                <p class="mb-0">Déjà un compte?</p>
+                <p class="mb-0">Déjà un compte ?</p>
                 <a href="/FishingSpot_App/login" class="btn btn-outline-primary mt-2">Se connecter</a>
             </div>
         </div>

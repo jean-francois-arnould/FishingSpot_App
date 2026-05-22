@@ -23,7 +23,7 @@
         <div class="accordion-item @(expandedSection == "cannes" ? "expanded" : "")">
             <div class="accordion-header" @onclick='() => ToggleSection("cannes")'>
                 <div class="accordion-title">
-                    <span class="accordion-icon">🎣</span>
+                    <span class="accordion-icon fs-icon-rod" aria-hidden="true"></span>
                     <span>Cannes</span>
                     <span class="badge badge-info">@rods.Count</span>
                 </div>
@@ -37,7 +37,7 @@
                         @foreach (var rod in rods)
                         {
                             <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/cannes/details/{rod.Id}")'>
-                                <div class="list-item-icon">🎣</div>
+                                <div class="list-item-icon fs-icon-rod" aria-hidden="true"></div>
                                 <div class="list-item-content">
                                     <div class="list-item-title">@rod.Brand @rod.Model</div>
                                     <div class="list-item-subtitle">@rod.Length @rod.Power</div>
@@ -60,7 +60,7 @@
         <div class="accordion-item @(expandedSection == "moulinets" ? "expanded" : "")">
             <div class="accordion-header" @onclick='() => ToggleSection("moulinets")'>
                 <div class="accordion-title">
-                    <span class="accordion-icon">🎡</span>
+                    <span class="accordion-icon fs-icon-reel" aria-hidden="true"></span>
                     <span>Moulinets</span>
                     <span class="badge badge-info">@reels.Count</span>
                 </div>
@@ -74,7 +74,7 @@
                         @foreach (var reel in reels)
                         {
                             <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/moulinets/details/{reel.Id}")'>
-                                <div class="list-item-icon">🎡</div>
+                                <div class="list-item-icon fs-icon-reel" aria-hidden="true"></div>
                                 <div class="list-item-content">
                                     <div class="list-item-title">@reel.Brand @reel.Model</div>
                                     <div class="list-item-subtitle">@reel.Type</div>
@@ -97,7 +97,7 @@
         <div class="accordion-item @(expandedSection == "fils" ? "expanded" : "")">
             <div class="accordion-header" @onclick='() => ToggleSection("fils")'>
                 <div class="accordion-title">
-                    <span class="accordion-icon">🧵</span>
+                    <span class="accordion-icon fs-icon-line" aria-hidden="true"></span>
                     <span>Fils</span>
                     <span class="badge badge-info">@lines.Count</span>
                 </div>
@@ -111,7 +111,7 @@
                         @foreach (var line in lines)
                         {
                             <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/fils/details/{line.Id}")'>
-                                <div class="list-item-icon">🧵</div>
+                                <div class="list-item-icon fs-icon-line" aria-hidden="true"></div>
                                 <div class="list-item-content">
                                     <div class="list-item-title">@line.Brand @line.Type</div>
                                     <div class="list-item-subtitle">@line.Strength</div>
@@ -134,7 +134,7 @@
         <div class="accordion-item @(expandedSection == "leurres" ? "expanded" : "")">
             <div class="accordion-header" @onclick='() => ToggleSection("leurres")'>
                 <div class="accordion-title">
-                    <span class="accordion-icon">🐟</span>
+                    <span class="accordion-icon fs-icon-lure" aria-hidden="true"></span>
                     <span>Leurres</span>
                     <span class="badge badge-info">@lures.Count</span>
                 </div>
@@ -148,7 +148,7 @@
                         @foreach (var lure in lures)
                         {
                             <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/leurres/details/{lure.Id}")'>
-                                <div class="list-item-icon">🐟</div>
+                                <div class="list-item-icon fs-icon-lure" aria-hidden="true"></div>
                                 <div class="list-item-content">
                                     <div class="list-item-title">@lure.Name</div>
                                     <div class="list-item-subtitle">@lure.Type - @lure.Color</div>
@@ -171,7 +171,7 @@
         <div class="accordion-item @(expandedSection == "hamecons" ? "expanded" : "")">
             <div class="accordion-header" @onclick='() => ToggleSection("hamecons")'>
                 <div class="accordion-title">
-                    <span class="accordion-icon">🪝</span>
+                    <span class="accordion-icon fs-icon-hook" aria-hidden="true"></span>
                     <span>Hameçons</span>
                     <span class="badge badge-info">@hooks.Count</span>
                 </div>
@@ -185,7 +185,7 @@
                         @foreach (var hook in hooks)
                         {
                             <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/hamecons/details/{hook.Id}")'>
-                                <div class="list-item-icon">🪝</div>
+                                <div class="list-item-icon fs-icon-hook" aria-hidden="true"></div>
                                 <div class="list-item-content">
                                     <div class="list-item-title">Taille @hook.Size @(!string.IsNullOrEmpty(hook.Brand) ? $"- {hook.Brand}" : "")</div>
                                     <div class="list-item-subtitle">@hook.Type</div>
@@ -208,7 +208,7 @@
         <div class="accordion-item @(expandedSection == "bas-de-ligne" ? "expanded" : "")">
             <div class="accordion-header" @onclick='() => ToggleSection("bas-de-ligne")'>
                 <div class="accordion-title">
-                    <span class="accordion-icon">⛓️</span>
+                    <span class="accordion-icon fs-icon-leader" aria-hidden="true"></span>
                     <span>Bas de ligne</span>
                     <span class="badge badge-info">@leaders.Count</span>
                 </div>
@@ -222,7 +222,7 @@
                         @foreach (var leader in leaders)
                         {
                             <div class="list-item" @onclick='() => Navigation.NavigateTo($"/FishingSpot_App/materiel/bas-de-ligne/details/{leader.Id}")'>
-                                <div class="list-item-icon">⛓️</div>
+                                <div class="list-item-icon fs-icon-leader" aria-hidden="true"></div>
                                 <div class="list-item-content">
                                     <div class="list-item-title">@leader.Material</div>
                                     <div class="list-item-subtitle">@leader.Length - @leader.Strength</div>
@@ -249,27 +249,27 @@
     {
         <div class="fab-menu">
             <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/cannes/ajouter")'>
-                <span class="fab-menu-icon">🎣</span>
+                <span class="fab-menu-icon fs-icon-rod" aria-hidden="true"></span>
                 <span class="fab-menu-label">Canne</span>
             </button>
             <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/moulinets/ajouter")'>
-                <span class="fab-menu-icon">🎡</span>
+                <span class="fab-menu-icon fs-icon-reel" aria-hidden="true"></span>
                 <span class="fab-menu-label">Moulinet</span>
             </button>
             <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/fils/ajouter")'>
-                <span class="fab-menu-icon">🧵</span>
+                <span class="fab-menu-icon fs-icon-line" aria-hidden="true"></span>
                 <span class="fab-menu-label">Fil</span>
             </button>
             <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/leurres/ajouter")'>
-                <span class="fab-menu-icon">🐟</span>
+                <span class="fab-menu-icon fs-icon-lure" aria-hidden="true"></span>
                 <span class="fab-menu-label">Leurre</span>
             </button>
             <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/hamecons/ajouter")'>
-                <span class="fab-menu-icon">🪝</span>
+                <span class="fab-menu-icon fs-icon-hook" aria-hidden="true"></span>
                 <span class="fab-menu-label">Hameçon</span>
             </button>
             <button class="fab-menu-item" @onclick='() => Navigation.NavigateTo("/FishingSpot_App/materiel/bas-de-ligne/ajouter")'>
-                <span class="fab-menu-icon">⛓️</span>
+                <span class="fab-menu-icon fs-icon-leader" aria-hidden="true"></span>
                 <span class="fab-menu-label">Bas de ligne</span>
             </button>
         </div>

@@ -22,7 +22,7 @@
     else if (catchToEdit == null)
     {
         <div class="empty-state">
-            <div class="empty-state-icon">❌</div>
+            <div class="empty-state-icon fs-icon-delete" aria-hidden="true"></div>
             <h3>Prise introuvable</h3>
             <p class="text-muted">Cette prise n'existe pas ou vous n'avez pas l'autorisation de la modifier.</p>
             <button class="btn btn-primary" @onclick="Cancel">
@@ -51,7 +51,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="mb-0">🐟 Information du poisson</h3>
+                    <h3 class="mb-0">Information du poisson</h3>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
@@ -62,12 +62,12 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="length" class="form-label">📏 Longueur (cm)</label>
+                            <label for="length" class="form-label">Longueur (cm)</label>
                             <InputNumber id="length" class="form-control" @bind-Value="catchToEdit.Length" 
                                        placeholder="30" step="0.1" />
                         </div>
                         <div class="form-group">
-                            <label for="weight" class="form-label">⚖️ Poids (kg)</label>
+                            <label for="weight" class="form-label">Poids (kg)</label>
                             <InputNumber id="weight" class="form-control" @bind-Value="catchToEdit.Weight" 
                                        placeholder="2.5" step="0.1" />
                         </div>
@@ -77,7 +77,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="mb-0">📍 Lieu et date</h3>
+                    <h3 class="mb-0">Lieu et date</h3>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
@@ -100,7 +100,7 @@
                                 }
                                 else
                                 {
-                                    <span>📍</span>
+                                    <span class="fs-icon fs-icon-map" aria-hidden="true"></span>
                                 }
                             </button>
                         </div>
@@ -123,17 +123,17 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="mb-0">📸 Photo et détails</h3>
+                    <h3 class="mb-0">Photo et détails</h3>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
                         <label class="form-label">Photo</label>
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-primary" @onclick="OpenGallery" disabled="@isUploadingPhoto">
-                                🖼️ Galerie
+                                Galerie
                             </button>
                             <button type="button" class="btn btn-outline-primary" @onclick="OpenCamera" disabled="@isUploadingPhoto">
-                                📷 Caméra
+                                Caméra
                             </button>
                         </div>
 
@@ -152,7 +152,7 @@
                             <div class="photo-preview">
                                 <img src="@catchToEdit.PhotoUrl" alt="Aperçu" class="preview-img" />
                                 <button type="button" class="btn btn-sm btn-danger" @onclick="RemovePhoto">
-                                    ❌ Supprimer
+                                    Supprimer
                                 </button>
                             </div>
                         }
@@ -188,14 +188,14 @@
                 </button>
                 <div>
                     <button type="button" class="btn btn-danger" @onclick="ShowDeleteConfirmation">
-                        🗑️ Supprimer
+                        Supprimer
                     </button>
-                    <button type="submit" class="btn btn-primary" disabled="@isSaving" style="margin-left: 8px;">
+                    <button type="submit" class="btn btn-primary" disabled="@isSaving">
                         @if (isSaving)
                         {
                             <div class="spinner"></div>
                         }
-                        ✅ Enregistrer
+                        Enregistrer
                     </button>
                 </div>
             </div>
@@ -206,7 +206,7 @@
             <div class="modal-overlay" @onclick="CancelDelete">
                 <div class="modal" @onclick:stopPropagation="true">
                     <div class="modal-header">
-                        <h3>⚠️ Confirmer la suppression</h3>
+                        <h3>Confirmer la suppression</h3>
                         <button type="button" class="modal-close" @onclick="CancelDelete">&times;</button>
                     </div>
                     <div class="modal-body">

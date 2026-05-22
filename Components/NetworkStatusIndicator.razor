@@ -7,7 +7,7 @@
 {
     <div class="offline-banner">
         <div class="offline-banner-content">
-            <span class="offline-icon">📡</span>
+            <span class="offline-icon" aria-hidden="true"></span>
             <span class="offline-text">Mode hors ligne</span>
             @if (pendingCount > 0)
             {
@@ -20,7 +20,7 @@ else if (isSyncing)
 {
     <div class="syncing-banner">
         <div class="syncing-banner-content">
-            <span class="syncing-icon">🔄</span>
+            <span class="syncing-icon" aria-hidden="true"></span>
             <span class="syncing-text">Synchronisation...</span>
         </div>
     </div>

@@ -4,12 +4,18 @@
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 
-<PageTitle>Login</PageTitle>
+<PageTitle>Connexion</PageTitle>
 
-<div class="container" style="max-width: 400px; margin-top: 50px;">
-    <div class="card">
+<div class="auth-shell">
+    <div class="card auth-card">
         <div class="card-body">
-            <h3 class="card-title text-center mb-4">🎣 FishingSpot Login</h3>
+            <div class="auth-title mb-4">
+                <span class="app-mark" aria-hidden="true"></span>
+                <div>
+                    <span class="top-bar-kicker">FishingSpot</span>
+                    <h1 class="card-title mb-0">Connexion</h1>
+                </div>
+            </div>
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -51,7 +57,7 @@
             <hr class="my-4" />
 
             <div class="text-center">
-                <p class="mb-0">Pas encore de compte?</p>
+                <p class="mb-0">Pas encore de compte ?</p>
                 <a href="/FishingSpot_App/register" class="btn btn-outline-secondary mt-2">Créer un compte</a>
             </div>
         </div>

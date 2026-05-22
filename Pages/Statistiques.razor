@@ -20,7 +20,7 @@
         else if (allCatches == null || !allCatches.Any())
         {
             <div class="empty-state">
-                <div class="empty-state-icon">📊</div>
+                <div class="empty-state-icon fs-icon-stats" aria-hidden="true"></div>
                 <h3>Aucune statistique disponible</h3>
                 <p class="text-muted">Commencez par enregistrer vos prises pour voir vos statistiques !</p>
             </div>
@@ -31,7 +31,7 @@
             <div class="stats-cards-container">
                 <!-- Total de prises -->
                 <div class="stat-card stat-card-weather" @onclick="ShowTotalInfo">
-                    <div class="stat-icon">🎣</div>
+                    <div class="stat-icon fs-icon-catches" aria-hidden="true"></div>
                     <div class="stat-content">
                         <div class="stat-value">@totalCatches</div>
                         <div class="stat-label">Prises totales</div>
@@ -40,7 +40,7 @@
 
                 <!-- Plus gros poisson (longueur) -->
                 <div class="stat-card stat-card-weather" @onclick="ShowBiggestInfo">
-                    <div class="stat-icon">📏</div>
+                    <div class="stat-icon">cm</div>
                     <div class="stat-content">
                         <div class="stat-value">@(biggestFish?.Length.ToString("0")) cm</div>
                         <div class="stat-label">Plus gros poisson</div>
@@ -53,7 +53,7 @@
 
                 <!-- Plus lourd poisson -->
                 <div class="stat-card stat-card-weather" @onclick="ShowHeaviestInfo">
-                    <div class="stat-icon">⚖️</div>
+                    <div class="stat-icon">kg</div>
                     <div class="stat-content">
                         <div class="stat-value">@(((heaviestFish?.Weight ?? 0) / 1000.0).ToString("0.00")) kg</div>
                         <div class="stat-label">Plus lourd</div>
@@ -66,7 +66,7 @@
 
                 <!-- Poids total -->
                 <div class="stat-card stat-card-weather" @onclick="ShowTotalWeightInfo">
-                    <div class="stat-icon">🏆</div>
+                    <div class="stat-icon fs-icon-check" aria-hidden="true"></div>
                     <div class="stat-content">
                         <div class="stat-value">@((totalWeight / 1000.0).ToString("0.00")) kg</div>
                         <div class="stat-label">Poids total capturé</div>
@@ -78,12 +78,12 @@
             @if (catchesWithWeather != null && catchesWithWeather.Any())
             {
                 <div class="stats-section">
-                    <h2 class="stats-section-title">🌤️ Statistiques météo</h2>
+                    <h2 class="stats-section-title">Statistiques météo</h2>
 
                     <div class="stats-cards-container weather-stats-container">
                         <!-- Température moyenne -->
                         <div class="stat-card stat-card-weather" @onclick="ShowTemperatureInfo">
-                            <div class="stat-icon">🌡️</div>
+                            <div class="stat-icon">°C</div>
                             <div class="stat-content">
                                 <div class="stat-value">@averageTemperature.ToString("F1")°C</div>
                                 <div class="stat-label">Température moyenne</div>
@@ -102,7 +102,7 @@
 
                         <!-- Vent moyen -->
                         <div class="stat-card stat-card-weather" @onclick="ShowWindInfo">
-                            <div class="stat-icon">💨</div>
+                            <div class="stat-icon">km</div>
                             <div class="stat-content">
                                 <div class="stat-value">@averageWindSpeed.ToString("F1") km/h</div>
                                 <div class="stat-label">Vent moyen</div>
@@ -111,7 +111,7 @@
 
                         <!-- Humidité moyenne -->
                         <div class="stat-card stat-card-weather" @onclick="ShowHumidityInfo">
-                            <div class="stat-icon">💧</div>
+                            <div class="stat-icon">%</div>
                             <div class="stat-content">
                                 <div class="stat-value">@averageHumidity.ToString("F0")%</div>
                                 <div class="stat-label">Humidité moyenne</div>
@@ -124,7 +124,7 @@
                 @if (topSpeciesStats.Any())
                 {
                     <div class="stats-section">
-                        <h2 class="stats-section-title">🎯 Meilleures conditions par espèce</h2>
+                        <h2 class="stats-section-title">Meilleures conditions par espèce</h2>
 
                         <div class="species-weather-cards">
                             @foreach (var stat in topSpeciesStats)
@@ -140,11 +140,11 @@
                                             <span class="weather-detail-value">@stat.ConditionCount fois</span>
                                         </div>
                                         <div class="weather-detail-row">
-                                            <span class="weather-detail-label">🌡️ Température moyenne</span>
+                                            <span class="weather-detail-label">Température moyenne</span>
                                             <span class="weather-detail-value">@stat.AverageTemp.ToString("F1")°C</span>
                                         </div>
                                         <div class="weather-detail-row">
-                                            <span class="weather-detail-label">💨 Vent moyen</span>
+                                            <span class="weather-detail-label">Vent moyen</span>
                                             <span class="weather-detail-value">@stat.AverageWind.ToString("F1") km/h</span>
                                         </div>
                                     </div>
@@ -220,7 +220,7 @@
 {
     <div class="stat-modal-overlay" @onclick="CloseCatchesModal">
         <div class="stat-modal-dialog catches-modal-dialog" @onclick:stopPropagation>
-            <div class="stat-modal-icon">📅</div>
+            <div class="stat-modal-icon fs-icon-stats" aria-hidden="true"></div>
             <h3 class="stat-modal-title">Prises du @selectedDate.ToString("dd/MM/yyyy")</h3>
 
             <div class="catches-modal-list">
@@ -234,17 +234,17 @@
                             }
                             else
                             {
-                                <div class="catch-preview-icon">🐟</div>
+                                <div class="catch-preview-icon fs-icon-catches" aria-hidden="true"></div>
                             }
                             <div class="catch-preview-info">
                                 <div class="catch-preview-name">@fishCatch.FishName</div>
-                                <div class="catch-preview-location">📍 @fishCatch.LocationName</div>
+                                <div class="catch-preview-location">@fishCatch.LocationName</div>
                             </div>
                             <div class="catch-preview-arrow">›</div>
                         </div>
                         <div class="catch-preview-stats">
-                            <span class="catch-preview-badge">📏 @fishCatch.Length cm</span>
-                            <span class="catch-preview-badge">⚖️ @((fishCatch.Weight / 1000.0).ToString("0.00")) kg</span>
+                            <span class="catch-preview-badge">@fishCatch.Length cm</span>
+                            <span class="catch-preview-badge">@((fishCatch.Weight / 1000.0).ToString("0.00")) kg</span>
                             @if (fishCatch.WeatherTemperature.HasValue)
                             {
                                 <span class="catch-preview-badge">@GetWeatherEmoji(fishCatch.WeatherCode ?? 0) @fishCatch.WeatherTemperature.Value.ToString("F1")°C</span>

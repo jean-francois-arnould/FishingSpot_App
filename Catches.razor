@@ -24,7 +24,7 @@
         else if (catches == null || !catches.Any())
         {
             <div class="empty-state">
-                <div class="empty-state-icon">🐟</div>
+                <div class="empty-state-icon fs-icon-catches" aria-hidden="true"></div>
                 <h3>Aucune prise enregistrée</h3>
                 <p class="text-muted">Commencez par ajouter votre première prise de pêche !</p>
             </div>
@@ -34,7 +34,7 @@
             <!-- Section de filtres -->
             <div class="filters-section">
                 <div class="filters-header" @onclick="ToggleFilters">
-                    <h3>🔍 Filtres</h3>
+                    <h3>Filtres</h3>
                     <span class="toggle-icon">@(showFilters ? "▼" : "▶")</span>
                 </div>
 
@@ -42,7 +42,7 @@
                 {
                     <div class="filters-content">
                         <div class="filter-group">
-                            <label class="filter-label">📅 Période</label>
+                            <label class="filter-label">Période</label>
                             <select class="form-control" @bind="selectedPeriod" @bind:after="ApplyFilters">
                                 <option value="all">Toutes les dates</option>
                                 <option value="today">Aujourd'hui</option>
@@ -68,7 +68,7 @@
                         }
 
                         <div class="filter-group">
-                            <label class="filter-label">🐟 Espèce</label>
+                            <label class="filter-label">Espèce</label>
                             <select class="form-control" @bind="selectedFishName" @bind:after="ApplyFilters">
                                 <option value="">Toutes les espèces</option>
                                 @foreach (var fishName in availableFishNames)
@@ -101,7 +101,7 @@
             @if (!filteredCatches.Any())
             {
                 <div class="empty-state">
-                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-icon fs-icon-search" aria-hidden="true"></div>
                     <h3>Aucune prise trouvée</h3>
                     <p class="text-muted">Aucune prise ne correspond aux filtres sélectionnés.</p>
                     <button class="btn btn-outline-primary" @onclick="ResetFilters">
@@ -126,12 +126,12 @@
                                 }
                                 else
                                 {
-                                    <div class="list-item-icon">🐟</div>
+                                    <div class="list-item-icon fs-icon-catches" aria-hidden="true"></div>
                                 }
                                 <div class="list-item-content">
                                     <div class="list-item-title">@fishCatch.FishName</div>
                                     <div class="list-item-subtitle">
-                                        📍 @fishCatch.LocationName
+                                        @fishCatch.LocationName
                                     </div>
                                     <div class="list-item-meta">
                                         <span class="badge badge-info">@fishCatch.Length cm</span>
@@ -143,7 +143,7 @@
                             </div>
 
                             <div class="swipe-delete" @onclick="() => ShowDeleteConfirmation(fishCatch)">
-                                <span class="delete-icon">🗑️</span>
+                                <span class="delete-icon fs-icon-delete" aria-hidden="true"></span>
                             </div>
                         </div>
                     }
@@ -160,13 +160,13 @@
 
 <!-- Popup de confirmation de suppression stylée -->
 <ConfirmationModal IsVisible="@showDeleteModal"
-                   Icon="🗑️"
+                   Icon="!"
                    Title="Supprimer cette prise ?"
                    Message="Cette action est irréversible. La prise sera définitivement supprimée."
                    DetailLine1="@(catchToDelete?.FishName)"
                    DetailLine2="@(catchToDelete != null ? $"{catchToDelete.LocationName} - {catchToDelete.CatchDate.ToShortDateString()}" : "")"
                    CancelText="Annuler"
-                   ConfirmText="🗑️ Supprimer"
+                   ConfirmText="Supprimer"
                    ConfirmButtonClass="danger"
                    IsProcessing="@isDeleting"
                    OnConfirm="ConfirmDelete"

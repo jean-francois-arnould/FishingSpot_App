@@ -16,9 +16,23 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <div class="top-bar-title">
-                <span>🎣</span>
-                <span>FishingSpot</span>
+                <span class="app-mark" aria-hidden="true"></span>
+                <span class="top-bar-title-text">
+                    <span class="top-bar-kicker">FishingSpot</span>
+                    <span class="top-bar-page">@GetPageTitle()</span>
+                </span>
             </div>
+            @if (AuthService.IsAuthenticated)
+            {
+                <div class="top-bar-actions">
+                    <a href="/FishingSpot_App/catches/add" class="top-bar-btn primary" title="Ajouter une prise" aria-label="Ajouter une prise">
+                        <span class="fs-icon fs-icon-plus" aria-hidden="true"></span>
+                    </a>
+                    <button type="button" class="top-bar-btn" @onclick="ToggleMenu" title="Ouvrir le menu" aria-label="Ouvrir le menu">
+                        <span class="fs-icon fs-icon-menu" aria-hidden="true"></span>
+                    </button>
+                </div>
+            }
         </div>
 
         <!-- Main Content -->
@@ -38,54 +52,56 @@
             <div class="burger-menu @(isMenuOpen ? "open" : "")">
                 <div class="burger-menu-header">
                     <div class="burger-menu-title">
-                        <span>🎣</span>
+                        <span class="app-mark" aria-hidden="true"></span>
                         <span>Menu</span>
                     </div>
-                    <button class="menu-close-btn" @onclick="CloseMenu">✕</button>
+                    <button type="button" class="menu-close-btn" @onclick="CloseMenu" aria-label="Fermer le menu">
+                        <span class="fs-icon fs-icon-close" aria-hidden="true"></span>
+                    </button>
                 </div>
 
                 <nav class="burger-menu-nav">
                     <a href="/FishingSpot_App/" class="burger-menu-item @(IsActive("/FishingSpot_App/") && !IsActive("/FishingSpot_App/catches") && !IsActive("/FishingSpot_App/statistiques") ? "active" : "")" @onclick="CloseMenu">
-                        <span class="burger-menu-icon">🏠</span>
+                        <span class="burger-menu-icon fs-icon-home" aria-hidden="true"></span>
                         <span class="burger-menu-label">Accueil</span>
                     </a>
 
                     <a href="/FishingSpot_App/catches" class="burger-menu-item @(IsActive("/FishingSpot_App/catches") ? "active" : "")" @onclick="CloseMenu">
-                        <span class="burger-menu-icon">🐟</span>
+                        <span class="burger-menu-icon fs-icon-catches" aria-hidden="true"></span>
                         <span class="burger-menu-label">Mes Prises</span>
                     </a>
 
                     <a href="/FishingSpot_App/statistiques" class="burger-menu-item @(IsActive("/FishingSpot_App/statistiques") ? "active" : "")" @onclick="CloseMenu">
-                        <span class="burger-menu-icon">📊</span>
+                        <span class="burger-menu-icon fs-icon-stats" aria-hidden="true"></span>
                         <span class="burger-menu-label">Statistiques</span>
                     </a>
 
                     <a href="/FishingSpot_App/carte" class="burger-menu-item @(IsActive("/FishingSpot_App/carte") ? "active" : "")" @onclick="CloseMenu">
-                        <span class="burger-menu-icon">🗺️</span>
+                        <span class="burger-menu-icon fs-icon-map" aria-hidden="true"></span>
                         <span class="burger-menu-label">Carte Géopêche</span>
                     </a>
 
                     <div class="burger-menu-divider"></div>
 
                     <a href="/FishingSpot_App/materiel" class="burger-menu-item @(IsActive("/FishingSpot_App/materiel") ? "active" : "")" @onclick="CloseMenu">
-                        <span class="burger-menu-icon">🎣</span>
+                        <span class="burger-menu-icon fs-icon-gear" aria-hidden="true"></span>
                         <span class="burger-menu-label">Mon Matériel</span>
                     </a>
 
                     <a href="/FishingSpot_App/montages" class="burger-menu-item @(IsActive("/FishingSpot_App/montages") ? "active" : "")" @onclick="CloseMenu">
-                        <span class="burger-menu-icon">🪝</span>
+                        <span class="burger-menu-icon fs-icon-rig" aria-hidden="true"></span>
                         <span class="burger-menu-label">Mes Montages</span>
                     </a>
 
                     <div class="burger-menu-divider"></div>
 
                     <a href="/FishingSpot_App/profile" class="burger-menu-item @(IsActive("/FishingSpot_App/profile") ? "active" : "")" @onclick="CloseMenu">
-                        <span class="burger-menu-icon">👤</span>
+                        <span class="burger-menu-icon fs-icon-user" aria-hidden="true"></span>
                         <span class="burger-menu-label">Mon Profil</span>
                     </a>
 
-                    <button class="burger-menu-item burger-menu-logout" @onclick="HandleLogoutFromMenu">
-                        <span class="burger-menu-icon">🚪</span>
+                    <button type="button" class="burger-menu-item burger-menu-logout" @onclick="HandleLogoutFromMenu">
+                        <span class="burger-menu-icon fs-icon-logout" aria-hidden="true"></span>
                         <span class="burger-menu-label">Déconnexion</span>
                     </button>
                 </nav>
@@ -97,22 +113,22 @@
         {
             <nav class="bottom-nav">
                 <a href="/FishingSpot_App/" class="bottom-nav-item @(IsActive("/FishingSpot_App/") && !IsActive("/FishingSpot_App/catches") && !IsActive("/FishingSpot_App/statistiques") ? "active" : "")">
-                    <div class="bottom-nav-icon">🏠</div>
+                    <div class="bottom-nav-icon fs-icon-home" aria-hidden="true"></div>
                     <div class="bottom-nav-label">Accueil</div>
                 </a>
 
                 <a href="/FishingSpot_App/catches" class="bottom-nav-item @(IsActive("/FishingSpot_App/catches") ? "active" : "")">
-                    <div class="bottom-nav-icon">🐟</div>
+                    <div class="bottom-nav-icon fs-icon-catches" aria-hidden="true"></div>
                     <div class="bottom-nav-label">Prises</div>
                 </a>
 
                 <a href="/FishingSpot_App/statistiques" class="bottom-nav-item @(IsActive("/FishingSpot_App/statistiques") ? "active" : "")">
-                    <div class="bottom-nav-icon">📊</div>
+                    <div class="bottom-nav-icon fs-icon-stats" aria-hidden="true"></div>
                     <div class="bottom-nav-label">Stats</div>
                 </a>
 
-                <button class="bottom-nav-item @(isMenuOpen ? "active" : "")" @onclick="ToggleMenu">
-                    <div class="bottom-nav-icon">☰</div>
+                <button type="button" class="bottom-nav-item @(isMenuOpen ? "active" : "")" @onclick="ToggleMenu">
+                    <div class="bottom-nav-icon fs-icon-menu" aria-hidden="true"></div>
                     <div class="bottom-nav-label">Menu</div>
                 </button>
             </nav>
@@ -155,6 +171,21 @@ else
     private bool IsActive(string path)
     {
         return currentUrl.Contains(path);
+    }
+
+    private string GetPageTitle()
+    {
+        if (IsActive("/FishingSpot_App/catches/add")) return "Nouvelle prise";
+        if (IsActive("/FishingSpot_App/catches/edit")) return "Modifier une prise";
+        if (IsActive("/FishingSpot_App/catches")) return "Mes prises";
+        if (IsActive("/FishingSpot_App/statistiques")) return "Statistiques";
+        if (IsActive("/FishingSpot_App/carte")) return "Carte Géopêche";
+        if (IsActive("/FishingSpot_App/materiel")) return "Mon matériel";
+        if (IsActive("/FishingSpot_App/montages")) return "Mes montages";
+        if (IsActive("/FishingSpot_App/profile")) return "Profil";
+        if (IsActive("/FishingSpot_App/login")) return "Connexion";
+        if (IsActive("/FishingSpot_App/register")) return "Créer un compte";
+        return "Accueil";
     }
 
     private void ToggleMenu()
