@@ -44,13 +44,142 @@ public class StatisticsServiceTests
         Assert.Equal("B", stats.BiggestCatch?.FishName);
     }
 
+    [Fact]
+    public async Task GetDashboardAsync_BuildsConditionInsights()
+    {
+        var today = DateTime.Today;
+        var catches = new List<FishCatch>
+        {
+            new()
+            {
+                FishName = "Brochet",
+                CatchDate = today.AddDays(-2),
+                CatchTime = new TimeSpan(6, 15, 0),
+                Length = 82,
+                Weight = 3200,
+                LocationName = "Lac",
+                WeatherCondition = "Nuageux",
+                WeatherTemperature = 14,
+                WindSpeed = 8,
+                Humidity = 70
+            },
+            new()
+            {
+                FishName = "Perche",
+                CatchDate = today.AddDays(-1),
+                CatchTime = new TimeSpan(7, 30, 0),
+                Length = 34,
+                Weight = 550,
+                LocationName = "Lac",
+                WeatherCondition = "Nuageux",
+                WeatherTemperature = 16,
+                WindSpeed = 10,
+                Humidity = 74
+            },
+            new()
+            {
+                FishName = "Sandre",
+                CatchDate = today.AddDays(-120),
+                CatchTime = new TimeSpan(20, 0, 0),
+                Length = 58,
+                Weight = 1800,
+                LocationName = "Canal"
+            }
+        };
+
+        var service = new StatisticsService(new FakeSupabaseService(catches), new FakeLoggerService());
+
+        var dashboard = await service.GetDashboardAsync(StatisticsPeriod.Last90Days);
+
+        Assert.Equal(3, dashboard.TotalAvailableCatches);
+        Assert.Equal(2, dashboard.Summary.TotalCatches);
+        Assert.Equal("06:00 - 09:00", dashboard.Conditions.BestTimeSlot);
+        Assert.Equal("Nuageux", dashboard.Conditions.BestWeatherCondition);
+        Assert.Equal(15, dashboard.Conditions.AverageTemperature);
+        Assert.Equal("Lac", dashboard.Conditions.BestLocation?.LocationName);
+        Assert.Equal(24, dashboard.HourlyBreakdown.Count);
+    }
+
+    [Fact]
+    public async Task GetDashboardAsync_BuildsAdvancedInsights()
+    {
+        var today = DateTime.Today;
+        var catches = new List<FishCatch>
+        {
+            new() { Id = 1, FishName = "Brochet", CatchDate = today.AddDays(-5), CatchTime = new TimeSpan(6, 0, 0), Length = 92, Weight = 5200, LocationName = "Grand Lac", Latitude = "49.6110", Longitude = "6.1319", SetupId = 10, WeatherCode = 2, WeatherCondition = "Partiellement nuageux", WeatherTemperature = 13, WindSpeed = 8, Humidity = 72, PhotoUrl = "photo-a.jpg" },
+            new() { Id = 2, FishName = "Perche", CatchDate = today.AddDays(-4), CatchTime = new TimeSpan(6, 30, 0), Length = 38, Weight = 750, LocationName = "Grand Lac", Latitude = "49.61103", Longitude = "6.13188", SetupId = 10, WeatherCode = 2, WeatherCondition = "Partiellement nuageux", WeatherTemperature = 14 },
+            new() { Id = 3, FishName = "Sandre", CatchDate = today.AddDays(-3), CatchTime = new TimeSpan(20, 0, 0), Length = 64, Weight = 2400, LocationName = "Canal", SetupId = 20 },
+            new() { Id = 4, FishName = "Brochet", CatchDate = today.AddDays(-2), CatchTime = new TimeSpan(18, 0, 0), Length = 71, Weight = 3100, LocationName = "Canal", SetupId = 20 }
+        };
+        var setups = new List<FishingSetup>
+        {
+            new() { Id = 10, Name = "Shad profond" },
+            new() { Id = 20, Name = "Drop shot" }
+        };
+
+        var service = new StatisticsService(new FakeSupabaseService(catches, setups), new FakeLoggerService());
+
+        var dashboard = await service.GetDashboardAsync(StatisticsPeriod.Last90Days);
+        var insights = dashboard.AdvancedInsights;
+
+        Assert.Equal("Grand Lac", insights.ProductiveSpots.First().LocationName);
+        Assert.True(insights.ProductiveSpots.First().HasCoordinates);
+        Assert.Equal("Shad profond", insights.SetupEfficiency.First().SetupName);
+        Assert.Contains(insights.SpeciesRecords, r => r.FishName == "Brochet" && r.Catch.Id == 1);
+        Assert.Equal(4, insights.SessionScores.Count);
+        Assert.NotEmpty(insights.ReturnSuggestions);
+    }
+
+    [Fact]
+    public async Task GetDashboardAsync_AdvancedInsightsHandleEmptyData()
+    {
+        var service = new StatisticsService(new FakeSupabaseService(new List<FishCatch>()), new FakeLoggerService());
+
+        var dashboard = await service.GetDashboardAsync(StatisticsPeriod.AllTime);
+
+        Assert.Empty(dashboard.AdvancedInsights.ProductiveSpots);
+        Assert.Empty(dashboard.AdvancedInsights.SetupEfficiency);
+        Assert.Empty(dashboard.AdvancedInsights.SessionScores);
+        Assert.Empty(dashboard.AdvancedInsights.SpeciesRecords);
+        Assert.Empty(dashboard.AdvancedInsights.ReturnSuggestions);
+    }
+
+    [Fact]
+    public async Task GetDashboardAsync_UsesForecastForReturnSuggestions()
+    {
+        var today = DateTime.Today;
+        var catches = new List<FishCatch>
+        {
+            new() { Id = 1, FishName = "Brochet", CatchDate = today.AddDays(-7), CatchTime = new TimeSpan(6, 15, 0), Length = 80, Weight = 3000, LocationName = "Lac", Latitude = "49.6", Longitude = "6.1", WeatherCode = 2 },
+            new() { Id = 2, FishName = "Perche", CatchDate = today.AddDays(-6), CatchTime = new TimeSpan(6, 45, 0), Length = 35, Weight = 600, LocationName = "Lac", Latitude = "49.6", Longitude = "6.1", WeatherCode = 2 }
+        };
+        var forecast = new WeatherForecast
+        {
+            Hours =
+            {
+                new() { Time = DateTime.Now.AddDays(1).Date.AddHours(6), WeatherCode = 2, Temperature = 14, WindSpeed = 8, Humidity = 70, PrecipitationProbability = 10 },
+                new() { Time = DateTime.Now.AddDays(1).Date.AddHours(15), WeatherCode = 95, Temperature = 27, WindSpeed = 35, Humidity = 80, PrecipitationProbability = 90 }
+            }
+        };
+        var service = new StatisticsService(new FakeSupabaseService(catches), new FakeLoggerService(), new FakeWeatherService(forecast));
+
+        var dashboard = await service.GetDashboardAsync(StatisticsPeriod.Last90Days);
+        var suggestion = Assert.Single(dashboard.AdvancedInsights.ReturnSuggestions);
+
+        Assert.True(suggestion.UsesForecast);
+        Assert.Equal(6, suggestion.SuggestedAt.Hour);
+        Assert.Equal(2, suggestion.WeatherCode);
+    }
+
     private sealed class FakeSupabaseService : ISupabaseService
     {
         private readonly List<FishCatch> _catches;
+        private readonly List<FishingSetup> _setups;
 
-        public FakeSupabaseService(List<FishCatch> catches)
+        public FakeSupabaseService(List<FishCatch> catches, List<FishingSetup>? setups = null)
         {
             _catches = catches;
+            _setups = setups ?? new List<FishingSetup>();
         }
 
         public Task InitializeAsync() => Task.CompletedTask;
@@ -63,7 +192,7 @@ public class StatisticsServiceTests
         public Task<int> AddFishSpeciesAsync(FishSpecies fishSpecies) => Task.FromResult(1);
         public Task<List<FishingBrand>> GetBrandsByCategoryAsync(string category) => Task.FromResult(new List<FishingBrand>());
         public Task<int> AddFishingBrandAsync(FishingBrand brand) => Task.FromResult(1);
-        public Task<List<FishingSetup>> GetAllSetupsAsync() => Task.FromResult(new List<FishingSetup>());
+        public Task<List<FishingSetup>> GetAllSetupsAsync() => Task.FromResult(_setups);
         public Task<FishingSetup?> GetSetupByIdAsync(int id) => Task.FromResult<FishingSetup?>(null);
         public Task<FishingSetup?> GetCurrentSetupAsync() => Task.FromResult<FishingSetup?>(null);
         public Task<int> AddSetupAsync(FishingSetup setup) => Task.FromResult(1);
@@ -82,5 +211,25 @@ public class StatisticsServiceTests
         public void LogWarning(string message, Exception? exception = null, Dictionary<string, object>? properties = null) { }
         public void LogError(string message, Exception? exception = null, Dictionary<string, object>? properties = null) { }
         public void LogDebug(string message, Dictionary<string, object>? properties = null) { }
+    }
+
+    private sealed class FakeWeatherService : IWeatherService
+    {
+        private readonly WeatherForecast _forecast;
+
+        public FakeWeatherService(WeatherForecast forecast)
+        {
+            _forecast = forecast;
+        }
+
+        public Task<WeatherData?> GetCurrentWeatherAsync(double latitude, double longitude)
+        {
+            return Task.FromResult<WeatherData?>(null);
+        }
+
+        public Task<WeatherForecast?> GetHourlyForecastAsync(double latitude, double longitude, int forecastDays = 7)
+        {
+            return Task.FromResult<WeatherForecast?>(_forecast);
+        }
     }
 }

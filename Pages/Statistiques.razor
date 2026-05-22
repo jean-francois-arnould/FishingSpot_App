@@ -2,14 +2,15 @@
 @page "/FishingSpot_App/statistiques"
 @using FishingSpot.PWA.Models
 @using FishingSpot.PWA.Services
-@inject ISupabaseService SupabaseService
+@using System.Globalization
+@inject IStatisticsService StatisticsService
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Statistiques</PageTitle>
 
 <AuthorizeView>
-    <div class="page-content stats-page">
+    <div class="page-content stats-page stats-dashboard">
         @if (isLoading)
         {
             <div class="empty-state">
@@ -17,205 +18,458 @@
                 <p class="mt-3">Chargement des statistiques...</p>
             </div>
         }
-        else if (allCatches == null || !allCatches.Any())
+        else if (!string.IsNullOrWhiteSpace(loadError))
+        {
+            <div class="empty-state">
+                <div class="empty-state-icon fs-icon-stats" aria-hidden="true"></div>
+                <h3>Statistiques indisponibles</h3>
+                <p class="text-muted">@loadError</p>
+            </div>
+        }
+        else if (dashboard == null || dashboard.TotalAvailableCatches == 0)
         {
             <div class="empty-state">
                 <div class="empty-state-icon fs-icon-stats" aria-hidden="true"></div>
                 <h3>Aucune statistique disponible</h3>
-                <p class="text-muted">Commencez par enregistrer vos prises pour voir vos statistiques !</p>
+                <p class="text-muted">Commencez par enregistrer vos prises pour voir vos statistiques.</p>
             </div>
         }
         else
         {
-            <!-- Cards de statistiques -->
-            <div class="stats-cards-container">
-                <!-- Total de prises -->
-                <div class="stat-card stat-card-weather" @onclick="ShowTotalInfo">
-                    <div class="stat-icon fs-icon-catches" aria-hidden="true"></div>
-                    <div class="stat-content">
-                        <div class="stat-value">@totalCatches</div>
-                        <div class="stat-label">Prises totales</div>
-                    </div>
+            var stats = dashboard.Summary;
+            var maxSpeciesCount = dashboard.SpeciesBreakdown.Any() ? dashboard.SpeciesBreakdown.Max(s => s.Count) : 0;
+            var maxMonthlyCount = dashboard.MonthlyTrends.Any() ? dashboard.MonthlyTrends.Max(m => m.Count) : 0;
+            var maxHourlyCount = dashboard.HourlyBreakdown.Any() ? dashboard.HourlyBreakdown.Max(h => h.Count) : 0;
+            var insights = dashboard.AdvancedInsights;
+
+            <section class="stats-hero">
+                <div class="stats-hero-copy">
+                    <span class="stats-eyebrow">Tableau de bord</span>
+                    <h1>Conditions gagnantes</h1>
+                    <p>@dashboard.PeriodLabel - @FormatDateRange()</p>
                 </div>
 
-                <!-- Plus gros poisson (longueur) -->
-                <div class="stat-card stat-card-weather" @onclick="ShowBiggestInfo">
-                    <div class="stat-icon">cm</div>
-                    <div class="stat-content">
-                        <div class="stat-value">@(biggestFish?.Length.ToString("0")) cm</div>
-                        <div class="stat-label">Plus gros poisson</div>
-                        @if (biggestFish != null)
-                        {
-                            <div class="stat-detail">@biggestFish.FishName</div>
-                        }
-                    </div>
+                <div class="stats-period-tabs" aria-label="Filtrer la période">
+                    @foreach (var option in periodOptions)
+                    {
+                        <button type="button"
+                                class="period-tab @(selectedPeriod == option.Period ? "active" : "")"
+                                @onclick="() => ChangePeriod(option.Period)">
+                            @option.Label
+                        </button>
+                    }
                 </div>
+            </section>
 
-                <!-- Plus lourd poisson -->
-                <div class="stat-card stat-card-weather" @onclick="ShowHeaviestInfo">
-                    <div class="stat-icon">kg</div>
-                    <div class="stat-content">
-                        <div class="stat-value">@(((heaviestFish?.Weight ?? 0) / 1000.0).ToString("0.00")) kg</div>
-                        <div class="stat-label">Plus lourd</div>
-                        @if (heaviestFish != null)
-                        {
-                            <div class="stat-detail">@heaviestFish.FishName</div>
-                        }
-                    </div>
-                </div>
-
-                <!-- Poids total -->
-                <div class="stat-card stat-card-weather" @onclick="ShowTotalWeightInfo">
-                    <div class="stat-icon fs-icon-check" aria-hidden="true"></div>
-                    <div class="stat-content">
-                        <div class="stat-value">@((totalWeight / 1000.0).ToString("0.00")) kg</div>
-                        <div class="stat-label">Poids total capturé</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Statistiques météo -->
-            @if (catchesWithWeather != null && catchesWithWeather.Any())
+            @if (stats.TotalCatches == 0)
             {
-                <div class="stats-section">
-                    <h2 class="stats-section-title">Statistiques météo</h2>
-
-                    <div class="stats-cards-container weather-stats-container">
-                        <!-- Température moyenne -->
-                        <div class="stat-card stat-card-weather" @onclick="ShowTemperatureInfo">
-                            <div class="stat-icon">°C</div>
-                            <div class="stat-content">
-                                <div class="stat-value">@averageTemperature.ToString("F1")°C</div>
-                                <div class="stat-label">Température moyenne</div>
-                            </div>
-                        </div>
-
-                        <!-- Condition la plus fréquente -->
-                        <div class="stat-card stat-card-weather stat-card-weather-condition" @onclick="ShowWeatherInfo">
-                            <div class="stat-icon weather-icon-large">@mostFrequentWeatherEmoji</div>
-                            <div class="stat-content">
-                                <div class="stat-value">@mostFrequentWeatherCount</div>
-                                <div class="stat-label">@mostFrequentWeatherCondition</div>
-                                <div class="stat-detail">Condition la plus fréquente</div>
-                            </div>
-                        </div>
-
-                        <!-- Vent moyen -->
-                        <div class="stat-card stat-card-weather" @onclick="ShowWindInfo">
-                            <div class="stat-icon">km</div>
-                            <div class="stat-content">
-                                <div class="stat-value">@averageWindSpeed.ToString("F1") km/h</div>
-                                <div class="stat-label">Vent moyen</div>
-                            </div>
-                        </div>
-
-                        <!-- Humidité moyenne -->
-                        <div class="stat-card stat-card-weather" @onclick="ShowHumidityInfo">
-                            <div class="stat-icon">%</div>
-                            <div class="stat-content">
-                                <div class="stat-value">@averageHumidity.ToString("F0")%</div>
-                                <div class="stat-label">Humidité moyenne</div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="empty-state stats-period-empty">
+                    <div class="empty-state-icon fs-icon-calendar" aria-hidden="true"></div>
+                    <h3>Aucune prise sur cette période</h3>
+                    <p class="text-muted">Changez la période pour retrouver vos prises plus anciennes.</p>
                 </div>
+            }
+            else
+            {
+                <section class="stats-kpi-grid" aria-label="Résumé des statistiques">
+                    <article class="stats-kpi-card">
+                        <span class="kpi-label">Prises</span>
+                        <strong>@stats.TotalCatches</strong>
+                        <small>@stats.TotalSpecies espèce@(stats.TotalSpecies > 1 ? "s" : "")</small>
+                    </article>
+                    <article class="stats-kpi-card">
+                        <span class="kpi-label">Poids total</span>
+                        <strong>@FormatKg(stats.TotalWeight)</strong>
+                        <small>Moyenne @FormatKg(stats.AverageWeight)</small>
+                    </article>
+                    <article class="stats-kpi-card">
+                        <span class="kpi-label">Taille moyenne</span>
+                        <strong>@FormatCm(stats.AverageLength)</strong>
+                        <small>@FormatBestCatch(stats.BiggestCatch, "Record longueur")</small>
+                    </article>
+                    <article class="stats-kpi-card">
+                        <span class="kpi-label">Plus lourd</span>
+                        <strong>@FormatKg(stats.HeaviestCatch?.Weight ?? 0)</strong>
+                        <small>@(stats.HeaviestCatch?.FishName ?? "Aucune prise")</small>
+                    </article>
+                </section>
 
-                <!-- Meilleures conditions par espèce -->
-                @if (topSpeciesStats.Any())
-                {
-                    <div class="stats-section">
-                        <h2 class="stats-section-title">Meilleures conditions par espèce</h2>
+                <section class="stats-insight-grid">
+                    <article class="stats-panel conditions-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Analyse conditions</span>
+                                <h2>Ce qui marche le mieux</h2>
+                            </div>
+                        </div>
 
-                        <div class="species-weather-cards">
-                            @foreach (var stat in topSpeciesStats)
+                        <div class="conditions-grid">
+                            <div class="condition-card condition-card-primary">
+                                <span>Plage horaire</span>
+                                <strong>@dashboard.Conditions.BestTimeSlot</strong>
+                                <small>@CountLabel(dashboard.Conditions.BestTimeSlotCount)</small>
+                            </div>
+                            <div class="condition-card">
+                                <span>Météo</span>
+                                <strong>@dashboard.Conditions.BestWeatherCondition</strong>
+                                <small>@CountLabel(dashboard.Conditions.BestWeatherCount)</small>
+                            </div>
+                            <div class="condition-card">
+                                <span>Température</span>
+                                <strong>@FormatNullable(dashboard.Conditions.AverageTemperature, "0.0", "°C")</strong>
+                                <small>@dashboard.Conditions.WeatherSampleCount relevé@(dashboard.Conditions.WeatherSampleCount > 1 ? "s" : "")</small>
+                            </div>
+                            <div class="condition-card">
+                                <span>Vent</span>
+                                <strong>@FormatNullable(dashboard.Conditions.AverageWindSpeed, "0.0", "km/h")</strong>
+                                <small>moyenne des prises</small>
+                            </div>
+                            <div class="condition-card">
+                                <span>Humidité</span>
+                                <strong>@FormatNullable(dashboard.Conditions.AverageHumidity, "0", "%")</strong>
+                                <small>moyenne relevée</small>
+                            </div>
+                            <div class="condition-card">
+                                <span>Lieu</span>
+                                <strong>@(dashboard.Conditions.BestLocation?.LocationName ?? "Non renseigné")</strong>
+                                <small>@CountLabel(dashboard.Conditions.BestLocation?.Count ?? 0)</small>
+                            </div>
+                        </div>
+
+                        @if (!dashboard.WeatherBreakdown.Any())
+                        {
+                            <p class="stats-muted-note">Ajoutez les données météo sur vos prochaines prises pour obtenir une lecture plus précise des conditions gagnantes.</p>
+                        }
+                    </article>
+
+                    <article class="stats-panel records-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Records</span>
+                                <h2>Prises marquantes</h2>
+                            </div>
+                        </div>
+
+                        <div class="record-stack">
+                            @if (stats.BiggestCatch != null)
                             {
-                                <div class="species-weather-card">
-                                    <div class="species-weather-header">
-                                        <h4>@stat.FishName</h4>
-                                        <span class="species-catch-count">@stat.CatchCount prises</span>
+                                <button type="button" class="record-row" @onclick="() => NavigateToCatchDetail(stats.BiggestCatch.Id)">
+                                    @CatchThumb(stats.BiggestCatch)
+                                    <span>
+                                        <strong>@stats.BiggestCatch.FishName</strong>
+                                        <small>@FormatCm(stats.BiggestCatch.Length) - @stats.BiggestCatch.CatchDate.ToString("dd/MM/yyyy")</small>
+                                    </span>
+                                    <span class="record-metric">Longueur</span>
+                                </button>
+                            }
+                            @if (stats.HeaviestCatch != null)
+                            {
+                                <button type="button" class="record-row" @onclick="() => NavigateToCatchDetail(stats.HeaviestCatch.Id)">
+                                    @CatchThumb(stats.HeaviestCatch)
+                                    <span>
+                                        <strong>@stats.HeaviestCatch.FishName</strong>
+                                        <small>@FormatKg(stats.HeaviestCatch.Weight) - @stats.HeaviestCatch.CatchDate.ToString("dd/MM/yyyy")</small>
+                                    </span>
+                                    <span class="record-metric">Poids</span>
+                                </button>
+                            }
+                        </div>
+                    </article>
+                </section>
+
+                @if (insights.ReturnSuggestions.Any())
+                {
+                    <section class="stats-panel suggestions-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Suggestion automatique</span>
+                                <h2>Meilleur moment pour retourner</h2>
+                            </div>
+                        </div>
+
+                        <div class="suggestion-grid">
+                            @foreach (var suggestion in insights.ReturnSuggestions)
+                            {
+                                <article class="suggestion-card">
+                                    <div>
+                                        <strong>@suggestion.SpotName</strong>
+                                        <small>@FormatSuggestionDate(suggestion.SuggestedAt) - @suggestion.TimeSlot</small>
                                     </div>
-                                    <div class="species-weather-details">
-                                        <div class="weather-detail-row">
-                                            <span class="weather-detail-label">@stat.WeatherEmoji @stat.MostCommonCondition</span>
-                                            <span class="weather-detail-value">@stat.ConditionCount fois</span>
-                                        </div>
-                                        <div class="weather-detail-row">
-                                            <span class="weather-detail-label">Température moyenne</span>
-                                            <span class="weather-detail-value">@stat.AverageTemp.ToString("F1")°C</span>
-                                        </div>
-                                        <div class="weather-detail-row">
-                                            <span class="weather-detail-label">Vent moyen</span>
-                                            <span class="weather-detail-value">@stat.AverageWind.ToString("F1") km/h</span>
-                                        </div>
+                                    <p>@suggestion.Reason</p>
+                                    <span>@suggestion.WeatherSummary</span>
+                                    <em>@suggestion.ConfidenceScore.ToString("0", CultureInfo.CurrentCulture)/100 @(suggestion.UsesForecast ? "avec meteo" : "historique")</em>
+                                </article>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <section class="stats-grid-two">
+                    <article class="stats-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Montages</span>
+                                <h2>Setup le plus efficace</h2>
+                            </div>
+                        </div>
+
+                        @if (insights.SetupEfficiency.Any())
+                        {
+                            <div class="setup-efficiency-list">
+                                @foreach (var setup in insights.SetupEfficiency.Take(5))
+                                {
+                                    <button type="button" class="setup-efficiency-row" @onclick="() => NavigateToCatchDetail(setup.BestCatch?.Id ?? 0)" disabled="@(setup.BestCatch == null)">
+                                        <span>
+                                            <strong>@setup.SetupName</strong>
+                                            <small>@setup.Count prise@(setup.Count > 1 ? "s" : "") - @setup.SpeciesCount espece@(setup.SpeciesCount > 1 ? "s" : "") - moy. @FormatCm(setup.AverageLength)</small>
+                                        </span>
+                                        <em>@setup.EfficiencyScore.ToString("0", CultureInfo.CurrentCulture)</em>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="stats-muted-note">Associez vos prochaines prises a un montage pour comparer les setups.</p>
+                        }
+                    </article>
+
+                    <article class="stats-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Score session</span>
+                                <h2>Sessions les mieux notees</h2>
+                            </div>
+                        </div>
+
+                        @if (insights.SessionScores.Any())
+                        {
+                            <div class="session-score-list">
+                                @foreach (var session in insights.SessionScores.Take(5))
+                                {
+                                    <button type="button" class="session-score-row" @onclick="() => NavigateToCatchDetail(session.CatchId)">
+                                        @CatchThumb(session.Catch)
+                                        <span>
+                                            <strong>@session.Catch.FishName</strong>
+                                            <small>@session.PrimaryReason - @session.Catch.CatchDate.ToString("dd/MM/yyyy")</small>
+                                        </span>
+                                        <em>@session.Grade<br />@session.Score.ToString("0", CultureInfo.CurrentCulture)</em>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </article>
+                </section>
+
+                @if (insights.SpeciesRecords.Any())
+                {
+                    <section class="stats-panel species-records-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Records personnels</span>
+                                <h2>Galerie par espece</h2>
+                            </div>
+                        </div>
+
+                        <div class="species-record-grid">
+                            @foreach (var record in insights.SpeciesRecords.Take(12))
+                            {
+                                <button type="button" class="species-record-card" @onclick="() => NavigateToCatchDetail(record.Catch.Id)">
+                                    @if (!string.IsNullOrWhiteSpace(record.PhotoUrl))
+                                    {
+                                        <img src="@record.PhotoUrl" alt="@record.FishName" />
+                                    }
+                                    else
+                                    {
+                                        <span class="catch-preview-icon fs-icon-catches" aria-hidden="true"></span>
+                                    }
+                                    <strong>@record.FishName</strong>
+                                    <small>@FormatCm(record.Length) - @FormatKg(record.Weight)</small>
+                                </button>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <section class="stats-grid-two">
+                    <article class="stats-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Espèces</span>
+                                <h2>Répartition des prises</h2>
+                            </div>
+                        </div>
+
+                        <div class="stats-bar-list">
+                            @foreach (var species in dashboard.SpeciesBreakdown.Take(8))
+                            {
+                                <div class="stats-bar-row">
+                                    <div class="bar-meta">
+                                        <span>@species.FishName</span>
+                                        <strong>@species.Count</strong>
                                     </div>
+                                    <div class="bar-track" aria-hidden="true">
+                                        <span style="@BarWidthStyle(species.Count, maxSpeciesCount)"></span>
+                                    </div>
+                                    <small>Moy. @FormatCm(species.AverageLength) - @FormatKg(species.TotalWeight) total</small>
                                 </div>
                             }
                         </div>
-                    </div>
-                }
-            }
+                    </article>
 
-            <!-- Calendrier -->
-            <div class="calendar-section">
-                <div class="calendar-header">
-                    <button class="calendar-nav-btn" @onclick="PreviousMonth">‹</button>
-                    <h3 class="calendar-title">@currentMonth.ToString("MMMM yyyy")</h3>
-                    <button class="calendar-nav-btn" @onclick="NextMonth">›</button>
-                </div>
+                    <article class="stats-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Horaires</span>
+                                <h2>Activité par heure</h2>
+                            </div>
+                        </div>
 
-                <div class="calendar-grid">
-                    <!-- Jours de la semaine -->
-                    <div class="calendar-day-name">Lun</div>
-                    <div class="calendar-day-name">Mar</div>
-                    <div class="calendar-day-name">Mer</div>
-                    <div class="calendar-day-name">Jeu</div>
-                    <div class="calendar-day-name">Ven</div>
-                    <div class="calendar-day-name">Sam</div>
-                    <div class="calendar-day-name">Dim</div>
-
-                    <!-- Jours vides avant le début du mois -->
-                    @for (int i = 0; i < firstDayOfMonth; i++)
-                    {
-                        <div class="calendar-day calendar-day-empty"></div>
-                    }
-
-                    <!-- Jours du mois -->
-                    @for (int day = 1; day <= daysInMonth; day++)
-                    {
-                        var currentDate = new DateTime(currentMonth.Year, currentMonth.Month, day);
-                        var catchesOnDate = GetCatchesForDate(currentDate);
-                        var hasCache = catchesOnDate.Any();
-                        var isToday = currentDate.Date == DateTime.Today;
-
-                        <div class="calendar-day @(hasCache ? "has-catch" : "") @(isToday ? "is-today" : "")"
-                             @onclick="() => ShowCatchesForDate(currentDate, catchesOnDate)">
-                            <span class="calendar-day-number">@day</span>
-                            @if (hasCache)
+                        <div class="hour-heatmap" aria-label="Prises par heure">
+                            @foreach (var hour in dashboard.HourlyBreakdown)
                             {
-                                <span class="calendar-day-badge">@catchesOnDate.Count</span>
+                                <div class="hour-cell @(hour.Count > 0 ? "active" : "")"
+                                     style="@HeatStyle(hour.Count, maxHourlyCount)"
+                                     title="@($"{hour.Label}: {CountLabel(hour.Count)}")">
+                                    <span>@hour.Label</span>
+                                    <strong>@hour.Count</strong>
+                                </div>
                             }
                         </div>
-                    }
-                </div>
-            </div>
+                    </article>
+                </section>
+
+                <section class="stats-grid-two">
+                    <article class="stats-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Tendance</span>
+                                <h2>Évolution mensuelle</h2>
+                            </div>
+                        </div>
+
+                        @if (dashboard.MonthlyTrends.Any())
+                        {
+                            <div class="monthly-bars">
+                                @foreach (var trend in dashboard.MonthlyTrends.TakeLast(12))
+                                {
+                                    <div class="monthly-column">
+                                        <span class="monthly-count">@trend.Count</span>
+                                        <div class="monthly-track">
+                                            <span style="@BarHeightStyle(trend.Count, maxMonthlyCount)"></span>
+                                        </div>
+                                        <small>@FormatMonth(trend)</small>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="stats-muted-note">Pas encore assez de données pour dessiner une tendance mensuelle.</p>
+                        }
+                    </article>
+
+                    <article class="stats-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Lieux</span>
+                                <h2>Spots productifs</h2>
+                            </div>
+                        </div>
+
+                        @if (dashboard.TopLocations.Any())
+                        {
+                            <div class="location-rank-list">
+                                @foreach (var location in dashboard.TopLocations)
+                                {
+                                    <div class="location-rank-row">
+                                        <span>
+                                            <strong>@location.LocationName</strong>
+                                            <small>@FormatCm(location.AverageSize) moyen</small>
+                                        </span>
+                                        <em>@CountLabel(location.Count)</em>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="stats-muted-note">Renseignez les lieux sur vos prises pour comparer vos spots.</p>
+                        }
+                    </article>
+                </section>
+
+                @if (dashboard.WeatherBreakdown.Any())
+                {
+                    <section class="stats-panel weather-panel">
+                        <div class="stats-panel-header">
+                            <div>
+                                <span class="stats-eyebrow">Météo</span>
+                                <h2>Conditions observées</h2>
+                            </div>
+                        </div>
+
+                        <div class="weather-chip-grid">
+                            @foreach (var weather in dashboard.WeatherBreakdown.Take(6))
+                            {
+                                <div class="weather-chip">
+                                    <span class="weather-chip-icon">@GetWeatherEmoji(weather.WeatherCode ?? 0)</span>
+                                    <span>
+                                        <strong>@weather.Condition</strong>
+                                        <small>@CountLabel(weather.Count) - @FormatNullable(weather.AverageTemperature, "0.0", "°C")</small>
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <section class="calendar-section stats-calendar-panel">
+                    <div class="calendar-header">
+                        <button class="calendar-nav-btn" @onclick="PreviousMonth" aria-label="Mois précédent">‹</button>
+                        <h3 class="calendar-title">@currentMonth.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</h3>
+                        <button class="calendar-nav-btn" @onclick="NextMonth" aria-label="Mois suivant">›</button>
+                    </div>
+
+                    <div class="calendar-grid">
+                        <div class="calendar-day-name">Lun</div>
+                        <div class="calendar-day-name">Mar</div>
+                        <div class="calendar-day-name">Mer</div>
+                        <div class="calendar-day-name">Jeu</div>
+                        <div class="calendar-day-name">Ven</div>
+                        <div class="calendar-day-name">Sam</div>
+                        <div class="calendar-day-name">Dim</div>
+
+                        @for (int i = 0; i < firstDayOfMonth; i++)
+                        {
+                            <div class="calendar-day calendar-day-empty"></div>
+                        }
+
+                        @for (int day = 1; day <= daysInMonth; day++)
+                        {
+                            var currentDate = new DateTime(currentMonth.Year, currentMonth.Month, day);
+                            var catchesOnDate = GetCatchesForDate(currentDate);
+                            var hasCatch = catchesOnDate.Any();
+                            var isToday = currentDate.Date == DateTime.Today;
+
+                            <button type="button"
+                                    class="calendar-day @(hasCatch ? "has-catch" : "") @(isToday ? "is-today" : "")"
+                                    @onclick="() => ShowCatchesForDate(currentDate, catchesOnDate)"
+                                    disabled="@(!hasCatch)">
+                                <span class="calendar-day-number">@day</span>
+                                @if (hasCatch)
+                                {
+                                    <span class="calendar-day-badge">@catchesOnDate.Count</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </section>
+            }
         }
     </div>
 </AuthorizeView>
 
-<!-- Modal d'information statistique (style iOS/Material) -->
-@if (showStatInfoModal)
-{
-    <div class="stat-modal-overlay" @onclick="CloseStatInfoModal">
-        <div class="stat-modal-dialog" @onclick:stopPropagation>
-            <div class="stat-modal-icon">@statInfoEmoji</div>
-            <h3 class="stat-modal-title">@statInfoTitle</h3>
-            <p class="stat-modal-message">@statInfoDescription</p>
-            <button class="stat-modal-button" @onclick="CloseStatInfoModal">OK</button>
-        </div>
-    </div>
-}
-
-<!-- Modal pour afficher les prises d'une date -->
 @if (showCatchesModal && selectedDateCatches != null && selectedDateCatches.Any())
 {
     <div class="stat-modal-overlay" @onclick="CloseCatchesModal">
@@ -226,31 +480,24 @@
             <div class="catches-modal-list">
                 @foreach (var fishCatch in selectedDateCatches)
                 {
-                    <div class="catch-preview-card" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
+                    <button type="button" class="catch-preview-card" @onclick="() => NavigateToCatchDetail(fishCatch.Id)">
                         <div class="catch-preview-header">
-                            @if (!string.IsNullOrEmpty(fishCatch.PhotoUrl))
-                            {
-                                <img src="@fishCatch.PhotoUrl" alt="@fishCatch.FishName" class="catch-preview-img" />
-                            }
-                            else
-                            {
-                                <div class="catch-preview-icon fs-icon-catches" aria-hidden="true"></div>
-                            }
+                            @CatchThumb(fishCatch)
                             <div class="catch-preview-info">
                                 <div class="catch-preview-name">@fishCatch.FishName</div>
-                                <div class="catch-preview-location">@fishCatch.LocationName</div>
+                                <div class="catch-preview-location">@(!string.IsNullOrWhiteSpace(fishCatch.LocationName) ? fishCatch.LocationName : "Lieu non renseigné")</div>
                             </div>
                             <div class="catch-preview-arrow">›</div>
                         </div>
                         <div class="catch-preview-stats">
-                            <span class="catch-preview-badge">@fishCatch.Length cm</span>
-                            <span class="catch-preview-badge">@((fishCatch.Weight / 1000.0).ToString("0.00")) kg</span>
+                            <span class="catch-preview-badge">@FormatCm(fishCatch.Length)</span>
+                            <span class="catch-preview-badge">@FormatKg(fishCatch.Weight)</span>
                             @if (fishCatch.WeatherTemperature.HasValue)
                             {
-                                <span class="catch-preview-badge">@GetWeatherEmoji(fishCatch.WeatherCode ?? 0) @fishCatch.WeatherTemperature.Value.ToString("F1")°C</span>
+                                <span class="catch-preview-badge">@GetWeatherEmoji(fishCatch.WeatherCode ?? 0) @fishCatch.WeatherTemperature.Value.ToString("0.0", CultureInfo.CurrentCulture)°C</span>
                             }
                         </div>
-                    </div>
+                    </button>
                 }
             </div>
 
@@ -260,28 +507,19 @@
 }
 
 @code {
-    private List<FishCatch>? allCatches;
+    private StatisticsDashboard? dashboard;
+    private StatisticsPeriod selectedPeriod = StatisticsPeriod.Last90Days;
     private bool isLoading = true;
+    private string? loadError;
 
-    // Statistiques
-    private int totalCatches => allCatches?.Count ?? 0;
-    private FishCatch? biggestFish;
-    private FishCatch? heaviestFish;
-    private double totalWeight => allCatches?.Sum(c => c.Weight) ?? 0;
+    private readonly List<PeriodOption> periodOptions = new()
+    {
+        new PeriodOption { Period = StatisticsPeriod.Last30Days, Label = "30 jours" },
+        new PeriodOption { Period = StatisticsPeriod.Last90Days, Label = "90 jours" },
+        new PeriodOption { Period = StatisticsPeriod.CurrentYear, Label = "Année" },
+        new PeriodOption { Period = StatisticsPeriod.AllTime, Label = "Tout" }
+    };
 
-    // Statistiques météo
-    private List<FishCatch>? catchesWithWeather => allCatches?.Where(c => c.WeatherTemperature.HasValue).ToList();
-    private double averageTemperature => catchesWithWeather?.Average(c => c.WeatherTemperature ?? 0) ?? 0;
-    private double averageWindSpeed => catchesWithWeather?.Where(c => c.WindSpeed.HasValue).Average(c => c.WindSpeed ?? 0) ?? 0;
-    private double averageHumidity => catchesWithWeather?.Where(c => c.Humidity.HasValue).Average(c => c.Humidity ?? 0) ?? 0;
-
-    private string mostFrequentWeatherCondition = "";
-    private int mostFrequentWeatherCount = 0;
-    private string mostFrequentWeatherEmoji = "🌤️";
-
-    private List<SpeciesWeatherStats> topSpeciesStats = new List<SpeciesWeatherStats>();
-
-    // Calendrier
     private DateTime currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
     private int daysInMonth => DateTime.DaysInMonth(currentMonth.Year, currentMonth.Month);
     private int firstDayOfMonth
@@ -290,32 +528,13 @@
         {
             var firstDay = new DateTime(currentMonth.Year, currentMonth.Month, 1);
             var dayOfWeek = (int)firstDay.DayOfWeek;
-            return dayOfWeek == 0 ? 6 : dayOfWeek - 1; // Lundi = 0
+            return dayOfWeek == 0 ? 6 : dayOfWeek - 1;
         }
     }
 
-    // Modal
-    private bool showCatchesModal = false;
+    private bool showCatchesModal;
     private DateTime selectedDate;
     private List<FishCatch>? selectedDateCatches;
-
-    // Modal info statistiques
-    private bool showStatInfoModal = false;
-    private string statInfoTitle = "";
-    private string statInfoDescription = "";
-    private string statInfoEmoji = "ℹ️";
-
-    // Classe helper pour les statistiques par espèce
-    private class SpeciesWeatherStats
-    {
-        public string FishName { get; set; } = "";
-        public int CatchCount { get; set; }
-        public string MostCommonCondition { get; set; } = "";
-        public int ConditionCount { get; set; }
-        public string WeatherEmoji { get; set; } = "🌤️";
-        public double AverageTemp { get; set; }
-        public double AverageWind { get; set; }
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -331,25 +550,17 @@
     private async Task LoadData()
     {
         isLoading = true;
+        loadError = null;
+
         try
         {
-            allCatches = await SupabaseService.GetAllCatchesAsync();
-
-            if (allCatches != null && allCatches.Any())
-            {
-                // Plus gros poisson (longueur)
-                biggestFish = allCatches.OrderByDescending(c => c.Length).FirstOrDefault();
-
-                // Plus lourd poisson
-                heaviestFish = allCatches.OrderByDescending(c => c.Weight).FirstOrDefault();
-
-                // Calculer les statistiques météo
-                CalculateWeatherStats();
-            }
+            dashboard = await StatisticsService.GetDashboardAsync(selectedPeriod);
+            AlignCalendarToLatestCatch();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Erreur lors du chargement des statistiques : {ex.Message}");
+            Console.WriteLine($"Erreur lors du chargement des statistiques : {ex.Message}");
+            loadError = "Impossible de charger les statistiques pour le moment.";
         }
         finally
         {
@@ -357,58 +568,32 @@
         }
     }
 
-    private void CalculateWeatherStats()
+    private async Task ChangePeriod(StatisticsPeriod period)
     {
-        if (catchesWithWeather == null || !catchesWithWeather.Any())
+        if (selectedPeriod == period || isLoading)
             return;
 
-        // Condition météo la plus fréquente
-        var weatherGroups = catchesWithWeather
-            .Where(c => !string.IsNullOrEmpty(c.WeatherCondition))
-            .GroupBy(c => new { c.WeatherCondition, c.WeatherCode })
-            .OrderByDescending(g => g.Count())
+        selectedPeriod = period;
+        await LoadData();
+    }
+
+    private void AlignCalendarToLatestCatch()
+    {
+        var latestCatch = dashboard?.Catches
+            .OrderByDescending(c => c.CatchDate)
             .FirstOrDefault();
 
-        if (weatherGroups != null)
-        {
-            mostFrequentWeatherCondition = weatherGroups.Key.WeatherCondition ?? "Inconnu";
-            mostFrequentWeatherCount = weatherGroups.Count();
-            mostFrequentWeatherEmoji = GetWeatherEmoji(weatherGroups.Key.WeatherCode ?? 0);
-        }
-
-        // Statistiques par espèce (top 5 espèces avec le plus de prises)
-        var speciesGroups = catchesWithWeather
-            .GroupBy(c => c.FishName)
-            .OrderByDescending(g => g.Count())
-            .Take(5);
-
-        topSpeciesStats = speciesGroups.Select(group =>
-        {
-            var catches = group.ToList();
-            var weatherConditionGroup = catches
-                .Where(c => !string.IsNullOrEmpty(c.WeatherCondition))
-                .GroupBy(c => new { c.WeatherCondition, c.WeatherCode })
-                .OrderByDescending(g => g.Count())
-                .FirstOrDefault();
-
-            return new SpeciesWeatherStats
-            {
-                FishName = group.Key,
-                CatchCount = group.Count(),
-                MostCommonCondition = weatherConditionGroup?.Key.WeatherCondition ?? "Inconnu",
-                ConditionCount = weatherConditionGroup?.Count() ?? 0,
-                WeatherEmoji = GetWeatherEmoji(weatherConditionGroup?.Key.WeatherCode ?? 0),
-                AverageTemp = catches.Where(c => c.WeatherTemperature.HasValue).Average(c => c.WeatherTemperature ?? 0),
-                AverageWind = catches.Where(c => c.WindSpeed.HasValue).Average(c => c.WindSpeed ?? 0)
-            };
-        }).ToList();
+        currentMonth = latestCatch == null
+            ? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)
+            : new DateTime(latestCatch.CatchDate.Year, latestCatch.CatchDate.Month, 1);
     }
 
     private List<FishCatch> GetCatchesForDate(DateTime date)
     {
-        if (allCatches == null) return new List<FishCatch>();
+        if (dashboard == null)
+            return new List<FishCatch>();
 
-        return allCatches
+        return dashboard.Catches
             .Where(c => c.CatchDate.Date == date.Date)
             .OrderBy(c => c.CatchTime ?? TimeSpan.Zero)
             .ToList();
@@ -426,7 +611,8 @@
 
     private void ShowCatchesForDate(DateTime date, List<FishCatch> catches)
     {
-        if (!catches.Any()) return;
+        if (!catches.Any())
+            return;
 
         selectedDate = date;
         selectedDateCatches = catches;
@@ -441,10 +627,105 @@
 
     private void NavigateToCatchDetail(int catchId)
     {
-        Navigation.NavigateTo($"/FishingSpot_App/catch/{catchId}");
+        if (catchId <= 0)
+            return;
+
+        Navigation.NavigateTo($"/FishingSpot_App/catches/{catchId}");
     }
 
-    private string GetWeatherEmoji(int code)
+    private RenderFragment CatchThumb(FishCatch fishCatch) => builder =>
+    {
+        if (!string.IsNullOrWhiteSpace(fishCatch.PhotoUrl))
+        {
+            builder.OpenElement(0, "img");
+            builder.AddAttribute(1, "src", fishCatch.PhotoUrl);
+            builder.AddAttribute(2, "alt", fishCatch.FishName);
+            builder.AddAttribute(3, "class", "catch-preview-img");
+            builder.CloseElement();
+        }
+        else
+        {
+            builder.OpenElement(4, "span");
+            builder.AddAttribute(5, "class", "catch-preview-icon fs-icon-catches");
+            builder.AddAttribute(6, "aria-hidden", "true");
+            builder.CloseElement();
+        }
+    };
+
+    private string FormatDateRange()
+    {
+        if (dashboard == null)
+            return string.Empty;
+
+        if (!dashboard.StartDate.HasValue)
+            return $"jusqu'au {dashboard.EndDate:dd/MM/yyyy}";
+
+        return $"{dashboard.StartDate.Value:dd/MM/yyyy} - {dashboard.EndDate:dd/MM/yyyy}";
+    }
+
+    private static string FormatBestCatch(FishCatch? fishCatch, string fallback)
+    {
+        return fishCatch == null ? fallback : fishCatch.FishName;
+    }
+
+    private static string FormatKg(double grams, string format = "0.00")
+    {
+        return $"{(grams / 1000.0).ToString(format, CultureInfo.CurrentCulture)} kg";
+    }
+
+    private static string FormatCm(double centimeters, string format = "0")
+    {
+        return $"{centimeters.ToString(format, CultureInfo.CurrentCulture)} cm";
+    }
+
+    private static string FormatNullable(double? value, string format, string unit)
+    {
+        return value.HasValue
+            ? $"{value.Value.ToString(format, CultureInfo.CurrentCulture)} {unit}"
+            : "Non renseigné";
+    }
+
+    private static string CountLabel(int count)
+    {
+        return count switch
+        {
+            0 => "Aucune prise",
+            1 => "1 prise",
+            _ => $"{count} prises"
+        };
+    }
+
+    private static string BarWidthStyle(int value, int max)
+    {
+        var width = max <= 0 ? 0 : Math.Max(8, value * 100.0 / max);
+        return $"--bar-width: {width.ToString("0.##", CultureInfo.InvariantCulture)}%;";
+    }
+
+    private static string BarHeightStyle(int value, int max)
+    {
+        var height = max <= 0 ? 0 : Math.Max(8, value * 100.0 / max);
+        return $"--bar-height: {height.ToString("0.##", CultureInfo.InvariantCulture)}%;";
+    }
+
+    private static string HeatStyle(int value, int max)
+    {
+        var alpha = max <= 0 || value == 0 ? 0.06 : 0.18 + (value * 0.72 / max);
+        return $"--heat-alpha: {alpha.ToString("0.##", CultureInfo.InvariantCulture)};";
+    }
+
+    private static string FormatMonth(MonthlyTrend trend)
+    {
+        return trend.MonthDate == default
+            ? trend.Month
+            : trend.MonthDate.ToString("MMM", CultureInfo.CurrentCulture);
+    }
+
+    private static string FormatSuggestionDate(DateTime date)
+    {
+        return date.ToString("ddd dd/MM HH:mm", CultureInfo.CurrentCulture);
+    }
+
+    private static string GetWeatherEmoji(int code)
     {
         return code switch
         {
@@ -465,83 +746,9 @@
         };
     }
 
-    private void ShowTotalInfo()
+    private sealed class PeriodOption
     {
-        Console.WriteLine("ShowTotalInfo appelé");
-        statInfoTitle = "Prises totales";
-        statInfoEmoji = "🎣";
-        statInfoDescription = "Le nombre total de poissons que vous avez capturés et enregistrés dans l'application. Continuez ainsi pour améliorer vos statistiques !";
-        showStatInfoModal = true;
-        StateHasChanged();
-        Console.WriteLine($"showStatInfoModal = {showStatInfoModal}");
-    }
-
-    private void ShowBiggestInfo()
-    {
-        statInfoTitle = "Plus gros poisson";
-        statInfoEmoji = "📏";
-        statInfoDescription = "Le poisson le plus long que vous avez capturé, mesuré en centimètres. C'est un record à battre lors de vos prochaines sessions !";
-        showStatInfoModal = true;
-        StateHasChanged();
-    }
-
-    private void ShowHeaviestInfo()
-    {
-        statInfoTitle = "Plus lourd";
-        statInfoEmoji = "⚖️";
-        statInfoDescription = "Le poisson le plus lourd que vous avez attrapé, mesuré en kilogrammes. Un vrai trophée de pêcheur !";
-        showStatInfoModal = true;
-        StateHasChanged();
-    }
-
-    private void ShowTotalWeightInfo()
-    {
-        statInfoTitle = "Poids total capturé";
-        statInfoEmoji = "🏆";
-        statInfoDescription = "La somme du poids de tous les poissons que vous avez capturés. Une belle mesure de votre succès de pêche au fil du temps !";
-        showStatInfoModal = true;
-        StateHasChanged();
-    }
-
-    private void ShowTemperatureInfo()
-    {
-        statInfoTitle = "Température moyenne";
-        statInfoEmoji = "🌡️";
-        statInfoDescription = "La température moyenne lors de vos sessions de pêche réussies. Cette information vous aide à identifier les conditions idéales pour pêcher.";
-        showStatInfoModal = true;
-        StateHasChanged();
-    }
-
-    private void ShowWeatherInfo()
-    {
-        statInfoTitle = "Condition météo la plus fréquente";
-        statInfoEmoji = mostFrequentWeatherEmoji;
-        statInfoDescription = $"La condition météo la plus courante lors de vos sorties de pêche. Vous avez pêché {mostFrequentWeatherCount} fois par temps {mostFrequentWeatherCondition.ToLower()}.";
-        showStatInfoModal = true;
-        StateHasChanged();
-    }
-
-    private void ShowWindInfo()
-    {
-        statInfoTitle = "Vent moyen";
-        statInfoEmoji = "💨";
-        statInfoDescription = "La vitesse moyenne du vent lors de vos sessions de pêche. Le vent peut influencer le comportement des poissons et votre technique de pêche.";
-        showStatInfoModal = true;
-        StateHasChanged();
-    }
-
-    private void ShowHumidityInfo()
-    {
-        statInfoTitle = "Humidité moyenne";
-        statInfoEmoji = "💧";
-        statInfoDescription = "Le niveau d'humidité moyen pendant vos sorties. L'humidité peut affecter l'activité des poissons et votre confort de pêche.";
-        showStatInfoModal = true;
-        StateHasChanged();
-    }
-
-    private void CloseStatInfoModal()
-    {
-        showStatInfoModal = false;
-        StateHasChanged();
+        public StatisticsPeriod Period { get; init; }
+        public string Label { get; init; } = string.Empty;
     }
 }

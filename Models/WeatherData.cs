@@ -25,7 +25,7 @@ namespace FishingSpot.PWA.Models
         [JsonIgnore]
         public string WeatherEmoji => GetWeatherEmoji(WeatherCode);
 
-        private static string GetWeatherDescription(int code)
+        public static string GetWeatherDescription(int code)
         {
             return code switch
             {
@@ -46,7 +46,7 @@ namespace FishingSpot.PWA.Models
             };
         }
 
-        private static string GetWeatherEmoji(int code)
+        public static string GetWeatherEmoji(int code)
         {
             return code switch
             {
@@ -72,6 +72,9 @@ namespace FishingSpot.PWA.Models
     {
         [JsonPropertyName("current")]
         public CurrentWeather? Current { get; set; }
+
+        [JsonPropertyName("hourly")]
+        public HourlyWeather? Hourly { get; set; }
     }
 
     public class CurrentWeather
@@ -90,5 +93,46 @@ namespace FishingSpot.PWA.Models
 
         [JsonPropertyName("surface_pressure")]
         public double Pressure { get; set; }
+    }
+
+    public class WeatherForecast
+    {
+        public List<HourlyForecast> Hours { get; set; } = new();
+    }
+
+    public class HourlyForecast
+    {
+        public DateTime Time { get; set; }
+        public double? Temperature { get; set; }
+        public int? WeatherCode { get; set; }
+        public double? WindSpeed { get; set; }
+        public int? Humidity { get; set; }
+        public int? PrecipitationProbability { get; set; }
+
+        [JsonIgnore]
+        public string WeatherDescription => WeatherCode.HasValue
+            ? WeatherData.GetWeatherDescription(WeatherCode.Value)
+            : "Non renseignee";
+    }
+
+    public class HourlyWeather
+    {
+        [JsonPropertyName("time")]
+        public List<DateTime> Time { get; set; } = new();
+
+        [JsonPropertyName("temperature_2m")]
+        public List<double?> Temperature { get; set; } = new();
+
+        [JsonPropertyName("weather_code")]
+        public List<int?> WeatherCode { get; set; } = new();
+
+        [JsonPropertyName("wind_speed_10m")]
+        public List<double?> WindSpeed { get; set; } = new();
+
+        [JsonPropertyName("relative_humidity_2m")]
+        public List<int?> Humidity { get; set; } = new();
+
+        [JsonPropertyName("precipitation_probability")]
+        public List<int?> PrecipitationProbability { get; set; } = new();
     }
 }

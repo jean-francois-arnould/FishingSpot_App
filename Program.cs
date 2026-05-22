@@ -33,7 +33,10 @@ builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 // WeatherService avec son propre HttpClient
 builder.Services.AddScoped<IWeatherService>(sp =>
 {
-    var httpClient = new HttpClient();
+    var httpClient = new HttpClient
+    {
+        Timeout = TimeSpan.FromSeconds(8)
+    };
     return new WeatherService(httpClient);
 });
 

@@ -1,38 +1,171 @@
 @page "/carte"
 @page "/FishingSpot_App/carte"
+@using FishingSpot.PWA.Services
+@using System.Globalization
+@implements IAsyncDisposable
+@inject IStatisticsService StatisticsService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Carte des Spots</PageTitle>
 
-<div class="page-content">
-    <div class="feature-panel mb-3">
-        <span class="list-item-icon fs-icon-map mb-3" aria-hidden="true"></span>
-        <h1>Carte Géopêche</h1>
-        <p class="text-muted mb-3">
-            Explorez les spots de pêche autour de vous avec la carte interactive Géopêche.
-        </p>
-        <a href="https://map.geopeche.com/"
-           target="_blank"
-           rel="noopener noreferrer"
-           class="btn btn-primary btn-lg w-100">
-            Ouvrir la carte Géopêche
-        </a>
-        <p class="text-muted mt-3 mb-0">
-            La carte s'ouvrira dans un nouvel onglet.
-        </p>
-    </div>
+<AuthorizeView>
+    <div class="page-content spots-map-page">
+        @if (isLoading)
+        {
+            <div class="empty-state">
+                <div class="spinner"></div>
+                <p class="mt-3">Chargement de la carte...</p>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(loadError))
+        {
+            <div class="empty-state">
+                <div class="empty-state-icon fs-icon-map" aria-hidden="true"></div>
+                <h3>Carte indisponible</h3>
+                <p class="text-muted">@loadError</p>
+            </div>
+        }
+        else if (insights == null || !insights.ProductiveSpots.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-state-icon fs-icon-map" aria-hidden="true"></div>
+                <h3>Aucun spot a afficher</h3>
+                <p class="text-muted">Ajoutez des prises avec un lieu ou une position GPS pour construire votre carte.</p>
+            </div>
+        }
+        else
+        {
+            <section class="spots-map-hero">
+                <div>
+                    <span class="stats-eyebrow">Carte des spots</span>
+                    <h1>Productivite par lieu</h1>
+                    <p>@insights.ProductiveSpots.Count spot@(insights.ProductiveSpots.Count > 1 ? "s" : "") analyse@(insights.ProductiveSpots.Count > 1 ? "s" : "") sur tout l'historique.</p>
+                </div>
+                <a href="https://map.geopeche.com/"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-outline-primary">
+                    GeoPeche
+                </a>
+            </section>
 
-    <div class="card mt-3">
-        <div class="card-header">
-            <h5 class="mb-0">À vérifier avant de partir</h5>
-        </div>
-        <div class="card-body">
-            <ul class="feature-list">
-                <li>Découvrir les spots publics près de chez vous</li>
-                <li>Voir les espèces présentes dans chaque plan d'eau</li>
-                <li>Consulter les avis et photos d'autres pêcheurs</li>
-                <li>Vérifier les règlementations locales</li>
-            </ul>
-        </div>
+            @if (mapSpots.Any())
+            {
+                <section class="spots-map-panel">
+                    <div id="@MapElementId" class="spots-map-canvas" aria-label="Carte des spots productifs"></div>
+                </section>
+            }
+            else
+            {
+                <div class="stats-panel">
+                    <div class="stats-panel-header">
+                        <div>
+                            <span class="stats-eyebrow">GPS manquant</span>
+                            <h2>Classement disponible sans carte</h2>
+                        </div>
+                    </div>
+                    <p class="stats-muted-note">Les prises ont des lieux saisis, mais pas encore de coordonnees exploitables pour placer les marqueurs.</p>
+                </div>
+            }
+
+            <section class="stats-panel">
+                <div class="stats-panel-header">
+                    <div>
+                        <span class="stats-eyebrow">Classement</span>
+                        <h2>Spots productifs</h2>
+                    </div>
+                </div>
+
+                <div class="spot-rank-list">
+                    @foreach (var spot in insights.ProductiveSpots.Take(10))
+                    {
+                        <article class="spot-rank-row">
+                            <div>
+                                <strong>@spot.LocationName</strong>
+                                <small>@spot.Count prise@(spot.Count > 1 ? "s" : "") - @spot.SpeciesCount espece@(spot.SpeciesCount > 1 ? "s" : "") - moy. @FormatCm(spot.AverageLength)</small>
+                                @if (spot.Species.Any())
+                                {
+                                    <span>@string.Join(", ", spot.Species.Take(4))</span>
+                                }
+                            </div>
+                            <em>@spot.ProductivityScore.ToString("0", CultureInfo.CurrentCulture)</em>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
     </div>
-</div>
+</AuthorizeView>
+
+@code {
+    private const string MapElementId = "spotsProductivityMap";
+    private AdvancedFishingInsights? insights;
+    private List<SpotProductivity> mapSpots = new();
+    private bool isLoading = true;
+    private bool shouldRenderMap;
+    private string? loadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/FishingSpot_App/login");
+            return;
+        }
+
+        await LoadData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (shouldRenderMap && mapSpots.Any())
+        {
+            shouldRenderMap = false;
+            await JSRuntime.InvokeVoidAsync("fishingSpotMap.render", MapElementId, mapSpots);
+        }
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        loadError = null;
+
+        try
+        {
+            var dashboard = await StatisticsService.GetDashboardAsync(StatisticsPeriod.AllTime);
+            insights = dashboard.AdvancedInsights;
+            mapSpots = insights.ProductiveSpots
+                .Where(s => s.HasCoordinates)
+                .ToList();
+            shouldRenderMap = mapSpots.Any();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement de la carte: {ex.Message}");
+            loadError = "Impossible de charger les statistiques des spots pour le moment.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string FormatCm(double centimeters)
+    {
+        return $"{centimeters.ToString("0", CultureInfo.CurrentCulture)} cm";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("fishingSpotMap.dispose", MapElementId);
+        }
+        catch
+        {
+            // JS interop can already be unavailable during teardown.
+        }
+    }
+}

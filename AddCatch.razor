@@ -89,6 +89,54 @@
                     }
                 </div>
 
+                <div class="form-group catch-photo-inline">
+                    <div class="catch-photo-header">
+                        <label class="form-label">Photo</label>
+                        <span class="field-hint">Optionnel</span>
+                    </div>
+                    <div class="photo-actions">
+                        <button type="button" class="btn btn-outline-primary" @onclick="OpenGallery" disabled="@isUploadingPhoto">
+                            Galerie
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" @onclick="OpenCamera" disabled="@isUploadingPhoto">
+                            Caméra
+                        </button>
+                    </div>
+
+                    <InputFile id="photoFileGallery" style="display: none;" OnChange="HandlePhotoSelected" accept="image/*" />
+                    <InputFile id="photoFileCamera" style="display: none;" OnChange="HandlePhotoSelected" accept="image/*" capture="environment" />
+
+                    @if (photoProgress.IsVisible)
+                    {
+                        <div class="upload-progress-panel @photoProgress.StateClass">
+                            <div class="upload-progress-header">
+                                <span>@photoProgress.StageLabel</span>
+                                <strong>@photoProgress.Percent%</strong>
+                            </div>
+                            <div class="upload-progress-track" aria-hidden="true">
+                                <span style="@ProgressWidthStyle(photoProgress.Percent)"></span>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(photoProgress.Detail))
+                            {
+                                <small>@photoProgress.Detail</small>
+                            }
+                            @if (photoProgress.OriginalBytes > 0 && photoProgress.CompressedBytes > 0)
+                            {
+                                <small>Original @FormatBytes(photoProgress.OriginalBytes) - Compressee @FormatBytes(photoProgress.CompressedBytes) - reduction @photoProgress.ReductionPercent.ToString("0", System.Globalization.CultureInfo.CurrentCulture)%</small>
+                            }
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(newCatch.PhotoUrl))
+                    {
+                        <div class="photo-preview">
+                            <img src="@newCatch.PhotoUrl" alt="Aperçu" class="preview-img" />
+                            <button type="button" class="btn btn-sm btn-danger" @onclick="RemovePhoto">
+                                Supprimer
+                            </button>
+                        </div>
+                    }
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Longueur</label>
@@ -281,41 +329,9 @@
 
         <div class="card">
             <div class="card-header">
-                <h3 class="mb-0">Photo et détails</h3>
+                <h3 class="mb-0">Détails</h3>
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <label class="form-label">Photo</label>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-primary" @onclick="OpenGallery" disabled="@isUploadingPhoto">
-                            Galerie
-                        </button>
-                        <button type="button" class="btn btn-outline-primary" @onclick="OpenCamera" disabled="@isUploadingPhoto">
-                            Caméra
-                        </button>
-                    </div>
-
-                    <InputFile id="photoFileGallery" style="display: none;" OnChange="HandlePhotoSelected" accept="image/*" />
-                    <InputFile id="photoFileCamera" style="display: none;" OnChange="HandlePhotoSelected" accept="image/*" capture="environment" />
-
-                    @if (isUploadingPhoto)
-                    {
-                        <div class="upload-status">
-                            <div class="spinner"></div>
-                            <span>Upload en cours...</span>
-                        </div>
-                    }
-                    @if (!string.IsNullOrEmpty(newCatch.PhotoUrl))
-                    {
-                        <div class="photo-preview">
-                            <img src="@newCatch.PhotoUrl" alt="Aperçu" class="preview-img" />
-                            <button type="button" class="btn btn-sm btn-danger" @onclick="RemovePhoto">
-                                Supprimer
-                            </button>
-                        </div>
-                    }
-                </div>
-
                 <div class="form-group">
                     <label for="notes" class="form-label">Notes</label>
                     <InputTextArea id="notes" class="form-control" rows="4" @bind-Value="newCatch.Notes" 
@@ -517,6 +533,7 @@
     private string? addFishSuccess;
     private bool isSaving;
     private bool isUploadingPhoto;
+    private PhotoUploadProgress photoProgress = new();
     private bool isGettingLocation;
     private bool isAddingFish;
     private bool showFishSpeciesModal = false;
@@ -762,6 +779,8 @@
     {
         isUploadingPhoto = true;
         errorMessage = null;
+        successMessage = null;
+        UpdatePhotoProgress("Validation", 5, "Controle du fichier selectionne");
         string? tempPhotoUrl = null;
 
         try
@@ -772,6 +791,7 @@
                 // Vérifier la taille (max 5 MB)
                 if (file.Size > 5 * 1024 * 1024)
                 {
+                    UpdatePhotoProgress("Erreur", 100, "La photo est trop volumineuse (max 5 MB).", isError: true);
                     errorMessage = "La photo est trop volumineuse (max 5 MB).";
                     isUploadingPhoto = false;
                     StateHasChanged();
@@ -781,6 +801,7 @@
                 // Vérifier le type
                 if (!file.ContentType.StartsWith("image/"))
                 {
+                    UpdatePhotoProgress("Erreur", 100, "Seules les images sont acceptees.", isError: true);
                     errorMessage = "Seules les images sont acceptées.";
                     isUploadingPhoto = false;
                     StateHasChanged();
@@ -790,6 +811,7 @@
                 Console.WriteLine($"📸 Traitement de la photo : {file.Name} ({file.Size} bytes)");
 
                 // Étape 1 : Lire le fichier en mémoire
+                UpdatePhotoProgress("Lecture", 20, $"Lecture de {FormatBytes(file.Size)}");
                 var buffer = new byte[file.Size];
                 await file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).ReadAsync(buffer);
                 Console.WriteLine($"✅ Fichier lu en mémoire");
@@ -801,10 +823,13 @@
 
                 // Étape 3 : Compresser l'image avec le service
                 Console.WriteLine($"🗜️ Compression de l'image...");
+                UpdatePhotoProgress("Compression", 45, "Compression locale avant upload");
                 var compressionStartTime = DateTime.Now;
                 var compressed = await ImageCompression.CompressImageAsync(base64DataUrl, maxWidth: 1200, thumbnailSize: 150, quality: 85);
                 var compressionTime = (DateTime.Now - compressionStartTime).TotalMilliseconds;
 
+                photoProgress.OriginalBytes = compressed.OriginalSize;
+                photoProgress.CompressedBytes = compressed.CompressedSize;
                 var reductionPercent = 100 - (compressed.CompressedSize * 100 / compressed.OriginalSize);
                 Console.WriteLine($"✅ Compression terminée en {compressionTime:F0}ms");
                 Console.WriteLine($"📊 Taille originale: {compressed.OriginalSize / 1024}KB");
@@ -814,6 +839,7 @@
                 // Étape 4 : Afficher l'aperçu immédiatement (version compressée)
                 tempPhotoUrl = compressed.Base64Data;
                 newCatch.PhotoUrl = tempPhotoUrl;
+                UpdatePhotoProgress("Apercu", 70, "Photo compressee et previsualisee");
                 StateHasChanged();
                 Console.WriteLine($"✅ Aperçu affiché");
 
@@ -821,6 +847,7 @@
                 try
                 {
                     Console.WriteLine($"🌐 Upload vers Supabase...");
+                    UpdatePhotoProgress("Upload", 85, "Envoi vers Supabase Storage");
                     var uploadStartTime = DateTime.Now;
 
                     // Extraire les données base64 (sans le préfixe data:image/jpeg;base64,)
@@ -828,7 +855,7 @@
                         ? compressed.Base64Data.Split(',')[1] 
                         : compressed.Base64Data;
                     var compressedBytes = Convert.FromBase64String(base64Data);
-                    var stream = new MemoryStream(compressedBytes);
+                    using var stream = new MemoryStream(compressedBytes);
 
                     var photoUrl = await SupabaseService.UploadPhotoAsync(stream, file.Name);
                     var uploadTime = (DateTime.Now - uploadStartTime).TotalMilliseconds;
@@ -839,6 +866,7 @@
                         !photoUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
                     {
                         newCatch.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
+                        UpdatePhotoProgress("Termine", 100, "Upload distant termine", isComplete: true);
                         successMessage = $"✅ Photo uploadée avec succès ! (-{reductionPercent:F0}% taille)";
                         StateHasChanged();
                         await Task.Delay(2000);
@@ -849,6 +877,7 @@
                     {
                         // Mode offline : garder l'aperçu local
                         Console.WriteLine("⚠️ Mode offline détecté, la photo sera uploadée lors de la synchronisation");
+                        UpdatePhotoProgress("Mode offline", 100, "Photo conservee localement et synchronisee plus tard", isOffline: true, isComplete: true);
                         successMessage = "📸 Photo ajoutée (sera uploadée en ligne)";
                         StateHasChanged();
                         await Task.Delay(2000);
@@ -860,6 +889,7 @@
                 {
                     Console.WriteLine($"⚠️ Erreur upload photo (mode offline?): {uploadEx.Message}");
                     // Garder l'aperçu local en mode offline
+                    UpdatePhotoProgress("Mode offline", 100, "Upload distant indisponible, photo conservee localement", isOffline: true, isComplete: true);
                     successMessage = "📸 Photo ajoutée localement";
                     StateHasChanged();
                     await Task.Delay(2000);
@@ -872,6 +902,7 @@
                 {
                     Console.WriteLine($"Error uploading photo: {ex.Message}");
                     errorMessage = $"Erreur lors de l'upload: {ex.Message}";
+                    UpdatePhotoProgress("Erreur", 100, ex.Message, isError: true);
                     if (!string.IsNullOrEmpty(tempPhotoUrl))
                     {
                         newCatch.PhotoUrl = tempPhotoUrl; // Garder l'aperçu local en cas d'erreur
@@ -883,6 +914,46 @@
                     isUploadingPhoto = false;
                     StateHasChanged();
                 }
+    }
+
+    private void UpdatePhotoProgress(
+        string stageLabel,
+        int percent,
+        string detail,
+        bool isOffline = false,
+        bool isError = false,
+        bool isComplete = false)
+    {
+        var originalBytes = photoProgress.OriginalBytes;
+        var compressedBytes = photoProgress.CompressedBytes;
+        photoProgress = new PhotoUploadProgress
+        {
+            IsVisible = true,
+            StageLabel = stageLabel,
+            Percent = Math.Clamp(percent, 0, 100),
+            Detail = detail,
+            OriginalBytes = originalBytes,
+            CompressedBytes = compressedBytes,
+            IsOffline = isOffline,
+            IsError = isError,
+            IsComplete = isComplete
+        };
+        StateHasChanged();
+    }
+
+    private static string ProgressWidthStyle(int percent)
+    {
+        return $"--progress-width: {Math.Clamp(percent, 0, 100)}%;";
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes >= 1024 * 1024)
+        {
+            return $"{bytes / 1024.0 / 1024.0:0.0} MB";
+        }
+
+        return $"{bytes / 1024.0:0} KB";
     }
 
     private async Task OpenGallery()
@@ -926,6 +997,7 @@
     private void RemovePhoto()
     {
         newCatch.PhotoUrl = string.Empty;
+        photoProgress = new PhotoUploadProgress();
     }
 
     private async Task GetCurrentLocation()
@@ -1297,5 +1369,26 @@
     {
         await AuthService.SignOutAsync();
         Navigation.NavigateTo("/FishingSpot_App/");
+    }
+
+    private sealed class PhotoUploadProgress
+    {
+        public bool IsVisible { get; set; }
+        public string StageLabel { get; set; } = string.Empty;
+        public string Detail { get; set; } = string.Empty;
+        public int Percent { get; set; }
+        public long OriginalBytes { get; set; }
+        public long CompressedBytes { get; set; }
+        public bool IsOffline { get; set; }
+        public bool IsError { get; set; }
+        public bool IsComplete { get; set; }
+
+        public double ReductionPercent => OriginalBytes <= 0 || CompressedBytes <= 0
+            ? 0
+            : Math.Max(0, 100 - (CompressedBytes * 100.0 / OriginalBytes));
+
+        public string StateClass => IsError
+            ? "is-error"
+            : IsOffline ? "is-offline" : IsComplete ? "is-complete" : "is-active";
     }
 }
