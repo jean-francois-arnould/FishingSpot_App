@@ -1,0 +1,35 @@
+/* iPhone PWA layout fixes kept separate because app.css contains legacy encoding. */
+:root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --bottom-nav-height: 65px;
+}
+
+html,
+body {
+    min-height: 100%;
+    overscroll-behavior-y: none;
+}
+
+body {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 15px) !important;
+}
+
+.bottom-nav {
+    height: auto !important;
+    min-height: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+    padding-bottom: var(--safe-area-bottom) !important;
+}
+
+.top-bar {
+    padding-top: var(--safe-area-top);
+    min-height: calc(60px + var(--safe-area-top));
+}
+
+@supports (-webkit-touch-callout: none) {
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}

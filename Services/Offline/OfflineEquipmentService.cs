@@ -190,7 +190,7 @@ namespace FishingSpot.PWA.Services
         }
 
         // Generic helper methods
-        private async Task<List<T>> GetAllItemsAsync<T>(string storeName, Func<Task<List<T>>> onlineMethod)
+        private async Task<List<T>> GetAllItemsAsync<T>(string storeName, Func<Task<List<T>>> onlineMethod) where T : class
         {
             if (_networkStatus.IsOnline)
             {
@@ -217,7 +217,7 @@ namespace FishingSpot.PWA.Services
             return await _indexedDb.GetAllItemsAsync<T>(storeName);
         }
 
-        private async Task<T?> GetItemByIdAsync<T>(string storeName, int id, Func<int, Task<T?>> onlineMethod)
+        private async Task<T?> GetItemByIdAsync<T>(string storeName, int id, Func<int, Task<T?>> onlineMethod) where T : class
         {
             if (_networkStatus.IsOnline)
             {
@@ -239,12 +239,12 @@ namespace FishingSpot.PWA.Services
             return await _indexedDb.GetItemAsync<T>(storeName, id.ToString());
         }
 
-        private async Task<int> AddItemAsync<T>(string storeName, string entityType, T item, int currentId, Func<Task<int>> onlineMethod)
+        private async Task<int> AddItemAsync<T>(string storeName, string entityType, T item, int currentId, Func<Task<int>> onlineMethod) where T : class
         {
             var id = currentId;
             if (id == 0)
             {
-                id = -new Random().Next(1, 1000000);
+                id = -Random.Shared.Next(1, int.MaxValue);
                 SetItemId(item, id);
             }
 
@@ -254,7 +254,12 @@ namespace FishingSpot.PWA.Services
             {
                 try
                 {
+                    SetItemId(item, 0);
                     var newId = await onlineMethod();
+                    if (newId <= 0)
+                    {
+                        throw new InvalidOperationException($"Server did not return a valid ID for {entityType}.");
+                    }
 
                     if (id < 0)
                     {
@@ -271,11 +276,12 @@ namespace FishingSpot.PWA.Services
                 }
             }
 
+            SetItemId(item, id);
             await _syncService.QueueActionAsync(SyncAction.Create, entityType, id.ToString(), item);
             return id;
         }
 
-        private async Task<bool> UpdateItemAsync<T>(string storeName, string entityType, T item, int id, Func<Task<bool>> onlineMethod)
+        private async Task<bool> UpdateItemAsync<T>(string storeName, string entityType, T item, int id, Func<Task<bool>> onlineMethod) where T : class
         {
             await _indexedDb.SetItemAsync(storeName, id.ToString(), item);
 
@@ -315,13 +321,13 @@ namespace FishingSpot.PWA.Services
             return true;
         }
 
-        private string GetItemId<T>(T item)
+        private string GetItemId<T>(T item) where T : class
         {
             var idProp = item?.GetType().GetProperty("Id");
             return idProp?.GetValue(item)?.ToString() ?? Guid.NewGuid().ToString();
         }
 
-        private void SetItemId<T>(T item, int id)
+        private void SetItemId<T>(T item, int id) where T : class
         {
             var idProp = item?.GetType().GetProperty("Id");
             idProp?.SetValue(item, id);

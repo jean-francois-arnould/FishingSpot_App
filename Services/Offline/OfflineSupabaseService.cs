@@ -14,6 +14,7 @@ namespace FishingSpot.PWA.Services
         private const string SPECIES_STORE = "species";
         private const string SETUPS_STORE = "setups";
         private const string BRANDS_STORE = "brands";
+        private const string DATA_IMAGE_PREFIX = "data:image/";
 
         private readonly ISupabaseService _onlineService;
         private readonly INetworkStatusService _networkStatus;
@@ -150,7 +151,7 @@ namespace FishingSpot.PWA.Services
             // Generate temporary ID for offline
             if (temporaryId == 0)
             {
-                temporaryId = -new Random().Next(1, 1000000); // Negative ID for offline items
+                temporaryId = CreateOfflineId(); // Negative ID for offline items
                 fishCatch.Id = temporaryId;
                 Console.WriteLine($"🆔 ID temporaire généré: {temporaryId}");
             }
@@ -164,14 +165,20 @@ namespace FishingSpot.PWA.Services
                     Console.WriteLine("⚠️ Token invalide, mode offline activé");
                     // Save to cache immediately
                     Console.WriteLine($"💾 Sauvegarde dans IndexedDB avec ID: {fishCatch.Id}");
-                    await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
-                    await _syncService.QueueActionAsync(SyncAction.Create, "catch", fishCatch.Id.ToString(), fishCatch);
+                    await CacheCatchForSyncAsync(fishCatch, SyncAction.Create);
                     return fishCatch.Id;
                 }
 
                 try
                 {
                     Console.WriteLine("🌐 Tentative de sauvegarde en ligne...");
+                    if (!await UploadLocalPhotoIfNeededAsync(fishCatch))
+                    {
+                        Console.WriteLine("Local photo upload failed, queuing catch for sync.");
+                        await CacheCatchForSyncAsync(fishCatch, SyncAction.Create);
+                        return fishCatch.Id;
+                    }
+
                     var newId = await _onlineService.AddCatchAsync(fishCatch);
 
                     if (newId == 0)
@@ -203,8 +210,7 @@ namespace FishingSpot.PWA.Services
             // Mode offline ou pas de connexion
             Console.WriteLine($"📋 Mode offline: Prise mise en queue pour synchronisation");
             Console.WriteLine($"💾 Sauvegarde dans IndexedDB avec ID: {fishCatch.Id}");
-            await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
-            await _syncService.QueueActionAsync(SyncAction.Create, "catch", fishCatch.Id.ToString(), fishCatch);
+            await CacheCatchForSyncAsync(fishCatch, SyncAction.Create);
 
             Console.WriteLine($"🔍 [AddCatchAsync] SORTIE - ID offline: {fishCatch.Id}");
             return fishCatch.Id;
@@ -212,14 +218,15 @@ namespace FishingSpot.PWA.Services
 
         public async Task<bool> UpdateCatchAsync(FishCatch fishCatch)
         {
-            // Update cache immediately
-            await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
-
             if (_networkStatus.IsOnline)
             {
                 try
                 {
-                    return await _onlineService.UpdateCatchAsync(fishCatch);
+                    if (await UploadLocalPhotoIfNeededAsync(fishCatch))
+                    {
+                        await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
+                        return await _onlineService.UpdateCatchAsync(fishCatch);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -228,6 +235,7 @@ namespace FishingSpot.PWA.Services
             }
 
             // Queue for synchronization
+            await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
             await _syncService.QueueActionAsync(SyncAction.Update, "catch", fishCatch.Id.ToString(), fishCatch);
             Console.WriteLine($"📋 Catch update queued for sync (offline mode)");
 
@@ -289,7 +297,7 @@ namespace FishingSpot.PWA.Services
         {
             if (fishSpecies.Id == 0)
             {
-                fishSpecies.Id = -new Random().Next(1, 1000000);
+                fishSpecies.Id = CreateOfflineId();
             }
 
             await _indexedDb.SetItemAsync(SPECIES_STORE, fishSpecies.Id.ToString(), fishSpecies);
@@ -349,7 +357,7 @@ namespace FishingSpot.PWA.Services
         {
             if (brand.Id == 0)
             {
-                brand.Id = -new Random().Next(1, 1000000);
+                brand.Id = CreateOfflineId();
             }
 
             await _indexedDb.SetItemAsync(BRANDS_STORE, $"{brand.Category}_{brand.Id}", brand);
@@ -450,7 +458,7 @@ namespace FishingSpot.PWA.Services
         {
             if (setup.Id == 0)
             {
-                setup.Id = -new Random().Next(1, 1000000);
+                setup.Id = CreateOfflineId();
             }
 
             await _indexedDb.SetItemAsync(SETUPS_STORE, setup.Id.ToString(), setup);
@@ -552,19 +560,99 @@ namespace FishingSpot.PWA.Services
             if (!_networkStatus.IsOnline)
             {
                 Console.WriteLine("⚠️ Cannot upload photo while offline. Photo will be stored locally.");
-                // TODO: Implement local photo storage with File System Access API or IndexedDB
-                return $"offline_{fileName}"; // Return placeholder
+                return await CreateLocalPhotoDataUrlAsync(photoStream);
             }
 
             try
             {
-                return await _onlineService.UploadPhotoAsync(photoStream, fileName);
+                var photoUrl = await _onlineService.UploadPhotoAsync(photoStream, fileName);
+                if (!string.IsNullOrEmpty(photoUrl))
+                {
+                    return photoUrl;
+                }
+
+                if (photoStream.CanSeek)
+                {
+                    photoStream.Position = 0;
+                }
+
+                return await CreateLocalPhotoDataUrlAsync(photoStream);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error uploading photo: {ex.Message}");
+                if (photoStream.CanSeek)
+                {
+                    photoStream.Position = 0;
+                    return await CreateLocalPhotoDataUrlAsync(photoStream);
+                }
+
                 return null;
             }
+        }
+
+        private async Task CacheCatchForSyncAsync(FishCatch fishCatch, SyncAction action)
+        {
+            Console.WriteLine($"ðŸ’¾ Sauvegarde dans IndexedDB avec ID: {fishCatch.Id}");
+            await _indexedDb.SetItemAsync(CATCHES_STORE, fishCatch.Id.ToString(), fishCatch);
+            await _syncService.QueueActionAsync(action, "catch", fishCatch.Id.ToString(), fishCatch);
+        }
+
+        private async Task<bool> UploadLocalPhotoIfNeededAsync(FishCatch fishCatch)
+        {
+            if (string.IsNullOrWhiteSpace(fishCatch.PhotoUrl) ||
+                !fishCatch.PhotoUrl.StartsWith(DATA_IMAGE_PREFIX, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            try
+            {
+                using var stream = CreateStreamFromDataUrl(fishCatch.PhotoUrl, out var extension);
+                var remoteUrl = await _onlineService.UploadPhotoAsync(
+                    stream,
+                    $"catch_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}.{extension}");
+
+                if (string.IsNullOrWhiteSpace(remoteUrl) ||
+                    remoteUrl.StartsWith(DATA_IMAGE_PREFIX, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                fishCatch.PhotoUrl = remoteUrl;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"âš ï¸ Local photo upload failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        private static MemoryStream CreateStreamFromDataUrl(string dataUrl, out string extension)
+        {
+            var commaIndex = dataUrl.IndexOf(',');
+            if (commaIndex < 0)
+            {
+                throw new InvalidOperationException("Invalid local photo data URL.");
+            }
+
+            var header = dataUrl[..commaIndex];
+            extension = header.Contains("png", StringComparison.OrdinalIgnoreCase) ? "png" : "jpg";
+            var base64 = dataUrl[(commaIndex + 1)..];
+            return new MemoryStream(Convert.FromBase64String(base64));
+        }
+
+        private static async Task<string> CreateLocalPhotoDataUrlAsync(Stream photoStream)
+        {
+            using var memoryStream = new MemoryStream();
+            await photoStream.CopyToAsync(memoryStream);
+            return $"data:image/jpeg;base64,{Convert.ToBase64String(memoryStream.ToArray())}";
+        }
+
+        private static int CreateOfflineId()
+        {
+            return -Random.Shared.Next(1, int.MaxValue);
         }
     }
 }

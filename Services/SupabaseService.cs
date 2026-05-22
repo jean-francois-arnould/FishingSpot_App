@@ -75,9 +75,19 @@ namespace FishingSpot.PWA.Services
                 }
 
                 // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
+                var originalId = fishSpecies.Id;
+                if (fishSpecies.Id < 0)
+                {
+                    fishSpecies.Id = 0;
+                }
+
                 fishSpecies.IsActive = true;
 
-                var json = JsonSerializer.Serialize(fishSpecies);
+                var json = JsonSerializer.Serialize(fishSpecies, new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                });
+                fishSpecies.Id = originalId;
                 Console.WriteLine($"Adding new fish species: {json}");
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -142,9 +152,19 @@ namespace FishingSpot.PWA.Services
                 }
 
                 // Ne pas définir CreatedAt - PostgreSQL le gère avec now()
+                var originalId = brand.Id;
+                if (brand.Id < 0)
+                {
+                    brand.Id = 0;
+                }
+
                 brand.IsActive = true;
 
-                var json = JsonSerializer.Serialize(brand);
+                var json = JsonSerializer.Serialize(brand, new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+                });
+                brand.Id = originalId;
                 Console.WriteLine($"Adding new brand: {json}");
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -533,7 +553,8 @@ namespace FishingSpot.PWA.Services
             try
             {
                 // Créer un nom de fichier unique
-                var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
+                var safeFileName = Path.GetFileName(fileName).Replace(' ', '_');
+                var uniqueFileName = $"{Guid.NewGuid():N}_{safeFileName}";
                 var filePath = $"catches/{uniqueFileName}";
 
                 // Préparer le contenu

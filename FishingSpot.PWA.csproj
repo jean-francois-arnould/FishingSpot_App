@@ -14,12 +14,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="FishingSpot.Tests\**\*.cs" />
+    <Content Remove="FishingSpot.Tests\**\*" />
+    <None Remove="FishingSpot.Tests\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include=".github\workflows\blazor-deploy.yml" />
-    <None Include="FishingSpot.Tests\FishingSpot.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

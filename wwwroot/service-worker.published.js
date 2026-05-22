@@ -8,6 +8,7 @@ self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
+const apiCacheName = `${cacheNamePrefix}api-${self.assetsManifest.version}`;
 const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/ ];
 const offlineAssetsExclude = [ /^service-worker\.js$/ ];
 
@@ -32,12 +33,17 @@ async function onActivate(event) {
 
     // Delete unused caches
     const cacheKeys = await caches.keys();
+    const currentCaches = new Set([cacheName, apiCacheName]);
     await Promise.all(cacheKeys
-        .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
+        .filter(key => key.startsWith(cacheNamePrefix) && !currentCaches.has(key))
         .map(key => caches.delete(key)));
 }
 
 async function onFetch(event) {
+    if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') {
+        return;
+    }
+
     let cachedResponse = null;
 
     if (event.request.method === 'GET') {

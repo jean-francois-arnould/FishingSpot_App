@@ -834,7 +834,9 @@
                     var uploadTime = (DateTime.Now - uploadStartTime).TotalMilliseconds;
                     Console.WriteLine($"✅ Upload terminé en {uploadTime:F0}ms");
 
-                    if (!string.IsNullOrEmpty(photoUrl) && !photoUrl.StartsWith("offline_"))
+                    if (!string.IsNullOrEmpty(photoUrl) &&
+                        !photoUrl.StartsWith("offline_") &&
+                        !photoUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
                     {
                         newCatch.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
                         successMessage = $"✅ Photo uploadée avec succès ! (-{reductionPercent:F0}% taille)";
@@ -923,7 +925,7 @@
 
     private void RemovePhoto()
     {
-        newCatch.PhotoUrl = null;
+        newCatch.PhotoUrl = string.Empty;
     }
 
     private async Task GetCurrentLocation()

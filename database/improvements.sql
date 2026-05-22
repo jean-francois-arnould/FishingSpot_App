@@ -125,7 +125,14 @@ CREATE TRIGGER update_user_profiles_updated_at
 
 CREATE OR REPLACE FUNCTION update_user_statistics()
 RETURNS TRIGGER AS $$
+DECLARE
+    affected_user_id uuid;
 BEGIN
+    affected_user_id := COALESCE(NEW.user_id, OLD.user_id);
+
+    IF affected_user_id IS NULL THEN
+        RETURN COALESCE(NEW, OLD);
+    END IF;
     -- Recalculer les statistiques pour l'utilisateur concerné
     INSERT INTO user_statistics (
         user_id, 
@@ -141,13 +148,13 @@ BEGIN
         user_id,
         COUNT(*) as total_catches,
         COUNT(DISTINCT fish_name) as total_species,
-        (SELECT id FROM fish_catches WHERE user_id = NEW.user_id ORDER BY length DESC LIMIT 1) as biggest_catch_id,
-        (SELECT id FROM fish_catches WHERE user_id = NEW.user_id ORDER BY weight DESC LIMIT 1) as heaviest_catch_id,
-        (SELECT fish_name FROM fish_catches WHERE user_id = NEW.user_id GROUP BY fish_name ORDER BY COUNT(*) DESC LIMIT 1) as favorite_species,
+        (SELECT id FROM fish_catches WHERE user_id = affected_user_id ORDER BY length DESC LIMIT 1) as biggest_catch_id,
+        (SELECT id FROM fish_catches WHERE user_id = affected_user_id ORDER BY weight DESC LIMIT 1) as heaviest_catch_id,
+        (SELECT fish_name FROM fish_catches WHERE user_id = affected_user_id GROUP BY fish_name ORDER BY COUNT(*) DESC LIMIT 1) as favorite_species,
         MAX(catch_date) as last_catch_date,
         now() as last_updated
     FROM fish_catches
-    WHERE user_id = NEW.user_id
+    WHERE user_id = affected_user_id
     GROUP BY user_id
     ON CONFLICT (user_id) 
     DO UPDATE SET
@@ -159,7 +166,11 @@ BEGIN
         last_catch_date = EXCLUDED.last_catch_date,
         last_updated = now();
 
-    RETURN NEW;
+    IF NOT FOUND THEN
+        DELETE FROM user_statistics WHERE user_id = affected_user_id;
+    END IF;
+
+    RETURN COALESCE(NEW, OLD);
 END;
 $$ language 'plpgsql';
 
@@ -208,42 +219,50 @@ CREATE POLICY "Users delete own catches" ON fish_catches
 -- Rods
 DROP POLICY IF EXISTS "Users manage own rods" ON rods;
 CREATE POLICY "Users manage own rods" ON rods 
-    FOR ALL USING (auth.uid() = user_id);
+    FOR ALL USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Reels
 DROP POLICY IF EXISTS "Users manage own reels" ON reels;
 CREATE POLICY "Users manage own reels" ON reels 
-    FOR ALL USING (auth.uid() = user_id);
+    FOR ALL USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Lines
 DROP POLICY IF EXISTS "Users manage own lines" ON lines;
 CREATE POLICY "Users manage own lines" ON lines 
-    FOR ALL USING (auth.uid() = user_id);
+    FOR ALL USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Lures
 DROP POLICY IF EXISTS "Users manage own lures" ON lures;
 CREATE POLICY "Users manage own lures" ON lures 
-    FOR ALL USING (auth.uid() = user_id);
+    FOR ALL USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Leaders
 DROP POLICY IF EXISTS "Users manage own leaders" ON leaders;
 CREATE POLICY "Users manage own leaders" ON leaders 
-    FOR ALL USING (auth.uid() = user_id);
+    FOR ALL USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Hooks
 DROP POLICY IF EXISTS "Users manage own hooks" ON hooks;
 CREATE POLICY "Users manage own hooks" ON hooks 
-    FOR ALL USING (auth.uid() = user_id);
+    FOR ALL USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Fishing Setups
 DROP POLICY IF EXISTS "Users manage own setups" ON fishing_setups;
 CREATE POLICY "Users manage own setups" ON fishing_setups 
-    FOR ALL USING (auth.uid() = user_id);
+    FOR ALL USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- User Profiles
 DROP POLICY IF EXISTS "Users manage own profile" ON user_profiles;
 CREATE POLICY "Users manage own profile" ON user_profiles 
-    FOR ALL USING (auth.uid() = id);
+    FOR ALL USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
 
 -- User Statistics
 DROP POLICY IF EXISTS "Users see own statistics" ON user_statistics;
@@ -275,7 +294,8 @@ CREATE POLICY "Anyone can view fishing brands" ON fishing_brands
 -- ============================================
 -- Vue pour obtenir les prises avec toutes les infos liées
 
-CREATE OR REPLACE VIEW catches_with_details AS
+CREATE OR REPLACE VIEW catches_with_details
+WITH (security_invoker = true) AS
 SELECT 
     fc.*,
     fs.common_name as species_common_name,

@@ -30,7 +30,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          dotnet-quality: 'preview'
 
       - name: Create appsettings.json with Supabase secrets
         run: |
@@ -43,19 +42,25 @@ jobs:
           }
           EOF
 
+      - name: Restore
+        run: |
+          dotnet restore FishingSpot.PWA.sln --nologo
+          dotnet restore FishingSpot.Tests/FishingSpot.Tests.csproj --nologo
+
+      - name: Build
+        run: dotnet build FishingSpot.PWA.sln -c Release --no-restore --nologo
+
+      - name: Test
+        run: dotnet test FishingSpot.Tests/FishingSpot.Tests.csproj -c Release --no-restore --nologo
+
       - name: Publish
-        run: dotnet publish FishingSpot.PWA.csproj -c Release -o output --nologo
+        run: dotnet publish FishingSpot.PWA.csproj -c Release -o output --no-restore --nologo
 
       - name: Copy 404.html for SPA routing
         run: cp 404.html output/wwwroot/404.html
 
       - name: Fix base href for GitHub Pages (needed for _framework assets)
         run: sed -i 's/<base href="\/" \/>/<base href="\/FishingSpot_App\/" \/>/g' output/wwwroot/index.html
-
-      - name: Fix manifest for PWA
-        run: |
-          sed -i 's/"id": "\.\/",/"id": "\/FishingSpot_App\/",/g' output/wwwroot/manifest.webmanifest
-          sed -i 's/"start_url": "\.\/",/"start_url": "\/FishingSpot_App\/",/g' output/wwwroot/manifest.webmanifest
 
       - name: Fix service worker base path
         run: sed -i 's/const base = "\/";/const base = "\/FishingSpot_App\/";/g' output/wwwroot/service-worker.js

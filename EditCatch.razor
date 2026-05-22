@@ -322,7 +322,9 @@
                 var stream = new MemoryStream(buffer);
                 var photoUrl = await SupabaseService.UploadPhotoAsync(stream, file.Name);
 
-                if (!string.IsNullOrEmpty(photoUrl))
+                if (!string.IsNullOrEmpty(photoUrl) &&
+                    !photoUrl.StartsWith("offline_") &&
+                    !photoUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
                 {
                     catchToEdit.PhotoUrl = photoUrl; // Remplacer par l'URL Supabase
                     successMessage = "✅ Photo uploadée avec succès !";
@@ -366,7 +368,7 @@
     {
         if (catchToEdit != null)
         {
-            catchToEdit.PhotoUrl = null;
+            catchToEdit.PhotoUrl = string.Empty;
         }
     }
 

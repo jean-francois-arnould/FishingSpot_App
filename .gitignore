@@ -10,6 +10,7 @@ output/
 launchSettings.json
 
 # Configuration sensible - NE PAS COMMITTER
+appsettings.json
 wwwroot/appsettings.json
 
 # Keep a template

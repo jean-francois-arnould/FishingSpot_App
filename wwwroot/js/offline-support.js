@@ -3,13 +3,17 @@
 // ==========================================
 window.networkStatus = {
     dotNetRef: null,
+    onlineHandler: null,
+    offlineHandler: null,
 
     initialize: function(dotNetReference) {
         this.dotNetRef = dotNetReference;
+        this.onlineHandler = this.handleOnline.bind(this);
+        this.offlineHandler = this.handleOffline.bind(this);
 
         // Add event listeners for online/offline
-        window.addEventListener('online', this.handleOnline.bind(this));
-        window.addEventListener('offline', this.handleOffline.bind(this));
+        window.addEventListener('online', this.onlineHandler);
+        window.addEventListener('offline', this.offlineHandler);
 
         // Return current status
         return navigator.onLine;
@@ -28,9 +32,15 @@ window.networkStatus = {
     },
 
     dispose: function() {
-        window.removeEventListener('online', this.handleOnline.bind(this));
-        window.removeEventListener('offline', this.handleOffline.bind(this));
+        if (this.onlineHandler) {
+            window.removeEventListener('online', this.onlineHandler);
+        }
+        if (this.offlineHandler) {
+            window.removeEventListener('offline', this.offlineHandler);
+        }
         this.dotNetRef = null;
+        this.onlineHandler = null;
+        this.offlineHandler = null;
     }
 };
 
@@ -39,7 +49,7 @@ window.networkStatus = {
 // ==========================================
 window.indexedDb = {
     dbName: 'FishingSpotDB',
-    dbVersion: 1,
+    dbVersion: 2,
     db: null,
 
     // Store names for different data types
@@ -55,7 +65,8 @@ window.indexedDb = {
         hooks: 'hooks',
         brands: 'brands',
         syncQueue: 'syncQueue',
-        userProfile: 'userProfile'
+        userProfile: 'userProfile',
+        photos: 'photos'
     },
 
     initialize: function() {

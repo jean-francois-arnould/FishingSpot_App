@@ -57,11 +57,20 @@ namespace FishingSpot.PWA.Services
         {
             try
             {
+                var idProperty = typeof(T).GetProperty("Id");
+                var originalId = idProperty?.GetValue(entity);
+
+                if (originalId is int originalIntId && originalIntId < 0)
+                {
+                    idProperty?.SetValue(entity, 0);
+                }
+
                 var options = new JsonSerializerOptions
                 {
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
                 };
                 var json = JsonSerializer.Serialize(entity, options);
+                idProperty?.SetValue(entity, originalId);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Remove("Prefer");
@@ -72,12 +81,10 @@ namespace FishingSpot.PWA.Services
 
                 var result = await response.Content.ReadFromJsonAsync<List<T>>();
 
-                // Try to get the Id property dynamically
-                var idProperty = typeof(T).GetProperty("Id");
                 if (idProperty != null && result?.FirstOrDefault() != null)
                 {
-                    var id = idProperty.GetValue(result.First());
-                    return id != null ? Convert.ToInt32(id) : 0;
+                    var returnedId = idProperty.GetValue(result.First());
+                    return returnedId != null ? Convert.ToInt32(returnedId) : 0;
                 }
 
                 return 0;
